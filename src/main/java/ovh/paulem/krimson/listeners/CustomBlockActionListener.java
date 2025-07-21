@@ -1,9 +1,9 @@
-package ovh.paulem.krimson.bountifulLib.listeners;
+package ovh.paulem.krimson.listeners;
 
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
-import ovh.paulem.krimson.bountifulLib.blocks.CustomBlock;
-import ovh.paulem.krimson.bountifulLib.blocks.InventoryCustomBlock;
+import ovh.paulem.krimson.utils.CustomBlockUtils;
+import ovh.paulem.krimson.blocks.CustomBlock;
+import ovh.paulem.krimson.blocks.InventoryCustomBlock;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;

@@ -1,4 +1,4 @@
-package ovh.paulem.krimson.bountifulLib.blocks;
+package ovh.paulem.krimson.blocks;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

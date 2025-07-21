@@ -1,9 +1,9 @@
-package ovh.paulem.krimson.bountifulLib.blocks;
+package ovh.paulem.krimson.blocks;
 
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
+import ovh.paulem.krimson.utils.CustomBlockUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -35,6 +35,7 @@ public abstract class CustomBlock {
     private ItemDisplay spawnedDisplay;
 
     private final Predicate<CustomBlock> commonArguments;
+
     /**
      * Set the brightness of the block, using an asynchronous task in the main file
      */

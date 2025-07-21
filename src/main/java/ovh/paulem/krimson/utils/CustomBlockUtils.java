@@ -1,7 +1,7 @@
-package ovh.paulem.krimson.bountifulLib;
+package ovh.paulem.krimson.utils;
 
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.bountifulLib.blocks.CustomBlock;
+import ovh.paulem.krimson.blocks.CustomBlock;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;

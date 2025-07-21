@@ -1,4 +1,4 @@
-package ovh.paulem.krimson.bountifulLib.blocks;
+package ovh.paulem.krimson.blocks;
 
 import com.google.common.base.Preconditions;
 import org.bukkit.Material;

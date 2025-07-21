@@ -1,6 +1,6 @@
-package ovh.paulem.krimson.bountifulLib.commands;
+package ovh.paulem.krimson.commands;
 
-import ovh.paulem.krimson.bountifulLib.blocks.LightBlock;
+import ovh.paulem.krimson.blocks.LightBlock;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
