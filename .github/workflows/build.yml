@@ -53,6 +53,9 @@ jobs:
           distribution: 'jetbrains'
           java-version: 21
           java-package: jdk
+        # To prevent rate limiting on GitHub Actions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🆙 Grant execute permission for gradlew
         run: chmod +x gradlew
