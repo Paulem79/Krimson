@@ -1,2 +1,2 @@
-# Verify lightning like Minecraft or do a less precise one
+# Verify lightning like Minecraft or do a less precise one by checking the upper block (which may cause the block to be black)
 preciseLightning: true

@@ -64,7 +64,7 @@ public class CustomBlock {
             Transformation actualTransformation = itemDisplay.getTransformation();
             itemDisplay.setTransformation(new Transformation(
                     actualTransformation.getTranslation(),
-                    actualTransformation.getLeftRotation(),
+                    actualTransformation.getLeftRotation().rotateY((float) Math.toRadians(180)),
                     actualTransformation.getScale().add(OFFSET),
                     actualTransformation.getRightRotation()
             ));
