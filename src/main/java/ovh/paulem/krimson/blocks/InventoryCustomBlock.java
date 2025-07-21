@@ -1,65 +1,146 @@
 package ovh.paulem.krimson.blocks;
 
-import com.google.common.base.Preconditions;
+import lombok.Getter;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.ItemDisplay;
-import org.bukkit.event.block.BrewingStartEvent;
-import org.bukkit.event.block.CampfireStartEvent;
-import org.bukkit.event.block.InventoryBlockStartEvent;
+import org.bukkit.entity.Player;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.*;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
+import ovh.paulem.krimson.Krimson;
+import ovh.paulem.krimson.constants.Keys;
+import ovh.paulem.krimson.inventories.InventoryData;
+import ovh.paulem.krimson.utils.CustomBlockUtils;
+import ovh.paulem.krimson.utils.serialization.InventorySerialization;
+import ovh.paulem.krimson.utils.properties.PropertiesField;
 
-public abstract class InventoryCustomBlock extends CustomBlock {
-    public InventoryCustomBlock(Material blockInside, ItemStack displayedItem, int emittingLightLevel) {
-        super(blockInside, displayedItem, emittingLightLevel);
-        Preconditions.checkArgument(blockInside.isInteractable(), "The block inside must be interactable!");
+import java.io.IOException;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class InventoryCustomBlock extends CustomBlock {
+    @Getter
+    protected PropertiesField<Integer> inventorySize;
+    private final int baseInventorySize;
+    @Getter
+    protected PropertiesField<String> inventoryTitle;
+    private final String baseInventoryTitle;
+    @Getter
+    protected PropertiesField<String> inventoryBase64;
+    @Getter
+    private Inventory inventory;
+
+    public InventoryCustomBlock(Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle) {
+        super(blockInside, displayedItem);
+
+        this.baseInventorySize = inventorySize;
+        this.baseInventoryTitle = inventoryTitle;
     }
 
-    public InventoryCustomBlock(Material blockInside, ItemStack displayedItem, int emittingLightLevel, ItemDisplay itemDisplay) {
-        super(blockInside, displayedItem, emittingLightLevel, itemDisplay);
-        Preconditions.checkArgument(blockInside.isInteractable(), "The block inside must be interactable!");
+    public InventoryCustomBlock(ItemDisplay itemDisplay) {
+        super(itemDisplay);
+
+        this.inventorySize = new PropertiesField<>(Keys.INVENTORY_SIZE, properties, PersistentDataType.INTEGER);
+        this.baseInventorySize = this.inventorySize.get();
+
+        this.inventoryTitle = new PropertiesField<>(Keys.INVENTORY_TITLE, properties, PersistentDataType.STRING);
+        this.baseInventoryTitle = this.inventoryTitle.get();
+
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, properties, PersistentDataType.STRING);
+        try {
+            this.inventory = InventorySerialization.fromBase64(this.inventoryBase64.get());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    /**
-     * Called when the custom block inventory is opened by a player.
-     */
+    @Override
+    public void spawn(Location blockLoc) {
+        super.spawn(blockLoc);
+
+        this.inventorySize = new PropertiesField<>(Keys.INVENTORY_SIZE, baseInventorySize);
+        properties.set(this.inventorySize);
+
+        this.inventoryTitle = new PropertiesField<>(Keys.INVENTORY_TITLE, baseInventoryTitle);
+        properties.set(this.inventoryTitle);
+
+        inventory = Krimson.getInstance().getServer().createInventory(
+                new InventoryCustomBlockHolder(this),
+                this.inventorySize.get(), // Default size, can be changed later
+                this.inventoryTitle.get()
+        );
+
+        inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.toBase64(new InventoryData(inventory, this.inventoryTitle.get())));
+        properties.set(inventoryBase64);
+    }
+
+    @Override
+    public void onInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+
+        if(action != Action.RIGHT_CLICK_BLOCK) {
+            return;
+        }
+
+        try {
+            Inventory inv = InventorySerialization.fromBase64(inventoryBase64.get());
+
+            player.openInventory(inv);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        event.setCancelled(true);
+    }
+
     public void onGuiOpen(InventoryOpenEvent event) {
     }
-    /**
-     * Called when the custom block inventory is closed by a player.
-     */
+
     public void onGuiClose(InventoryCloseEvent event) {
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.toBase64(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
+        this.properties.set(this.inventoryBase64);
     }
-    /**
-     * Called when a custom block inventory's slot is clicked by a player.
-     */
+
     public void onGuiClick(InventoryClickEvent event) {
     }
-    /**
-     * Called when the player drags an item in their cursor across the custom block inventory.
-     */
+
     public void onGuiDrag(InventoryDragEvent event) {
     }
 
-    /**
-     * Called when some entity or block (e.g. hopper) tries to move items directly from the custom block inventory to another or the invert.
-     */
     public void onGuiMoveItem(InventoryMoveItemEvent event) {
     }
 
-    /**
-     * Called when the custom block hopper or hopper minecart picks up a dropped item.
-     */
     public void onGuiPickupItem(InventoryPickupItemEvent event) {
     }
-    /**
-     * Used when:
-     * <ul>
-     * <li>A custom block Furnace starts smelting {@link FurnaceStartSmeltEvent}</li>
-     * <li>A custom block Brewing-Stand starts brewing {@link BrewingStartEvent}</li>
-     * <li>A custom block Campfire starts cooking {@link CampfireStartEvent}</li>
-     * </ul>
-     */
-    public void onGuiBlockStart(InventoryBlockStartEvent event) {
+
+    public static class InventoryCustomBlockHolder implements InventoryHolder, Serializable {
+        @Serial
+        private static final long serialVersionUID = 6829685498215757690L;
+
+        private final Location customBlockLoc;
+
+        public InventoryCustomBlockHolder(InventoryCustomBlock customBlock) {
+            this.customBlockLoc = customBlock.getSpawnedDisplay().getLocation();
+        }
+
+        public InventoryCustomBlock getCustomBlock() {
+            return (InventoryCustomBlock) CustomBlockUtils.getCustomBlockFromLoc(customBlockLoc);
+        }
+
+        @NotNull
+        @Override
+        public Inventory getInventory() {
+            return getCustomBlock().getInventory();
+        }
     }
 }

@@ -65,16 +65,26 @@ public class CustomBlockUtils {
      */
     @Nullable
     public static Entity getDisplayFromBlock(Block block) {
+        return getDisplayFromLoc(block.getLocation());
+    }
+
+    /**
+     * Gets the custom block display entity from the given location.
+     * @param location the location to get the display entity from
+     * @return the display entity if found, otherwise null
+     */
+    @Nullable
+    public static Entity getDisplayFromLoc(Location location) {
         @Nullable Entity entity = null;
-        for (Entity nearbyEntity : block.getWorld().getNearbyEntities(block.getLocation().add(0.5,0.5,0.5) ,0.1 ,0.1, 0.1)) {
+        for (Entity nearbyEntity : location.getWorld().getNearbyEntities(location.add(0.5,0.5,0.5) ,0.1 ,0.1, 0.1)) {
             if(entity == null) {
                 entity = nearbyEntity;
             }
 
             Location blockLocationForNearby = nearbyEntity.getLocation().subtract(.5, .5, .5);
-            double nearbyDistance = blockLocationForNearby.distance(block.getLocation());
+            double nearbyDistance = blockLocationForNearby.distance(location);
 
-            if(blockLocationForNearby.getBlock().getLocation().equals(block.getLocation()) && nearbyDistance < entity.getLocation().distance(block.getLocation())) {
+            if(blockLocationForNearby.getBlock().getLocation().equals(location) && nearbyDistance < entity.getLocation().distance(location)) {
                 entity = nearbyEntity;
             }
         }
@@ -94,6 +104,17 @@ public class CustomBlockUtils {
                 .filter(cB -> cB.getSpawnedDisplay().equals(entity))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public static CustomBlock getCustomBlockFromLoc(Location location) {
+        Block block = location.getBlock();
+        Entity entity = getDisplayFromBlock(block);
+
+        if (entity != null && Krimson.isCustomBlock(entity)) {
+            return getCustomBlockFromEntity(entity);
+        }
+
+        return null;
     }
 
     /**

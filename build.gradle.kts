@@ -40,14 +40,11 @@ tasks.shadowJar {
 
 tasks {
     runServer {
-        // Configure the Minecraft version for our task.
-        // This is the only required configuration besides applying the plugin.
-        // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion("1.21.8")
     }
 }
 
-val targetJavaVersion = 17
+val targetJavaVersion = 21
 java {
     sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
     targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
@@ -66,6 +63,13 @@ tasks.withType<JavaCompile>().configureEach {
     }
 }
 
+tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
+    javaLauncher = javaToolchains.launcherFor {
+        vendor = JvmVendorSpec.JETBRAINS
+        languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+    jvmArgs("-XX:+AllowEnhancedClassRedefinition")
+}
 
 tasks.processResources {
     val props = mapOf("version" to version)

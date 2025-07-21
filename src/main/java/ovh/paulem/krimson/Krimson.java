@@ -4,8 +4,10 @@ import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
 import lombok.Getter;
 import ovh.paulem.krimson.blocks.CustomBlock;
-import ovh.paulem.krimson.blocks.LightBlock;
+import ovh.paulem.krimson.blocks.CustomBlockTypeChecker;
+import ovh.paulem.krimson.blocks.list.CustomBlocksList;
 import ovh.paulem.krimson.commands.CommandDisplay;
+import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.listeners.CustomBlockActionListener;
 import ovh.paulem.krimson.listeners.CustomBlockSuppressionListener;
 import ovh.paulem.krimson.listeners.LightSourcePreventionListener;
@@ -22,6 +24,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.*;
 
 // TODO : Add place custom block from inventory
+// TODO : Seems like PDC is slow https://github.com/PaperMC/Paper/pull/3359
 /**
  * Main class for the BountifulLib plugin.
  * Handles plugin initialization, event registration, and custom block management.
@@ -40,7 +43,7 @@ public final class Krimson extends JavaPlugin implements Listener {
 
     public static NamespacedKey customBlockKey;
 
-    public static LinkedList<CustomBlock> customBlocks = new LinkedList<>();
+    public static CustomBlocksList<CustomBlock> customBlocks = new CustomBlocksList<>();
 
     @Override
     public void onEnable() {
@@ -52,7 +55,7 @@ public final class Krimson extends JavaPlugin implements Listener {
 
         scheduler = UniversalScheduler.getScheduler(this);
 
-        customBlockKey = new NamespacedKey(getInstance(), "customblock");
+        customBlockKey = new NamespacedKey(getInstance(), Keys.CUSTOM_BLOCK_KEY);
 
         isReloaded = !Bukkit.getOnlinePlayers().isEmpty();
         if(isReloaded) {
@@ -73,7 +76,7 @@ public final class Krimson extends JavaPlugin implements Listener {
 
         getScheduler().runTaskTimerAsynchronously(() -> {
             for (CustomBlock customBlock : customBlocks) {
-                CustomBlock.tickPredicate.test(customBlock);
+                if(customBlock.getSpawnedDisplay().isValid()) customBlock.tick();
             }
         }, 1L, 1L);
         getLogger().info("Scheduled brightness !");
@@ -122,7 +125,9 @@ public final class Krimson extends JavaPlugin implements Listener {
             for (ItemDisplay itemDisplay : itemDisplays) {
                 if (itemDisplay.getBrightness() == null) continue;
 
-                gotCustomBlocks.add(new LightBlock(itemDisplay));
+                CustomBlock e1 = new CustomBlockTypeChecker(itemDisplay).get();
+                System.out.println(e1.getClass());
+                gotCustomBlocks.add(e1);
             }
             customBlocks.addAll(gotCustomBlocks);
 
