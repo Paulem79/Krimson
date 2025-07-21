@@ -73,7 +73,7 @@ public final class Krimson extends JavaPlugin implements Listener {
 
         getScheduler().runTaskTimerAsynchronously(() -> {
             for (CustomBlock customBlock : customBlocks) {
-                CustomBlock.tickPredicate.apply(customBlock);
+                CustomBlock.tickPredicate.test(customBlock);
             }
         }, 1L, 1L);
         getLogger().info("Scheduled brightness !");

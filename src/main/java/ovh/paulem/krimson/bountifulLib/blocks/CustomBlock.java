@@ -1,7 +1,6 @@
 package ovh.paulem.krimson.bountifulLib.blocks;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import lombok.Getter;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
@@ -20,6 +19,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
+
+import java.util.function.Predicate;
 
 public abstract class CustomBlock {
     public static final Vector3f OFFSET = new Vector3f(.0005f);
@@ -102,7 +103,7 @@ public abstract class CustomBlock {
             itemDisplay.getPersistentDataContainer().set(Krimson.customBlockKey, PersistentDataType.BYTE, (byte) 1);
             Krimson.customBlocks.add(customBlock);
 
-            tickPredicate.apply(customBlock);
+            tickPredicate.test(customBlock);
 
             return true;
         };
@@ -145,7 +146,7 @@ public abstract class CustomBlock {
                         new AxisAngle4f(0f, 0f, 0f, 1f)
                 ));
 
-                commonArguments.apply(this);
+                commonArguments.test(this);
             });
         } else
         {
@@ -162,7 +163,7 @@ public abstract class CustomBlock {
                         new AxisAngle4f(0f, 0f, 0f, 1f)
                 ));
 
-                commonArguments.apply(this);
+                commonArguments.test(this);
             });
         }
 
