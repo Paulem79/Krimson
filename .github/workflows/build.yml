@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: 🔨 Build gradle project
-    runs-on: blacksmith-8vcpu-ubuntu-2204
+    runs-on: ubuntu-latest
     permissions: write-all
     steps:
       - name: ✅ Checkout repository
