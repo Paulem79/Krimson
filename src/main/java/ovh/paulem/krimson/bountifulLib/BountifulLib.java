@@ -2,6 +2,7 @@ package ovh.paulem.krimson.bountifulLib;
 
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
+import lombok.Getter;
 import ovh.paulem.krimson.bountifulLib.blocks.CustomBlock;
 import ovh.paulem.krimson.bountifulLib.blocks.LightBlock;
 import ovh.paulem.krimson.bountifulLib.commands.CommandDisplay;
@@ -26,8 +27,11 @@ import java.util.*;
  * Handles plugin initialization, event registration, and custom block management.
  */
 public final class BountifulLib extends JavaPlugin implements Listener {
+    @Getter
     private static BountifulLib instance;
+    @Getter
     private static TaskScheduler scheduler;
+    @Getter
     private static FileConfiguration configuration;
 
     private static boolean isReloaded = false;
@@ -152,32 +156,5 @@ public final class BountifulLib extends JavaPlugin implements Listener {
      */
     public static boolean isCustomBlock(ItemDisplay itemDisplay) {
         return itemDisplay.isValid() && itemDisplay.getPersistentDataContainer().has(customBlockKey, PersistentDataType.BYTE);
-    }
-
-    /**
-     * Gets the instance of the BountifulLib plugin.
-     *
-     * @return the instance of the BountifulLib plugin
-     */
-    public static BountifulLib getInstance() {
-        return instance;
-    }
-
-    /**
-     * Gets the configuration file of the BountifulLib plugin.
-     *
-     * @return the configuration file
-     */
-    public static FileConfiguration getConfiguration() {
-        return configuration;
-    }
-
-    /**
-     * Gets the task scheduler of the BountifulLib plugin.
-     *
-     * @return the task scheduler
-     */
-    public static TaskScheduler getScheduler() {
-        return scheduler;
     }
 }

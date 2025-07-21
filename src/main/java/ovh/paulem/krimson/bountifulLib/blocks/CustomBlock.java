@@ -2,6 +2,7 @@ package ovh.paulem.krimson.bountifulLib.blocks;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import lombok.Getter;
 import ovh.paulem.krimson.bountifulLib.BountifulLib;
 import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
 import org.bukkit.Location;
@@ -23,9 +24,13 @@ import org.joml.Vector3f;
 public abstract class CustomBlock {
     public static final Vector3f OFFSET = new Vector3f(.0005f);
 
+    @Getter
     private final Material blockInside;
+    @Getter
     private final ItemStack displayedItem;
+    @Getter
     private final int emittingLightLevel;
+    @Getter
     private ItemDisplay spawnedDisplay;
 
     private final Predicate<CustomBlock> commonArguments;
@@ -195,21 +200,5 @@ public abstract class CustomBlock {
      * Called when the custom block is broken. (called also when a player breaks the block)
      */
     public void onBreak(BlockEvent event) {
-    }
-
-    public ItemStack getDisplayedItem() {
-        return displayedItem;
-    }
-
-    public Material getBlockInside() {
-        return blockInside;
-    }
-
-    public int getEmittingLightLevel() {
-        return emittingLightLevel;
-    }
-
-    public ItemDisplay getSpawnedDisplay() {
-        return spawnedDisplay;
     }
 }
