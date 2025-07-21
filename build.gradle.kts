@@ -1,5 +1,7 @@
 plugins {
     id("java")
+    id("io.github.goooler.shadow") version "8.+"
+
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
@@ -8,12 +10,26 @@ version = "1.0"
 
 repositories {
     mavenCentral()
-    maven("https://repo.papermc.io/repository/maven-public/")
-    maven("https://oss.sonatype.org/content/groups/public/")
+    maven {
+        name = "spigotmc-repo"
+        url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+    }
+    maven {
+        name = "sonatype"
+        url = uri("https://oss.sonatype.org/content/groups/public/")
+    }
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT")
+    implementation("com.github.Anon8281:UniversalScheduler:0.+")
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+
+    relocate("com.github.Anon8281.universalScheduler", "io.github.paulem.bountifullib.universalScheduler")
 }
 
 tasks {
@@ -21,7 +37,7 @@ tasks {
         // Configure the Minecraft version for our task.
         // This is the only required configuration besides applying the plugin.
         // Your plugin's jar (or shadowJar if present) will be used automatically.
-        minecraftVersion("1.21")
+        minecraftVersion("1.21.8")
     }
 }
 
