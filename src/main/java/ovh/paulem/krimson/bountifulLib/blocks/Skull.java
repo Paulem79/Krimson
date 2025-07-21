@@ -8,6 +8,7 @@ import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.UUID;
 
@@ -18,7 +19,7 @@ public class Skull {
 
     public Skull(String url) {
         try {
-            this.url = new URL(url); // The URL to the skin, for example: https://textures.minecraft.net/texture/18813764b2abc94ec3c3bc67b9147c21be850cdf996679703157f4555997ea63
+            this.url = URI.create(url).toURL(); // The URL to the skin, for example: https://textures.minecraft.net/texture/18813764b2abc94ec3c3bc67b9147c21be850cdf996679703157f4555997ea63
         } catch (MalformedURLException exception) {
             throw new RuntimeException("Invalid URL", exception);
         }

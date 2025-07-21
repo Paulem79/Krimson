@@ -41,7 +41,7 @@ tasks {
     }
 }
 
-val targetJavaVersion = 21
+val targetJavaVersion = 17
 java {
     sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
     targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
