@@ -1,6 +1,6 @@
 package ovh.paulem.krimson.bountifulLib.listeners;
 
-import ovh.paulem.krimson.bountifulLib.BountifulLib;
+import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
 import ovh.paulem.krimson.bountifulLib.blocks.CustomBlock;
 import org.bukkit.Location;
@@ -16,7 +16,7 @@ public class LightSourcePreventionListener implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         Block block = event.getBlockPlaced();
-        for (CustomBlock customBlock : BountifulLib.customBlocks) {
+        for (CustomBlock customBlock : Krimson.customBlocks) {
             Location customBlockLocation = CustomBlockUtils.getBlockFromDisplay(customBlock.getSpawnedDisplay()).getLocation();
             if(customBlockLocation.add(0, 1, 0).equals(block.getLocation())) {
                 event.setCancelled(true);
@@ -28,7 +28,7 @@ public class LightSourcePreventionListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        for (CustomBlock customBlock : BountifulLib.customBlocks) {
+        for (CustomBlock customBlock : Krimson.customBlocks) {
             Location customBlockLocation = CustomBlockUtils.getBlockFromDisplay(customBlock.getSpawnedDisplay()).getLocation();
             Block lightBlock = customBlockLocation.add(0, 1, 0).getBlock();
 

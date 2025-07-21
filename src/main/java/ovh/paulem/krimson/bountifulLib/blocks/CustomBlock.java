@@ -3,7 +3,7 @@ package ovh.paulem.krimson.bountifulLib.blocks;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import lombok.Getter;
-import ovh.paulem.krimson.bountifulLib.BountifulLib;
+import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -41,18 +41,18 @@ public abstract class CustomBlock {
         ItemDisplay itemDisplay = customBlock.spawnedDisplay;
 
         if(itemDisplay == null) {
-            BountifulLib.customBlocks.remove(customBlock);
+            Krimson.customBlocks.remove(customBlock);
             return false;
         }
 
         Block block = CustomBlockUtils.getBlockFromDisplay(itemDisplay);
         if (block.getType() != customBlock.blockInside) {
-            BountifulLib.getScheduler().runTask(() -> {
+            Krimson.getScheduler().runTask(() -> {
                 CustomBlockUtils.handleBlockSuppression(block, null);
             });
         }
 
-        if(BountifulLib.getConfiguration().getBoolean("preciseLightning", true)) {
+        if(Krimson.getConfiguration().getBoolean("preciseLightning", true)) {
             // Precise lightning : check the light level of the block in all cartesian directions
             byte maxLight = 0;
             for (BlockFace blockFace : BlockFace.values()) {
@@ -99,8 +99,8 @@ public abstract class CustomBlock {
                     actualTransformation.getRightRotation()
             ));
 
-            itemDisplay.getPersistentDataContainer().set(BountifulLib.customBlockKey, PersistentDataType.BYTE, (byte) 1);
-            BountifulLib.customBlocks.add(customBlock);
+            itemDisplay.getPersistentDataContainer().set(Krimson.customBlockKey, PersistentDataType.BYTE, (byte) 1);
+            Krimson.customBlocks.add(customBlock);
 
             tickPredicate.apply(customBlock);
 
@@ -177,7 +177,7 @@ public abstract class CustomBlock {
             lightBlock.getState().update();
         }
 
-        BountifulLib.trackedDisplays.add(spawnedDisplay);
+        Krimson.trackedDisplays.add(spawnedDisplay);
     }
 
     /**

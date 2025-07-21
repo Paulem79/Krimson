@@ -1,8 +1,13 @@
 name: Krimson
 version: '1.0'
 main: ovh.paulem.krimson.Krimson
-api-version: '1.21'
+api-version: '1.19'
 load: STARTUP
 authors: [ Paulem ]
 description: A lib to create custom blocks in a Spigot environment.
 website: paulem.ovh
+
+commands:
+  display:
+    description: Your description
+    usage: /<command>

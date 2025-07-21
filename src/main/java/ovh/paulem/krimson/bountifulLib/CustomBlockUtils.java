@@ -1,5 +1,6 @@
 package ovh.paulem.krimson.bountifulLib;
 
+import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.bountifulLib.blocks.CustomBlock;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -24,7 +25,7 @@ public class CustomBlockUtils {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity) && getBlockFromDisplay(entity).getLocation().equals(block.getLocation())) {
+        if(Krimson.isCustomBlock(entity) && getBlockFromDisplay(entity).getLocation().equals(block.getLocation())) {
             if(event != null){
                 CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
                 if(customBlock != null){
@@ -88,7 +89,7 @@ public class CustomBlockUtils {
      */
     @Nullable
     public static CustomBlock getCustomBlockFromEntity(Entity entity) {
-        return BountifulLib.customBlocks
+        return Krimson.customBlocks
                 .stream()
                 .filter(cB -> cB.getSpawnedDisplay().equals(entity))
                 .findFirst()
@@ -104,6 +105,6 @@ public class CustomBlockUtils {
         itemDisplay.getWorld().getBlockAt(itemDisplay.getLocation()).setType(Material.AIR);
         itemDisplay.getWorld().getBlockAt(itemDisplay.getLocation().add(0, 1, 0)).setType(Material.AIR);
 
-        BountifulLib.customBlocks.removeIf(customBlock -> customBlock.getSpawnedDisplay().equals(itemDisplay));
+        Krimson.customBlocks.removeIf(customBlock -> customBlock.getSpawnedDisplay().equals(itemDisplay));
     }
 }

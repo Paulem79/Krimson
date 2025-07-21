@@ -1,6 +1,6 @@
 package ovh.paulem.krimson.bountifulLib.listeners;
 
-import ovh.paulem.krimson.bountifulLib.BountifulLib;
+import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
 import ovh.paulem.krimson.bountifulLib.blocks.CustomBlock;
 import ovh.paulem.krimson.bountifulLib.blocks.InventoryCustomBlock;
@@ -27,7 +27,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -50,7 +50,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -79,7 +79,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -109,7 +109,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -139,7 +139,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -169,7 +169,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -199,7 +199,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -229,7 +229,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -259,7 +259,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {
@@ -284,7 +284,7 @@ public class CustomBlockActionListener implements Listener {
             return;
         }
 
-        if(BountifulLib.isCustomBlock(entity)) {
+        if(Krimson.isCustomBlock(entity)) {
             CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
 
             if(customBlock == null) {

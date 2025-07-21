@@ -1,6 +1,6 @@
 package ovh.paulem.krimson.bountifulLib.listeners;
 
-import ovh.paulem.krimson.bountifulLib.BountifulLib;
+import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.bountifulLib.CustomBlockUtils;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
@@ -10,7 +10,7 @@ import org.bukkit.event.block.*;
 
 public class CustomBlockSuppressionListener implements Listener {
     public static void onCustomBlockDeath(ItemDisplay itemDisplay, boolean doCheck) {
-        if(doCheck || BountifulLib.isCustomBlock(itemDisplay)) {
+        if(doCheck || Krimson.isCustomBlock(itemDisplay)) {
             CustomBlockUtils.removeDisplay(itemDisplay);
         }
     }
