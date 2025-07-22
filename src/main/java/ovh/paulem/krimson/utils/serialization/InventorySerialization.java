@@ -75,6 +75,7 @@ public class InventorySerialization {
             // Write the title of the inventory
             dataOutput.writeUTF(inventoryData.title());
 
+            // FIXME: Inventory full of shulker boxes full of items will crash the saving process because the utf-8 string is too long.
             // Save every element in the list
             for (int i = 0; i < inventory.getSize(); i++) {
                 dataOutput.writeObject(inventory.getItem(i));
