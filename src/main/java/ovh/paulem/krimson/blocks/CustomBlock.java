@@ -20,9 +20,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Transformation;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
-import ovh.paulem.krimson.utils.properties.PropertiesField;
-import ovh.paulem.krimson.utils.properties.PropertiesStore;
-import ovh.paulem.krimson.utils.serialization.ItemStackSerialization;
+import ovh.paulem.krimson.properties.PropertiesField;
+import ovh.paulem.krimson.properties.PropertiesStore;
+import ovh.paulem.krimson.serialization.ItemStackSerialization;
 
 import java.util.function.Predicate;
 

@@ -1,5 +1,5 @@
 name: Krimson
-version: '1.0'
+version: ${version}
 main: ovh.paulem.krimson.Krimson
 api-version: '1.19'
 load: STARTUP

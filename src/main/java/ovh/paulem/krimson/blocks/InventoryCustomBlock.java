@@ -17,12 +17,10 @@ import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.inventories.InventoryData;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
-import ovh.paulem.krimson.utils.serialization.InventorySerialization;
-import ovh.paulem.krimson.utils.properties.PropertiesField;
+import ovh.paulem.krimson.serialization.InventorySerialization;
+import ovh.paulem.krimson.properties.PropertiesField;
 
 import java.io.IOException;
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.UUID;
 
 // TODO : Compress only on inventory changes

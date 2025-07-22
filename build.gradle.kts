@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("io.github.goooler.shadow") version "8.+"
+    id("com.gradleup.shadow")
 
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
@@ -8,69 +8,122 @@ plugins {
 group = "ovh.paulem"
 version = "1.0"
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven {
-        name = "spigotmc-repo"
-        url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+val targetJavaVersion = 21
+
+allprojects {
+    plugins.apply("java")
+    plugins.apply("com.gradleup.shadow")
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            name = "spigotmc-repo"
+            url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+        }
+        maven {
+            name = "sonatype"
+            url = uri("https://oss.sonatype.org/content/groups/public/")
+        }
+        maven { url = uri("https://jitpack.io") }
+        maven {
+            name = "papermc"
+            url = uri("https://repo.papermc.io/repository/maven-public/")
+        }
     }
-    maven {
-        name = "sonatype"
-        url = uri("https://oss.sonatype.org/content/groups/public/")
+
+    dependencies {
+        if(project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+        else compileOnly("org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT")
+
+        compileOnly("org.jetbrains:annotations:26.0.2")
+
+        compileOnly("org.projectlombok:lombok:1.18.38")
+        annotationProcessor("org.projectlombok:lombok:1.18.38")
     }
-    maven { url = uri("https://jitpack.io") }
-    maven {
-        name = "papermc"
-        url = uri("https://repo.papermc.io/repository/maven-public/")
+
+    tasks.shadowJar {
+        archiveClassifier.set("")
+    }
+
+    tasks.build {
+        dependsOn(tasks.shadowJar)
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
+        targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
+        if (JavaVersion.current() < JavaVersion.toVersion(targetJavaVersion)) {
+            toolchain {
+                languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+            }
+        }
+    }
+
+    tasks.withType<JavaCompile>().configureEach {
+        options.encoding = "UTF-8"
+
+        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {
+            options.release.set(targetJavaVersion)
+        }
     }
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    implementation(project(":paper")) {
+        isTransitive = false
+    }
+    implementation(project(":spigot")) {
+        isTransitive = false
+    }
+    implementation(project(":common")) {
+        isTransitive = false
+    }
+
     implementation("com.github.Anon8281:UniversalScheduler:0.+")
+}
 
-    compileOnly("org.jetbrains:annotations:26.0.2")
+var alreadyMappedCommon = false
 
-    compileOnly("org.projectlombok:lombok:1.18.38")
-    annotationProcessor("org.projectlombok:lombok:1.18.38")
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "com.gradleup.shadow")
 
-    testCompileOnly("org.projectlombok:lombok:1.18.38")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
+    group = rootProject.group
+    version = rootProject.version
+
+    if(project.name != "common") {
+        dependencies {
+            implementation(project(":common")) {
+                isTransitive = false
+            }
+        }
+
+        tasks.compileJava {
+            dependsOn(project(":common").tasks.build)
+        }
+
+        alreadyMappedCommon = true
+
+        tasks.shadowJar {
+            if(alreadyMappedCommon) exclude("**/common/**")
+        }
+    }
 }
 
 tasks.shadowJar {
-    archiveClassifier.set("")
-
     relocate("com.github.Anon8281.universalScheduler", "ovh.paulem.krimson.libs.universalScheduler")
 }
 
-tasks.build {
-    dependsOn(tasks.shadowJar)
+tasks.compileJava {
+    subprojects.forEach {
+        dependsOn(it.tasks.build)
+    }
 }
 
 tasks {
     runServer {
         minecraftVersion("1.21.8")
-    }
-}
-
-val targetJavaVersion = 21
-java {
-    sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
-    targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
-    if (JavaVersion.current() < JavaVersion.toVersion(targetJavaVersion)) {
-        toolchain {
-            languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
-        }
-    }
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    options.encoding = "UTF-8"
-
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {
-        options.release.set(targetJavaVersion)
     }
 }
 
@@ -86,7 +139,7 @@ tasks.processResources {
     val props = mapOf("version" to version)
     inputs.properties(props)
     filteringCharset = "UTF-8"
-    filesMatching("paper-plugin.yml") {
+    filesMatching("plugin.yml") {
         expand(props)
     }
 }

@@ -10,7 +10,7 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import ovh.paulem.krimson.constants.Keys;
-import ovh.paulem.krimson.utils.properties.PropertiesField;
+import ovh.paulem.krimson.properties.PropertiesField;
 
 public class LightBlock extends CustomBlock {
     @Getter

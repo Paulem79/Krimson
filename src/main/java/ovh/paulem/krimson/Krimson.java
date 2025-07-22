@@ -21,7 +21,7 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-import ovh.paulem.krimson.utils.properties.PropertiesStore;
+import ovh.paulem.krimson.properties.PropertiesStore;
 
 import java.util.*;
 

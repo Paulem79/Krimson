@@ -2,7 +2,7 @@ package ovh.paulem.krimson.blocks;
 
 import org.bukkit.entity.ItemDisplay;
 import ovh.paulem.krimson.constants.Keys;
-import ovh.paulem.krimson.utils.properties.PropertiesStore;
+import ovh.paulem.krimson.properties.PropertiesStore;
 
 public class CustomBlockTypeChecker {
     private final ItemDisplay itemDisplay;
