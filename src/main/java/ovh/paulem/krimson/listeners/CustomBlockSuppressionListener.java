@@ -34,6 +34,8 @@ public class CustomBlockSuppressionListener implements Listener {
         }
     }
 
+    // FIXME: Makes piston extend block disappear
+    // TODO : Make custom blocks work with piston
     @EventHandler
     public void onCustomBlockPistonExtend(BlockPistonExtendEvent e) {
         for (Block block : e.getBlocks()) {

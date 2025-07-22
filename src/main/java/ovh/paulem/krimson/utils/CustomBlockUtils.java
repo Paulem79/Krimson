@@ -101,7 +101,7 @@ public class CustomBlockUtils {
     public static CustomBlock getCustomBlockFromEntity(Entity entity) {
         return Krimson.customBlocks
                 .stream()
-                .filter(cB -> cB.getSpawnedDisplay().equals(entity))
+                .filter(customBlock -> customBlock.getSpawnedDisplay().getUniqueId().equals(entity.getUniqueId()))
                 .findFirst()
                 .orElse(null);
     }

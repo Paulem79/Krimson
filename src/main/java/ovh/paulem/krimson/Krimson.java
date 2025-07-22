@@ -3,6 +3,7 @@ package ovh.paulem.krimson;
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
 import lombok.Getter;
+import org.bukkit.event.world.ChunkLoadEvent;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.CustomBlockTypeChecker;
 import ovh.paulem.krimson.blocks.list.CustomBlocksList;
@@ -17,7 +18,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -45,6 +45,8 @@ public final class Krimson extends JavaPlugin implements Listener {
 
     public static CustomBlocksList<CustomBlock> customBlocks = new CustomBlocksList<>();
 
+    public static Set<Chunk> processedChunks = new HashSet<>();
+
     @Override
     public void onEnable() {
         // Plugin startup logic
@@ -61,7 +63,9 @@ public final class Krimson extends JavaPlugin implements Listener {
         if(isReloaded) {
             customBlocks.clear();
             for (World world : Bukkit.getWorlds()) {
-                onWorldLoad(new WorldLoadEvent(world));
+                for (Chunk chunk : world.getLoadedChunks()) {
+                    onChunkLoad(new ChunkLoadEvent(chunk, false));
+                }
             }
         }
 
@@ -79,7 +83,7 @@ public final class Krimson extends JavaPlugin implements Listener {
                 if(customBlock.getSpawnedDisplay().isValid()) customBlock.tick();
             }
         }, 1L, 1L);
-        getLogger().info("Scheduled brightness !");
+        getLogger().info("Scheduled ticking !");
 
         // Commands
         getCommand("display").setExecutor(new CommandDisplay());
@@ -110,18 +114,22 @@ public final class Krimson extends JavaPlugin implements Listener {
      * Event handler for world load events.
      * Adds existing custom blocks in the loaded world to the customBlocks list.
      *
-     * @param e the WorldLoadEvent
+     * @param event the WorldLoadEvent
      */
     @EventHandler
-    public void onWorldLoad(WorldLoadEvent e) {
-        World world = e.getWorld();
+    public void onChunkLoad(ChunkLoadEvent event) {
+        Chunk chunk = event.getChunk();
+
+        if (processedChunks.contains(chunk)) {
+            return;
+        }
 
         LinkedList<CustomBlock> gotCustomBlocks = new LinkedList<>();
 
-        Collection<ItemDisplay> itemDisplays = world.getEntitiesByClass(ItemDisplay.class).stream().filter(Krimson::isCustomBlock).toList();
+        Collection<ItemDisplay> itemDisplays = Arrays.stream(chunk.getEntities()).filter(Krimson::isCustomBlock).map(entity -> (ItemDisplay) entity).toList();
         if(!itemDisplays.isEmpty())
         {
-            getLogger().info("Adding existing custom blocks for " + world.getName() + "...");
+            getLogger().info("Adding existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
             for (ItemDisplay itemDisplay : itemDisplays) {
                 if (itemDisplay.getBrightness() == null) continue;
 
@@ -131,8 +139,10 @@ public final class Krimson extends JavaPlugin implements Listener {
             }
             customBlocks.addAll(gotCustomBlocks);
 
-            getLogger().info("Added " + gotCustomBlocks.size() + " existing custom blocks for " + world.getName() + " !");
+            getLogger().info("Added " + gotCustomBlocks.size() + " existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
         }
+
+        processedChunks.add(chunk);
     }
 
     /**
