@@ -6,6 +6,7 @@ import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.inventories.InventoryData;
+import ovh.paulem.krimson.utils.ZLibUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -83,7 +84,10 @@ public class InventorySerialization {
 
             // Serialize that array
             dataOutput.close();
-            return Base64Coder.encodeLines(outputStream.toByteArray());
+
+            // Compression avec zlib
+            byte[] compressed = ZLibUtils.compress(outputStream.toByteArray());
+            return Base64Coder.encodeLines(compressed);
         } catch (Exception e) {
             throw new IllegalStateException("Unable to save item stacks.", e);
         }
@@ -106,7 +110,10 @@ public class InventorySerialization {
      */
     public static Inventory fromBase64(String data) throws IOException {
         try {
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
+            byte[] compressed = Base64Coder.decodeLines(data);
+            byte[] decompressed = ZLibUtils.decompress(compressed);
+
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(decompressed);
             BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
 
             Inventory inventory = Krimson.getInstance().getServer().createInventory((InventoryHolder) dataInput.readObject(), dataInput.readInt(), dataInput.readUTF());
@@ -151,4 +158,5 @@ public class InventorySerialization {
             throw new IOException("Unable to decode class type.", e);
         }
     }
+
 }

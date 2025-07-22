@@ -23,10 +23,9 @@ import ovh.paulem.krimson.utils.properties.PropertiesField;
 import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
+// TODO : Compress only on inventory changes
+// FIXME: there are still some difficulties with this approach, especially around parsing/saving it asynchronously which can become an issue if there are a lot of these and they have large contents, but for a basic approach this will be fine https://discord.com/channels/690411863766466590/741875863271899136/1397175434432614472 (saving in files, with pointers in PDC can be better)
 public class InventoryCustomBlock extends CustomBlock {
     @Getter
     protected PropertiesField<Integer> inventorySize;
@@ -75,7 +74,7 @@ public class InventoryCustomBlock extends CustomBlock {
 
         inventory = Krimson.getInstance().getServer().createInventory(
                 new InventoryCustomBlockHolder(this),
-                this.inventorySize.get(), // Default size, can be changed later
+                this.inventorySize.get(),
                 this.inventoryTitle.get()
         );
 
@@ -92,13 +91,7 @@ public class InventoryCustomBlock extends CustomBlock {
             return;
         }
 
-        try {
-            Inventory inv = InventorySerialization.fromBase64(inventoryBase64.get());
-
-            player.openInventory(inv);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        player.openInventory(inventory);
 
         event.setCancelled(true);
     }
@@ -109,6 +102,8 @@ public class InventoryCustomBlock extends CustomBlock {
     public void onGuiClose(InventoryCloseEvent event) {
         this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.toBase64(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
         this.properties.set(this.inventoryBase64);
+
+        this.inventory = event.getInventory();
     }
 
     public void onGuiClick(InventoryClickEvent event) {
