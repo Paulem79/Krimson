@@ -6,12 +6,12 @@ import ovh.paulem.krimson.versioned.stream.output.OutputStreamHandler;
 
 public class BukkitItemSerializer extends ItemSerializerHandler {
     @Override
-    public void serializeAndWrite(ItemStack stack, OutputStreamHandler outputStream) throws Exception {
+    public void serializeAndWrite(ItemStack stack, OutputStreamHandler<?> outputStream) throws Exception {
         outputStream.writeObject(stack);
     }
 
     @Override
-    public ItemStack readAndDeserialize(InputStreamHandler inputStream, int length) throws Exception {
+    public ItemStack readAndDeserialize(InputStreamHandler<?> inputStream, int length) throws Exception {
         return (ItemStack) inputStream.readObject();
     }
 }

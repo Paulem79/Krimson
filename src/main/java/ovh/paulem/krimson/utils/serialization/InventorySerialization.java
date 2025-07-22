@@ -33,7 +33,7 @@ public class InventorySerialization {
     public static byte[] serialize(InventoryData inventoryData) throws IllegalStateException {
             Inventory inventory = inventoryData.inventory();
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-                OutputStreamHandler dataOutput = OutputStreamHandler.getHandler(outputStream);
+                OutputStreamHandler<?> dataOutput = OutputStreamHandler.getHandler(outputStream);
 
                 // Write the owner of the inventory, if applicable
                 InventoryCustomBlock.InventoryCustomBlockHolder holder = (InventoryCustomBlock.InventoryCustomBlockHolder) inventory.getHolder();
@@ -102,7 +102,7 @@ public class InventorySerialization {
     public static Inventory deserialize(byte[] data) throws IOException {
         byte[] decompressed = ZLibUtils.decompress(data);
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(decompressed)) {
-            InputStreamHandler dataInput = InputStreamHandler.getHandler(inputStream);
+            InputStreamHandler<?> dataInput = InputStreamHandler.getHandler(inputStream);
 
 
             int uuidLength = dataInput.readInt();

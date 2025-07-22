@@ -6,7 +6,7 @@ import ovh.paulem.krimson.versioned.stream.output.OutputStreamHandler;
 
 public class PaperItemSerializer extends ItemSerializerHandler {
     @Override
-    public void serializeAndWrite(ItemStack stack, OutputStreamHandler outputStream) throws Exception {
+    public void serializeAndWrite(ItemStack stack, OutputStreamHandler<?> outputStream) throws Exception {
         /*byte[] serialized = (byte[]) ItemStack.class.getMethod("serializeAsBytes")
                 .invoke(stack);*/
 
@@ -17,7 +17,7 @@ public class PaperItemSerializer extends ItemSerializerHandler {
     }
 
     @Override
-    public ItemStack readAndDeserialize(InputStreamHandler inputStream, int length) throws Exception {
+    public ItemStack readAndDeserialize(InputStreamHandler<?> inputStream, int length) throws Exception {
         byte[] itemBytes = new byte[length];
         inputStream.read(itemBytes);
 

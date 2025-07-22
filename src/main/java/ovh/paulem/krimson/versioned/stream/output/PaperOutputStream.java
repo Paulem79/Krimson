@@ -37,7 +37,7 @@ public class PaperOutputStream extends OutputStreamHandler<DataOutputStream> {
     }
 
     @Override
-    public void writeObject(Object object) throws IOException {
+    public void writeObject(Object object) {
         throw new RuntimeException("Paper's output stream handler doesn't support writing objects!");
     }
 }

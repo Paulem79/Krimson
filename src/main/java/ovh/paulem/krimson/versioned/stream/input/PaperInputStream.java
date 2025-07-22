@@ -17,7 +17,7 @@ public class PaperInputStream extends InputStreamHandler<DataInputStream> {
     }
 
     @Override
-    public Object readObject() throws IOException, ClassNotFoundException {
+    public Object readObject() {
         throw new RuntimeException("Paper's input stream handler doesn't support reading objects!");
     }
 
