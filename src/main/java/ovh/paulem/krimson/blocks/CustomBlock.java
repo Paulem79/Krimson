@@ -152,8 +152,6 @@ public class CustomBlock {
                 commonArguments.test(this);
             });
         }
-
-        Krimson.trackedDisplays.add(spawnedDisplay);
     }
 
     public void tick() {

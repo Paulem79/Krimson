@@ -23,6 +23,7 @@ import ovh.paulem.krimson.utils.properties.PropertiesField;
 import java.io.IOException;
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.UUID;
 
 // TODO : Compress only on inventory changes
 // FIXME: there are still some difficulties with this approach, especially around parsing/saving it asynchronously which can become an issue if there are a lot of these and they have large contents, but for a basic approach this will be fine https://discord.com/channels/690411863766466590/741875863271899136/1397175434432614472 (saving in files, with pointers in PDC can be better)
@@ -34,7 +35,7 @@ public class InventoryCustomBlock extends CustomBlock {
     protected PropertiesField<String> inventoryTitle;
     private final String baseInventoryTitle;
     @Getter
-    protected PropertiesField<String> inventoryBase64;
+    protected PropertiesField<byte[]> inventoryBase64;
     @Getter
     private Inventory inventory;
 
@@ -54,9 +55,9 @@ public class InventoryCustomBlock extends CustomBlock {
         this.inventoryTitle = new PropertiesField<>(Keys.INVENTORY_TITLE, properties, PersistentDataType.STRING);
         this.baseInventoryTitle = this.inventoryTitle.get();
 
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, properties, PersistentDataType.STRING);
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, properties, PersistentDataType.BYTE_ARRAY);
         try {
-            this.inventory = InventorySerialization.fromBase64(this.inventoryBase64.get());
+            this.inventory = InventorySerialization.deserialize(this.inventoryBase64.get());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -78,7 +79,7 @@ public class InventoryCustomBlock extends CustomBlock {
                 this.inventoryTitle.get()
         );
 
-        inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.toBase64(new InventoryData(inventory, this.inventoryTitle.get())));
+        inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(inventory, this.inventoryTitle.get())));
         properties.set(inventoryBase64);
     }
 
@@ -100,7 +101,7 @@ public class InventoryCustomBlock extends CustomBlock {
     }
 
     public void onGuiClose(InventoryCloseEvent event) {
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.toBase64(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
         this.properties.set(this.inventoryBase64);
 
         this.inventory = event.getInventory();
@@ -118,18 +119,33 @@ public class InventoryCustomBlock extends CustomBlock {
     public void onGuiPickupItem(InventoryPickupItemEvent event) {
     }
 
-    public static class InventoryCustomBlockHolder implements InventoryHolder, Serializable {
-        @Serial
-        private static final long serialVersionUID = 6829685498215757690L;
-
-        private final Location customBlockLoc;
+    public static class InventoryCustomBlockHolder implements InventoryHolder {
+        @Getter
+        private final UUID worldUUID;
+        @Getter
+        private final int x, y, z;
 
         public InventoryCustomBlockHolder(InventoryCustomBlock customBlock) {
-            this.customBlockLoc = customBlock.getSpawnedDisplay().getLocation();
+            this(customBlock.getSpawnedDisplay().getLocation());
+        }
+
+        public InventoryCustomBlockHolder(Location location) {
+            this(location.getWorld().getUID(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        }
+
+        public InventoryCustomBlockHolder(UUID worldUUID, int x, int y, int z) {
+            this.worldUUID = worldUUID;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        public Location getCustomBlockLoc() {
+            return new Location(Krimson.getInstance().getServer().getWorld(worldUUID), x, y, z);
         }
 
         public InventoryCustomBlock getCustomBlock() {
-            return (InventoryCustomBlock) CustomBlockUtils.getCustomBlockFromLoc(customBlockLoc);
+            return (InventoryCustomBlock) CustomBlockUtils.getCustomBlockFromLoc(getCustomBlockLoc());
         }
 
         @NotNull

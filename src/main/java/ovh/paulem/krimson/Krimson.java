@@ -3,7 +3,9 @@ package ovh.paulem.krimson;
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
 import lombok.Getter;
+import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.CustomBlockTypeChecker;
 import ovh.paulem.krimson.blocks.list.CustomBlocksList;
@@ -18,8 +20,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import ovh.paulem.krimson.utils.properties.PropertiesStore;
 
 import java.util.*;
 
@@ -37,12 +39,6 @@ public final class Krimson extends JavaPlugin implements Listener {
     @Getter
     private static FileConfiguration configuration;
 
-    private static boolean isReloaded = false;
-
-    public static Set<ItemDisplay> trackedDisplays = Collections.newSetFromMap(new WeakHashMap<>());
-
-    public static NamespacedKey customBlockKey;
-
     public static CustomBlocksList<CustomBlock> customBlocks = new CustomBlocksList<>();
 
     public static Set<Chunk> processedChunks = new HashSet<>();
@@ -56,18 +52,6 @@ public final class Krimson extends JavaPlugin implements Listener {
         configuration = getConfig();
 
         scheduler = UniversalScheduler.getScheduler(this);
-
-        customBlockKey = new NamespacedKey(getInstance(), Keys.CUSTOM_BLOCK_KEY);
-
-        isReloaded = !Bukkit.getOnlinePlayers().isEmpty();
-        if(isReloaded) {
-            customBlocks.clear();
-            for (World world : Bukkit.getWorlds()) {
-                for (Chunk chunk : world.getLoadedChunks()) {
-                    onChunkLoad(new ChunkLoadEvent(chunk, false));
-                }
-            }
-        }
 
         // Events
         getServer().getPluginManager().registerEvents(this, this);
@@ -87,27 +71,20 @@ public final class Krimson extends JavaPlugin implements Listener {
 
         // Commands
         getCommand("display").setExecutor(new CommandDisplay());
-
-        // Check the ItemDisplay entities diff between old tick and actual tick and trigger a method while specifying the removed ItemDisplay
-        // Sort of backport of EntityRemoveEvent for before 1.20.4
-        getScheduler().runTaskTimer(() -> {
-            Iterator<ItemDisplay> iterator = trackedDisplays.iterator();
-            while (iterator.hasNext()) {
-                ItemDisplay nextDisplayEntity = iterator.next();
-                if (nextDisplayEntity.isValid()) {
-                    continue;
-                }
-
-                iterator.remove();
-                CustomBlockSuppressionListener.onCustomBlockDeath(nextDisplayEntity, true);
-            }
-        }, 1L, 1L);
     }
 
     @Override
     public void onDisable() {
         // Plugin shutdown logic
         getLogger().info("Goodbye from Krimson API!");
+    }
+
+    @EventHandler
+    public void onEntityRemove(EntityRemoveEvent event) {
+        Entity entity = event.getEntity();
+        if (isCustomBlock(entity)) {
+            CustomBlockSuppressionListener.onCustomBlockDeath((ItemDisplay) entity, true);
+        }
     }
 
     /**
@@ -131,10 +108,7 @@ public final class Krimson extends JavaPlugin implements Listener {
         {
             getLogger().info("Adding existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
             for (ItemDisplay itemDisplay : itemDisplays) {
-                if (itemDisplay.getBrightness() == null) continue;
-
                 CustomBlock e1 = new CustomBlockTypeChecker(itemDisplay).get();
-                System.out.println(e1.getClass());
                 gotCustomBlocks.add(e1);
             }
             customBlocks.addAll(gotCustomBlocks);
@@ -143,6 +117,32 @@ public final class Krimson extends JavaPlugin implements Listener {
         }
 
         processedChunks.add(chunk);
+    }
+
+    @EventHandler
+    public void onChunkUnload(ChunkUnloadEvent event) {
+        Chunk chunk = event.getChunk();
+
+        if (!processedChunks.contains(chunk)) {
+            return;
+        }
+
+        getLogger().info("Unloading existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
+
+        customBlocks.removeIf(customBlock -> {
+            ItemDisplay display = customBlock.getSpawnedDisplay();
+
+            if (display.getLocation().getChunk().equals(chunk)) {
+                getLogger().info("Unloading custom block " + customBlock.getBlockInside() + " at " + display.getLocation() + "!");
+                return true;
+            }
+
+            return false;
+        });
+
+        getLogger().info("Removed existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
+
+        processedChunks.remove(chunk);
     }
 
     /**
@@ -162,6 +162,6 @@ public final class Krimson extends JavaPlugin implements Listener {
      * @return true if the item display is a custom block, false otherwise
      */
     public static boolean isCustomBlock(ItemDisplay itemDisplay) {
-        return itemDisplay.isValid() && itemDisplay.getPersistentDataContainer().has(customBlockKey, PersistentDataType.BYTE);
+        return itemDisplay.isValid() && new PropertiesStore(itemDisplay).has(Keys.CUSTOM_BLOCK_KEY);
     }
 }

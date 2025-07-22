@@ -14,10 +14,10 @@ public class CustomBlocksList<T extends CustomBlock> extends LinkedList<T> {
     }
 
     private static <C extends CustomBlock> Collector<C, ?, CustomBlocksList<C>> collector() {
-            return Collector.of(
-                    CustomBlocksList::new,
-                    CustomBlocksList::add,
-                    (left, right) -> { left.addAll(right); return left; }
-            );
-        }
+        return Collector.of(
+                CustomBlocksList::new,
+                CustomBlocksList::add,
+                (left, right) -> { left.addAll(right); return left; }
+        );
+    }
 }

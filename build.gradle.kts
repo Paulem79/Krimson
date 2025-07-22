@@ -9,6 +9,7 @@ group = "ovh.paulem"
 version = "1.0"
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         name = "spigotmc-repo"
@@ -19,11 +20,17 @@ repositories {
         url = uri("https://oss.sonatype.org/content/groups/public/")
     }
     maven { url = uri("https://jitpack.io") }
+    maven {
+        name = "papermc"
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
 }
 
 dependencies {
-    compileOnly("org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     implementation("com.github.Anon8281:UniversalScheduler:0.+")
+
+    compileOnly("org.jetbrains:annotations:26.0.2")
 
     compileOnly("org.projectlombok:lombok:1.18.38")
     annotationProcessor("org.projectlombok:lombok:1.18.38")
@@ -35,7 +42,11 @@ dependencies {
 tasks.shadowJar {
     archiveClassifier.set("")
 
-    relocate("com.github.Anon8281.universalScheduler", "io.github.paulem.bountifullib.universalScheduler")
+    relocate("com.github.Anon8281.universalScheduler", "ovh.paulem.krimson.libs.universalScheduler")
+}
+
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
 
 tasks {
@@ -44,7 +55,7 @@ tasks {
     }
 }
 
-val targetJavaVersion = 17
+val targetJavaVersion = 21
 java {
     sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
     targetCompatibility = JavaVersion.toVersion(targetJavaVersion)

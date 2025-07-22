@@ -9,8 +9,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 
 public class CustomBlockSuppressionListener implements Listener {
-    public static void onCustomBlockDeath(ItemDisplay itemDisplay, boolean doCheck) {
-        if(doCheck || Krimson.isCustomBlock(itemDisplay)) {
+    public static void onCustomBlockDeath(ItemDisplay itemDisplay, boolean passCheck) {
+        if(passCheck || Krimson.isCustomBlock(itemDisplay)) {
             CustomBlockUtils.removeDisplay(itemDisplay);
         }
     }

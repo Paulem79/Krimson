@@ -1,51 +1,21 @@
 package ovh.paulem.krimson.utils.serialization;
 
 import org.bukkit.inventory.*;
-import org.bukkit.util.io.BukkitObjectInputStream;
-import org.bukkit.util.io.BukkitObjectOutputStream;
-import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import ovh.paulem.krimson.Krimson;
+import ovh.paulem.krimson.blocks.InventoryCustomBlock;
 import ovh.paulem.krimson.inventories.InventoryData;
+import ovh.paulem.krimson.utils.UuidUtils;
 import ovh.paulem.krimson.utils.ZLibUtils;
+import ovh.paulem.krimson.versioned.serialize.ItemSerializerHandler;
+import ovh.paulem.krimson.versioned.stream.input.InputStreamHandler;
+import ovh.paulem.krimson.versioned.stream.output.OutputStreamHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.UUID;
 
 public class InventorySerialization {
-    /**
-     *
-     * A method to serialize an {@link ItemStack} array to Base64 String.
-     *
-     * <p />
-     *
-     * Based off of {@link #toBase64(InventoryData)}.
-     *
-     * @param items to turn into a Base64 String.
-     * @return Base64 string of the items.
-     * @throws IllegalStateException
-     */
-    public static String itemStackArrayToBase64(ItemStack[] items) throws IllegalStateException {
-        try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
-
-            // Write the size of the inventory
-            dataOutput.writeInt(items.length);
-
-            // Save every element in the list
-            for (ItemStack item : items) {
-                dataOutput.writeObject(item);
-            }
-
-            // Serialize that array
-            dataOutput.close();
-            return Base64Coder.encodeLines(outputStream.toByteArray());
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to save item stacks.", e);
-        }
-    }
-
     /**
      * A method to serialize an inventory to Base64 string.
      *
@@ -60,37 +30,58 @@ public class InventorySerialization {
      * @return Base64 string of the provided inventory
      * @throws IllegalStateException
      */
-    public static String toBase64(InventoryData inventoryData) throws IllegalStateException {
-        try {
+    public static byte[] serialize(InventoryData inventoryData) throws IllegalStateException {
             Inventory inventory = inventoryData.inventory();
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                OutputStreamHandler dataOutput = OutputStreamHandler.getHandler(outputStream);
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
+                // Write the owner of the inventory, if applicable
+                InventoryCustomBlock.InventoryCustomBlockHolder holder = (InventoryCustomBlock.InventoryCustomBlockHolder) inventory.getHolder();
 
-            // Write the owner of the inventory, if applicable
-            dataOutput.writeObject(inventory.getHolder());
+                assert holder != null;
+                byte[] UUIDbytes = UuidUtils.asBytes(holder.getWorldUUID());
+                // Write the world UUID length
+                dataOutput.writeInt(UUIDbytes.length);
+                // Write the world UUID
+                dataOutput.write(UUIDbytes);
+                // Write the inventory holder x, y, z coordinates
+                dataOutput.writeInt(holder.getX());
+                dataOutput.writeInt(holder.getY());
+                dataOutput.writeInt(holder.getZ());
 
-            // Write the size of the inventory
-            dataOutput.writeInt(inventory.getSize());
+                // Write the size of the inventory
+                dataOutput.writeInt(inventory.getSize());
 
-            // Write the title of the inventory
-            dataOutput.writeUTF(inventoryData.title());
+                // Write the title of the inventory
+                dataOutput.writeUTF(inventoryData.title());
 
-            // FIXME: Inventory full of shulker boxes full of items will crash the saving process because the utf-8 string is too long.
-            // Save every element in the list
-            for (int i = 0; i < inventory.getSize(); i++) {
-                dataOutput.writeObject(inventory.getItem(i));
+                ItemStack[] items = inventory.getContents();
+
+                System.out.println("Serialized " + items.length + " items.");
+
+                dataOutput.writeInt(items.length);
+
+                for (ItemStack item : items) {
+                    if (item == null) {
+                        // Ensure the correct order by including empty/null items
+                        // Simply remove the write line if you don't want this
+                        dataOutput.writeInt(0);
+                        continue;
+                    }
+
+                    ItemSerializerHandler itemSerializer = ItemSerializerHandler.getHandler();
+                    itemSerializer.serializeAndWrite(item, dataOutput);
+                }
+
+                // Serialize that array
+                dataOutput.close();
+
+                // Compression avec zlib
+                byte[] compressed = ZLibUtils.compress(outputStream.toByteArray());
+                return compressed;
+            } catch (Exception e) {
+                throw new IllegalStateException("Unable to save item stacks.", e);
             }
-
-            // Serialize that array
-            dataOutput.close();
-
-            // Compression avec zlib
-            byte[] compressed = ZLibUtils.compress(outputStream.toByteArray());
-            return Base64Coder.encodeLines(compressed);
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to save item stacks.", e);
-        }
     }
 
     /**
@@ -108,55 +99,43 @@ public class InventorySerialization {
      * @return Inventory created from the Base64 string.
      * @throws IOException
      */
-    public static Inventory fromBase64(String data) throws IOException {
-        try {
-            byte[] compressed = Base64Coder.decodeLines(data);
-            byte[] decompressed = ZLibUtils.decompress(compressed);
+    public static Inventory deserialize(byte[] data) throws IOException {
+        byte[] decompressed = ZLibUtils.decompress(data);
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(decompressed)) {
+            InputStreamHandler dataInput = InputStreamHandler.getHandler(inputStream);
 
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(decompressed);
-            BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
 
-            Inventory inventory = Krimson.getInstance().getServer().createInventory((InventoryHolder) dataInput.readObject(), dataInput.readInt(), dataInput.readUTF());
+            int uuidLength = dataInput.readInt();
+            byte[] uuidBytes = new byte[uuidLength];
+            dataInput.read(uuidBytes);
+            UUID worldUUID = UuidUtils.asUuid(uuidBytes);
 
-            // Read the serialized inventory
-            for (int i = 0; i < inventory.getSize(); i++) {
-                inventory.setItem(i, (ItemStack) dataInput.readObject());
+            // Read the x, y, z coordinates of the inventory holder
+            int x = dataInput.readInt();
+            int y = dataInput.readInt();
+            int z = dataInput.readInt();
+
+            InventoryCustomBlock.InventoryCustomBlockHolder holder = new InventoryCustomBlock.InventoryCustomBlockHolder(worldUUID, x, y, z);
+            Inventory inventory = Krimson.getInstance().getServer().createInventory(holder, dataInput.readInt(), dataInput.readUTF());
+
+            int count = dataInput.readInt();
+
+            for (int i = 0; i < count; i++) {
+                int length = dataInput.readInt();
+                if (length == 0) {
+                    // Empty item, keep entry as null
+                    continue;
+                }
+
+                ItemSerializerHandler itemSerializer = ItemSerializerHandler.getHandler();
+                ItemStack stack = itemSerializer.readAndDeserialize(dataInput, length);
+                inventory.setItem(i, stack);
             }
 
             dataInput.close();
             return inventory;
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Unable to decode class type.", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Error while reading itemstack", e);
         }
     }
-
-    /**
-     * Gets an array of ItemStacks from Base64 string.
-     *
-     * <p />
-     *
-     * Base off of {@link #fromBase64(String)}.
-     *
-     * @param data Base64 string to convert to ItemStack array.
-     * @return ItemStack array created from the Base64 string.
-     * @throws IOException
-     */
-    public static ItemStack[] itemStackArrayFromBase64(String data) throws IOException {
-        try {
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
-            BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
-            ItemStack[] items = new ItemStack[dataInput.readInt()];
-
-            // Read the serialized inventory
-            for (int i = 0; i < items.length; i++) {
-                items[i] = (ItemStack) dataInput.readObject();
-            }
-
-            dataInput.close();
-            return items;
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Unable to decode class type.", e);
-        }
-    }
-
 }
