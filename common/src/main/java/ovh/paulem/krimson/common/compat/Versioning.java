@@ -1,4 +1,4 @@
-package ovh.paulem.krimson.common.versioned;
+package ovh.paulem.krimson.common.compat;
 
 import org.bukkit.Bukkit;
 

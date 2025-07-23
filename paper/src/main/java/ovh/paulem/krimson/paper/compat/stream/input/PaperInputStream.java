@@ -1,6 +1,6 @@
-package ovh.paulem.krimson.paper.versioned.stream.input;
+package ovh.paulem.krimson.paper.compat.stream.input;
 
-import ovh.paulem.krimson.common.versioned.stream.input.InputStreamHandler;
+import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 
 import java.io.*;
 
@@ -10,7 +10,7 @@ public class PaperInputStream extends InputStreamHandler<DataInputStream> {
     }
 
     @Override
-    public DataInputStream create(ByteArrayInputStream inputStream) {
+    public DataInputStream create() {
         return new DataInputStream(inputStream);
     }
 
@@ -21,17 +21,17 @@ public class PaperInputStream extends InputStreamHandler<DataInputStream> {
 
     @Override
     public int readInt() throws IOException {
-        return dataOutput.readInt();
+        return dataInput.readInt();
     }
 
     @Override
     public String readUTF() throws IOException {
-        return dataOutput.readUTF();
+        return dataInput.readUTF();
     }
 
     @Override
     public int read(byte[] bytes) throws IOException {
-        return dataOutput.read(bytes);
+        return dataInput.read(bytes);
     }
 
     @Override

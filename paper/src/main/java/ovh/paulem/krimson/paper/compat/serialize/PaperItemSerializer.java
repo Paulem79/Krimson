@@ -1,10 +1,10 @@
-package ovh.paulem.krimson.paper.versioned.serialize;
+package ovh.paulem.krimson.paper.compat.serialize;
 
 import org.bukkit.inventory.ItemStack;
 import ovh.paulem.krimson.common.KrimsonPlugin;
-import ovh.paulem.krimson.common.versioned.serialize.ItemSerializerHandler;
-import ovh.paulem.krimson.common.versioned.stream.input.InputStreamHandler;
-import ovh.paulem.krimson.common.versioned.stream.output.OutputStreamHandler;
+import ovh.paulem.krimson.common.compat.serialize.ItemSerializerHandler;
+import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
+import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 
 public class PaperItemSerializer extends ItemSerializerHandler {
     public PaperItemSerializer() {
@@ -16,9 +16,6 @@ public class PaperItemSerializer extends ItemSerializerHandler {
 
     @Override
     public void serializeAndWrite(ItemStack stack, OutputStreamHandler<?> outputStream) throws Exception {
-        /*byte[] serialized = (byte[]) ItemStack.class.getMethod("serializeAsBytes")
-                .invoke(stack);*/
-
         byte[] serialized = stack.serializeAsBytes();
 
         outputStream.writeInt(serialized.length);
@@ -31,7 +28,5 @@ public class PaperItemSerializer extends ItemSerializerHandler {
         inputStream.read(itemBytes);
 
         return ItemStack.deserializeBytes(itemBytes);
-        /*return (ItemStack) ItemStack.class.getMethod("deserializeBytes", byte[].class)
-                .invoke(null, itemBytes);*/
     }
 }

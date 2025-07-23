@@ -1,17 +1,17 @@
-package ovh.paulem.krimson.spigot.versioned.stream.output;
+package ovh.paulem.krimson.spigot.compat.stream.output;
 
 import org.bukkit.util.io.BukkitObjectOutputStream;
-import ovh.paulem.krimson.common.versioned.stream.output.OutputStreamHandler;
+import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 
 import java.io.*;
 
-public class BukkitOutputStream extends OutputStreamHandler<BukkitObjectOutputStream> {
-    public BukkitOutputStream(ByteArrayOutputStream outputStream) {
+public class SpigotOutputStream extends OutputStreamHandler<BukkitObjectOutputStream> {
+    public SpigotOutputStream(ByteArrayOutputStream outputStream) {
         super(outputStream);
     }
 
     @Override
-    public BukkitObjectOutputStream create(ByteArrayOutputStream outputStream) {
+    public BukkitObjectOutputStream create() {
         try {
             return new BukkitObjectOutputStream(outputStream);
         } catch (IOException e) {

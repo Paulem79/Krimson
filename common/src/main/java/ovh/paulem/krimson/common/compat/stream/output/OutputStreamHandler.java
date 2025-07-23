@@ -1,15 +1,17 @@
-package ovh.paulem.krimson.common.versioned.stream.output;
+package ovh.paulem.krimson.common.compat.stream.output;
 
 import java.io.*;
 
 public abstract class OutputStreamHandler<T extends OutputStream> {
+    protected final ByteArrayOutputStream outputStream;
     protected final T dataOutput;
 
     public OutputStreamHandler(ByteArrayOutputStream outputStream) {
-        this.dataOutput = create(outputStream);
+        this.outputStream = outputStream;
+        this.dataOutput = create();
     }
 
-    public abstract T create(ByteArrayOutputStream outputStream);
+    public abstract T create();
 
     public abstract void writeInt(int value) throws IOException;
 
@@ -20,5 +22,9 @@ public abstract class OutputStreamHandler<T extends OutputStream> {
     public abstract void close() throws IOException;
 
     public abstract void writeObject(Object object) throws IOException;
+
+    public byte[] toByteArray() {
+        return outputStream.toByteArray();
+    }
 
 }

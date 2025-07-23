@@ -1,15 +1,17 @@
-package ovh.paulem.krimson.common.versioned.stream.input;
+package ovh.paulem.krimson.common.compat.stream.input;
 
 import java.io.*;
 
 public abstract class InputStreamHandler<T extends InputStream> {
-    protected final T dataOutput;
+    protected final ByteArrayInputStream inputStream;
+    protected final T dataInput;
 
     public InputStreamHandler(ByteArrayInputStream inputStream) {
-        this.dataOutput = create(inputStream);
+        this.inputStream = inputStream;
+        this.dataInput = create();
     }
 
-    public abstract T create(ByteArrayInputStream inputStream);
+    public abstract T create();
 
     public abstract Object readObject() throws IOException, ClassNotFoundException;
 

@@ -1,8 +1,8 @@
-package ovh.paulem.krimson.common.versioned.serialize;
+package ovh.paulem.krimson.common.compat.serialize;
 
 import org.bukkit.inventory.ItemStack;
-import ovh.paulem.krimson.common.versioned.stream.input.InputStreamHandler;
-import ovh.paulem.krimson.common.versioned.stream.output.OutputStreamHandler;
+import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
+import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 
 public abstract class ItemSerializerHandler {
     protected static boolean messageSent = false;

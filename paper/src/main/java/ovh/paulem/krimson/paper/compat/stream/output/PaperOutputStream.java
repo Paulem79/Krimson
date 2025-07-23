@@ -1,6 +1,6 @@
-package ovh.paulem.krimson.paper.versioned.stream.output;
+package ovh.paulem.krimson.paper.compat.stream.output;
 
-import ovh.paulem.krimson.common.versioned.stream.output.OutputStreamHandler;
+import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 
 import java.io.*;
 
@@ -10,7 +10,7 @@ public class PaperOutputStream extends OutputStreamHandler<DataOutputStream> {
     }
 
     @Override
-    public DataOutputStream create(ByteArrayOutputStream outputStream) {
+    public DataOutputStream create() {
         return new DataOutputStream(outputStream);
     }
 

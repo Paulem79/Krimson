@@ -1,17 +1,17 @@
-package ovh.paulem.krimson.spigot.versioned.stream.input;
+package ovh.paulem.krimson.spigot.compat.stream.input;
 
 import org.bukkit.util.io.BukkitObjectInputStream;
-import ovh.paulem.krimson.common.versioned.stream.input.InputStreamHandler;
+import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 
 import java.io.*;
 
-public class BukkitInputStream extends InputStreamHandler<BukkitObjectInputStream> {
-    public BukkitInputStream(ByteArrayInputStream inputStream) {
+public class SpigotInputStream extends InputStreamHandler<BukkitObjectInputStream> {
+    public SpigotInputStream(ByteArrayInputStream inputStream) {
         super(inputStream);
     }
 
     @Override
-    public BukkitObjectInputStream create(ByteArrayInputStream inputStream) {
+    public BukkitObjectInputStream create() {
         try {
             return new BukkitObjectInputStream(inputStream);
         } catch (IOException e) {
@@ -21,26 +21,26 @@ public class BukkitInputStream extends InputStreamHandler<BukkitObjectInputStrea
 
     @Override
     public Object readObject() throws IOException, ClassNotFoundException {
-        return dataOutput.readObject();
+        return dataInput.readObject();
     }
 
     @Override
     public int readInt() throws IOException {
-        return dataOutput.readInt();
+        return dataInput.readInt();
     }
 
     @Override
     public String readUTF() throws IOException {
-        return dataOutput.readUTF();
+        return dataInput.readUTF();
     }
 
     @Override
     public int read(byte[] bytes) throws IOException {
-        return dataOutput.read(bytes);
+        return dataInput.read(bytes);
     }
 
     @Override
     public void close() throws IOException {
-        dataOutput.close();
+        dataInput.close();
     }
 }

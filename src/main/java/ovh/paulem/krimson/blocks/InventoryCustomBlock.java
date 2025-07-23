@@ -14,11 +14,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import ovh.paulem.krimson.Krimson;
+import ovh.paulem.krimson.codec.Codecs;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.inventories.InventoryData;
 import ovh.paulem.krimson.inventories.InventoryDiff;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
-import ovh.paulem.krimson.serialization.InventorySerialization;
 import ovh.paulem.krimson.properties.PropertiesField;
 
 import java.io.IOException;
@@ -56,11 +56,7 @@ public class InventoryCustomBlock extends CustomBlock {
         this.baseInventoryTitle = this.inventoryTitle.get();
 
         this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, properties, PersistentDataType.BYTE_ARRAY);
-        try {
-            this.inventory = InventorySerialization.deserialize(this.inventoryBase64.get());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.inventory = Codecs.INVENTORY_DATA_CODEC.decode(this.inventoryBase64.get()).inventory();
     }
 
     @Override
@@ -79,7 +75,7 @@ public class InventoryCustomBlock extends CustomBlock {
                 this.inventoryTitle.get()
         );
 
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(this.inventory, this.inventoryTitle.get())));
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, Codecs.INVENTORY_DATA_CODEC.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
         properties.set(inventoryBase64);
     }
 
@@ -104,7 +100,7 @@ public class InventoryCustomBlock extends CustomBlock {
         this.inventoryDiff.setNow(event.getInventory().getContents());
 
         if(inventoryDiff.hasChanges()) {
-            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
+            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, Codecs.INVENTORY_DATA_CODEC.encode(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
             this.properties.set(this.inventoryBase64);
         }
 

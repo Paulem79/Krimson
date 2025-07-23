@@ -6,6 +6,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Display;
 import org.bukkit.persistence.PersistentDataType;
 import ovh.paulem.krimson.Krimson;
+import ovh.paulem.krimson.codec.Codecs;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.utils.BlockUtils;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
@@ -22,7 +23,6 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import ovh.paulem.krimson.properties.PropertiesField;
 import ovh.paulem.krimson.properties.PropertiesStore;
-import ovh.paulem.krimson.serialization.ItemStackSerialization;
 
 import java.util.function.Predicate;
 
@@ -41,7 +41,7 @@ public class CustomBlock {
     @Getter
     private PropertiesField<String> blockInsideField;
     @Getter
-    private PropertiesField<String> displayedItemField;
+    private PropertiesField<byte[]> displayedItemField;
 
     private final Predicate<CustomBlock> commonArguments;
 
@@ -83,7 +83,7 @@ public class CustomBlock {
     public CustomBlock(ItemDisplay itemDisplay) {
         // Thanks to java being an asshole with before super statements (but available in java 22+), we have to do this shit
         this(Material.valueOf(new PropertiesStore(itemDisplay).get(Keys.BLOCK_INSIDE_KEY, PersistentDataType.STRING).orElseThrow()),
-                ItemStackSerialization.itemStackFromBase64(new PropertiesStore(itemDisplay).get(Keys.DISPLAYED_ITEM_KEY, PersistentDataType.STRING).orElseThrow()));
+                Codecs.ITEM_STACK_CODEC.decode(new PropertiesStore(itemDisplay).get(Keys.DISPLAYED_ITEM_KEY, PersistentDataType.BYTE_ARRAY).orElseThrow()));
         setDisplayAndProperties(itemDisplay);
     }
 
@@ -99,9 +99,9 @@ public class CustomBlock {
         }
 
         if(this.properties.has(Keys.DISPLAYED_ITEM_KEY)) {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, properties, PersistentDataType.STRING);
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, properties, PersistentDataType.BYTE_ARRAY);
         } else {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, ItemStackSerialization.itemStackToBase64(displayedItem));
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, Codecs.ITEM_STACK_CODEC.encode(displayedItem));
             this.properties.set(displayedItemField);
         }
     }
