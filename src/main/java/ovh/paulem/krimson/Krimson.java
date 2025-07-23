@@ -10,6 +10,7 @@ import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.CustomBlockTypeChecker;
 import ovh.paulem.krimson.blocks.list.CustomBlocksList;
 import ovh.paulem.krimson.commands.CommandDisplay;
+import ovh.paulem.krimson.common.KrimsonPlugin;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.listeners.CustomBlockActionListener;
 import ovh.paulem.krimson.listeners.CustomBlockSuppressionListener;
@@ -20,7 +21,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.java.JavaPlugin;
 import ovh.paulem.krimson.properties.PropertiesStore;
 
 import java.util.*;
@@ -31,9 +31,7 @@ import java.util.*;
  * Main class for the BountifulLib plugin.
  * Handles plugin initialization, event registration, and custom block management.
  */
-public final class Krimson extends JavaPlugin implements Listener {
-    @Getter
-    private static Krimson instance;
+public final class Krimson extends KrimsonPlugin implements Listener {
     @Getter
     private static TaskScheduler scheduler;
     @Getter
