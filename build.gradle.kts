@@ -15,7 +15,6 @@ allprojects {
     plugins.apply("com.gradleup.shadow")
 
     repositories {
-        mavenLocal()
         mavenCentral()
         maven {
             name = "spigotmc-repo"

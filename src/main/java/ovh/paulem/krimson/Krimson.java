@@ -106,14 +106,11 @@ public final class Krimson extends JavaPlugin implements Listener {
         Collection<ItemDisplay> itemDisplays = Arrays.stream(chunk.getEntities()).filter(Krimson::isCustomBlock).map(entity -> (ItemDisplay) entity).toList();
         if(!itemDisplays.isEmpty())
         {
-            getLogger().info("Adding existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
             for (ItemDisplay itemDisplay : itemDisplays) {
                 CustomBlock e1 = new CustomBlockTypeChecker(itemDisplay).get();
                 gotCustomBlocks.add(e1);
             }
             customBlocks.addAll(gotCustomBlocks);
-
-            getLogger().info("Added " + gotCustomBlocks.size() + " existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
         }
 
         processedChunks.add(chunk);
@@ -127,8 +124,6 @@ public final class Krimson extends JavaPlugin implements Listener {
             return;
         }
 
-        getLogger().info("Unloading existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
-
         customBlocks.removeIf(customBlock -> {
             ItemDisplay display = customBlock.getSpawnedDisplay();
 
@@ -139,8 +134,6 @@ public final class Krimson extends JavaPlugin implements Listener {
 
             return false;
         });
-
-        getLogger().info("Removed existing custom blocks for " + chunk.getWorld().getName() + " chunk " + chunk.getX() + ", " + chunk.getZ() + "!");
 
         processedChunks.remove(chunk);
     }

@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.inventories.InventoryData;
+import ovh.paulem.krimson.inventories.InventoryDiff;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
 import ovh.paulem.krimson.serialization.InventorySerialization;
 import ovh.paulem.krimson.properties.PropertiesField;
@@ -36,6 +37,8 @@ public class InventoryCustomBlock extends CustomBlock {
     protected PropertiesField<byte[]> inventoryBase64;
     @Getter
     private Inventory inventory;
+
+    private final InventoryDiff inventoryDiff = new InventoryDiff();
 
     public InventoryCustomBlock(Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle) {
         super(blockInside, displayedItem);
@@ -71,13 +74,13 @@ public class InventoryCustomBlock extends CustomBlock {
         this.inventoryTitle = new PropertiesField<>(Keys.INVENTORY_TITLE, baseInventoryTitle);
         properties.set(this.inventoryTitle);
 
-        inventory = Krimson.getInstance().getServer().createInventory(
+        this.inventory = Krimson.getInstance().getServer().createInventory(
                 new InventoryCustomBlockHolder(this),
                 this.inventorySize.get(),
                 this.inventoryTitle.get()
         );
 
-        inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(inventory, this.inventoryTitle.get())));
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(this.inventory, this.inventoryTitle.get())));
         properties.set(inventoryBase64);
     }
 
@@ -99,10 +102,15 @@ public class InventoryCustomBlock extends CustomBlock {
     }
 
     public void onGuiClose(InventoryCloseEvent event) {
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
-        this.properties.set(this.inventoryBase64);
+        this.inventoryDiff.setNow(event.getInventory().getContents());
+
+        if(inventoryDiff.hasChanges()) {
+            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventorySerialization.serialize(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
+            this.properties.set(this.inventoryBase64);
+        }
 
         this.inventory = event.getInventory();
+        this.inventoryDiff.setBefore(this.inventory.getContents());
     }
 
     public void onGuiClick(InventoryClickEvent event) {
