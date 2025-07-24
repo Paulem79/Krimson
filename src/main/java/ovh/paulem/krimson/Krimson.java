@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.bukkit.event.entity.EntityRemoveEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.plugin.PluginManager;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.CustomBlockTypeChecker;
 import ovh.paulem.krimson.blocks.list.CustomBlocksList;
@@ -52,10 +53,11 @@ public final class Krimson extends KrimsonPlugin implements Listener {
         scheduler = UniversalScheduler.getScheduler(this);
 
         // Events
-        getServer().getPluginManager().registerEvents(this, this);
-        getServer().getPluginManager().registerEvents(new CustomBlockSuppressionListener(), this);
-        getServer().getPluginManager().registerEvents(new CustomBlockActionListener(), this);
-        getServer().getPluginManager().registerEvents(new LightSourcePreventionListener(), this);
+        PluginManager pluginManager = getServer().getPluginManager();
+        pluginManager.registerEvents(this, this);
+        pluginManager.registerEvents(new CustomBlockSuppressionListener(), this);
+        pluginManager.registerEvents(new CustomBlockActionListener(), this);
+        pluginManager.registerEvents(new LightSourcePreventionListener(), this);
 
         // Main
         getLogger().info("Hello from Krimson API!");
