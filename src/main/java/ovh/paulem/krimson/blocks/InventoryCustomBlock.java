@@ -91,6 +91,21 @@ public class InventoryCustomBlock extends CustomBlock {
         event.setCancelled(true);
     }
 
+    @Override
+    public void onUnload() {
+        if (this.inventory != null) {
+            this.inventoryDiff.setNow(this.inventory.getContents());
+            if (inventoryDiff.hasChanges()) {
+                this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.CODEC.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
+                this.properties.set(this.inventoryBase64);
+            }
+
+            this.inventoryDiff.setBefore(this.inventory.getContents());
+        }
+
+        super.onUnload();
+    }
+
     public void onGuiOpen(InventoryOpenEvent event) {
     }
 

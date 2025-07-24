@@ -129,6 +129,8 @@ public final class Krimson extends KrimsonPlugin implements Listener {
 
             if (display.getLocation().getChunk().equals(chunk)) {
                 getLogger().info("Unloading custom block " + customBlock.getBlockInside() + " at " + display.getLocation() + "!");
+
+                customBlock.onUnload();
                 return true;
             }
 

@@ -205,4 +205,7 @@ public class CustomBlock {
      */
     public void onBreak(BlockEvent event) {
     }
+
+    public void onUnload() {
+    }
 }
