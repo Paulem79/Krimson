@@ -8,6 +8,14 @@ import ovh.paulem.krimson.compat.CompatAccess;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+/**
+ * The Codec interface defines methods for encoding and decoding objects between two types, T and R.
+ * It provides default implementations for handling byte array-based encoding and decoding.
+ * Subclasses or implementing classes can provide specific implementations for the {@code encode} and {@code decode} methods.
+ *
+ * @param <T> the type of the original object to be encoded/decoded
+ * @param <R> the type of the resulting encoded/decoded representation
+ */
 public interface Codec<T, R> {
     default R encode(T object) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {

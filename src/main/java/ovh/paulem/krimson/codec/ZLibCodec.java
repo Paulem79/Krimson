@@ -8,6 +8,13 @@ import ovh.paulem.krimson.compat.CompatAccess;
 
 import java.io.ByteArrayInputStream;
 
+/**
+ * An abstract implementation of the {@link Codec} interface that utilizes the ZLIB compression algorithm
+ * for serializing and deserializing objects. This class provides methods for encoding and decoding objects
+ * and facilitates both compressed and uncompressed operations by converting the object and its byte array representation.
+ *
+ * @param <T> the object type to be encoded/decoded
+ */
 public abstract class ZLibCodec<T> implements Codec<T, byte[]> {
     protected abstract OutputStreamHandler<?> createEncoder(@NotNull OutputStreamHandler<?> dataOutput, T object) throws Exception;
 
@@ -29,6 +36,13 @@ public abstract class ZLibCodec<T> implements Codec<T, byte[]> {
         }
     }
 
+    /**
+     * Converts the current {@link ZLibCodec} implementation into a basic codec that bypasses
+     * the ZLIB compression layer, allowing for direct encoding and decoding of objects without compression.
+     *
+     * @return a {@link Codec} instance capable of encoding objects of type {@code T} to their raw byte array representation
+     *         and decoding them back to objects of type {@code T}, without applying any compression or decompression.
+     */
     public Codec<T, byte[]> toBasicCodec() {
         return new Codec<>() {
             @Override

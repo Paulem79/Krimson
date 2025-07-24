@@ -14,14 +14,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.codec.Codecs;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.inventories.InventoryData;
 import ovh.paulem.krimson.inventories.InventoryDiff;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
 import ovh.paulem.krimson.properties.PropertiesField;
 
-import java.io.IOException;
 import java.util.UUID;
 
 // FIXME: there are still some difficulties with this approach, especially around parsing/saving it asynchronously which can become an issue if there are a lot of these and they have large contents, but for a basic approach this will be fine https://discord.com/channels/690411863766466590/741875863271899136/1397175434432614472 (saving in files, with pointers in PDC can be better)
@@ -56,7 +54,7 @@ public class InventoryCustomBlock extends CustomBlock {
         this.baseInventoryTitle = this.inventoryTitle.get();
 
         this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, properties, PersistentDataType.BYTE_ARRAY);
-        this.inventory = Codecs.INVENTORY_DATA_CODEC.decode(this.inventoryBase64.get()).inventory();
+        this.inventory = InventoryData.CODEC.decode(this.inventoryBase64.get()).inventory();
     }
 
     @Override
@@ -75,7 +73,7 @@ public class InventoryCustomBlock extends CustomBlock {
                 this.inventoryTitle.get()
         );
 
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, Codecs.INVENTORY_DATA_CODEC.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.CODEC.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
         properties.set(inventoryBase64);
     }
 
@@ -100,7 +98,7 @@ public class InventoryCustomBlock extends CustomBlock {
         this.inventoryDiff.setNow(event.getInventory().getContents());
 
         if(inventoryDiff.hasChanges()) {
-            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, Codecs.INVENTORY_DATA_CODEC.encode(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
+            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.CODEC.encode(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
             this.properties.set(this.inventoryBase64);
         }
 
