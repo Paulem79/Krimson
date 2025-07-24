@@ -1,6 +1,7 @@
 package ovh.paulem.krimson.codec;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 import ovh.paulem.krimson.utils.ZLibUtils;
@@ -63,7 +64,7 @@ public abstract class ZLibCodec<T> implements Codec<T, byte[]> {
             }
 
             @Override
-            public T decode(@NotNull InputStreamHandler<?> dataInput, byte[] object) throws Exception {
+            public T decode(@NotNull InputStreamHandler<?> dataInput, byte @Nullable [] object) throws Exception {
                 return ZLibCodec.this.decode(dataInput, object);
             }
         };

@@ -1,6 +1,7 @@
 package ovh.paulem.krimson.codec;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 import ovh.paulem.krimson.compat.CompatAccess;
@@ -50,6 +51,14 @@ public interface Codec<T, R> {
         throw new IllegalArgumentException("The given object is not a byte array.");
     }
 
+    default T decode(InputStreamHandler<?> dataOutput) {
+        try {
+            return decode(dataOutput, null);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to decode class type.", e);
+        }
+    }
+
     /**
      * Decodes an object from the specified input.
      *
@@ -57,5 +66,5 @@ public interface Codec<T, R> {
      * @return the decoded object
      * @throws Exception if an error occurs during decoding
      */
-    T decode(@NotNull InputStreamHandler<?> dataInput, R object) throws Exception;
+    T decode(@NotNull InputStreamHandler<?> dataInput, @Nullable R object) throws Exception;
 }

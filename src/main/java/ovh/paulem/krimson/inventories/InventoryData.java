@@ -74,7 +74,7 @@ public record InventoryData(Inventory inventory, String title) {
             int count = dataInput.readInt();
 
             for (int i = 0; i < count; i++) {
-                @Nullable ItemStack stack = Codecs.ITEM_STACK_BASE_CODEC.decode(null);
+                @Nullable ItemStack stack = Codecs.ITEM_STACK_BASE_CODEC.decode(dataInput);
 
                 if (stack == null) {
                     // Empty item, keep entry as null

@@ -2,6 +2,7 @@ package ovh.paulem.krimson.codec;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.common.compat.serialize.ItemSerializerHandler;
 import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
@@ -24,7 +25,7 @@ public interface Codecs {
         }
 
         @Override
-        public ItemStack decode(@NotNull InputStreamHandler<?> dataInput, byte[] object) throws Exception {
+        public ItemStack decode(@NotNull InputStreamHandler<?> dataInput, byte @Nullable [] object) throws Exception {
             int length = dataInput.readInt();
 
             if(length == 0) return null;
