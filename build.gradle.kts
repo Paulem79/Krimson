@@ -104,7 +104,7 @@ dependencies {
     implementation("net.mcbrawls.inject:javalin:3.+"){
         isTransitive = false
     }
-    implementation("io.javalin:javalin:6.3.0")
+    implementation("io.javalin:javalin:6.7.0")
 
     compileOnly("io.netty:netty-all:4.1.97.Final")
     compileOnly("org.slf4j:slf4j-api:1.7.30")
