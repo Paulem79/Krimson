@@ -93,7 +93,7 @@ dependencies {
 
     implementation("com.github.Anon8281:UniversalScheduler:0.+")
 
-    implementation("com.jeff-media:custom-block-data:2.2.4")
+    implementation("com.jeff-media:custom-block-data:2.2.5")
 
     implementation("net.radstevee.packed:packed-core:1.+")
 
@@ -138,7 +138,7 @@ subprojects {
     } else {
         dependencies {
             implementation("com.github.Anon8281:UniversalScheduler:0.+")
-            implementation("com.jeff-media:custom-block-data:2.2.4")
+            implementation("com.jeff-media:custom-block-data:2.2.5")
         }
     }
 }
