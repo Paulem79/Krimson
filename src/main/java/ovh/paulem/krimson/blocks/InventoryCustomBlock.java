@@ -94,6 +94,8 @@ public class InventoryCustomBlock extends CustomBlock {
 
     @Override
     public void onUnload() {
+        super.onUnload();
+
         if (this.inventory != null) {
             this.inventoryDiff.setNow(this.inventory.getContents());
             if (inventoryDiff.hasChanges()) {
@@ -103,8 +105,6 @@ public class InventoryCustomBlock extends CustomBlock {
 
             this.inventoryDiff.setBefore(this.inventory.getContents());
         }
-
-        super.onUnload();
     }
 
     public void onGuiOpen(InventoryOpenEvent event) {

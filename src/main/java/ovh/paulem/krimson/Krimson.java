@@ -10,9 +10,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.Nullable;
-import ovh.paulem.krimson.blocks.CustomBlock;
-import ovh.paulem.krimson.blocks.CustomBlockTypeChecker;
-import ovh.paulem.krimson.blocks.list.CustomBlocks;
 import ovh.paulem.krimson.commands.CommandDisplay;
 import ovh.paulem.krimson.commands.CommandKrimson;
 import ovh.paulem.krimson.common.KrimsonPlugin;
@@ -26,6 +23,7 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import ovh.paulem.krimson.properties.PropertiesStore;
+import ovh.paulem.krimson.regions.CustomBlockTracker;
 import ovh.paulem.krimson.resourcepack.ResourcePackHosting;
 import ovh.paulem.krimson.resourcepack.creator.ResourcePackKt;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
@@ -41,13 +39,18 @@ import java.util.*;
 public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
     public static ResourcePackHosting packHosting;
 
-    public static CustomBlocks<CustomBlock> customBlocks = new CustomBlocks<>();
+    public static CustomBlockTracker customBlocks;
 
     public static Set<Chunk> processedChunks = new HashSet<>();
 
     @Override
     public void onEnable() {
         super.onEnable();
+
+        getLogger().info("Hello from Krimson API!");
+
+        customBlocks = new CustomBlockTracker();
+        getLogger().info("Scheduled ticking!");
 
         // Events
         PluginManager pluginManager = getServer().getPluginManager();
@@ -58,23 +61,6 @@ public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
         pluginManager.registerEvents(new BlockItemHandlerListener(), this);
         pluginManager.registerEvents(new MigrationListener(), this);
         CustomBlockData.registerListener(this);
-
-        // Main
-        getLogger().info("Hello from Krimson API!");
-
-        getScheduler().runTaskTimerAsynchronously(() -> {
-            //long startTime = System.nanoTime();
-
-            customBlocks.parallelStream()
-                .filter(customBlock -> customBlock.getSpawnedDisplay().isValid())
-                .forEach(CustomBlock::tick);
-
-            //long endTime = System.nanoTime();
-
-            //getLogger().info("CustomBlocks tick iteration took " + (endTime - startTime) / 1_000_000 + " ms");
-        }, 1L, 1L);
-
-        getLogger().info("Scheduled ticking!");
 
         // Commands
         getCommand("display").setExecutor(new CommandDisplay());
@@ -117,44 +103,14 @@ public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
     public void onChunkLoad(ChunkLoadEvent event) {
         Chunk chunk = event.getChunk();
 
-        if (processedChunks.contains(chunk)) {
-            return;
-        }
-
-        Collection<ItemDisplay> itemDisplays = Arrays.stream(chunk.getEntities()).filter(Krimson::isCustomBlock).map(entity -> (ItemDisplay) entity).toList();
-        if(!itemDisplays.isEmpty())
-        {
-            for (ItemDisplay itemDisplay : itemDisplays) {
-                CustomBlock customBlock = new CustomBlockTypeChecker(itemDisplay).get();
-                customBlocks.add(customBlock);
-            }
-        }
-
-        processedChunks.add(chunk);
+        customBlocks.handleChunkLoad(chunk);
     }
 
     @EventHandler
     public void onChunkUnload(ChunkUnloadEvent event) {
         Chunk chunk = event.getChunk();
 
-        if (!processedChunks.contains(chunk)) {
-            return;
-        }
-
-        customBlocks.removeIf(customBlock -> {
-            ItemDisplay display = customBlock.getSpawnedDisplay();
-
-            if (display.getLocation().getChunk().equals(chunk)) {
-                getLogger().info("Unloading custom block " + customBlock.getBlockInside() + " at " + display.getLocation() + "!");
-
-                customBlock.onUnload();
-                return true;
-            }
-
-            return false;
-        });
-
-        processedChunks.remove(chunk);
+        customBlocks.handleChunkUnload(chunk);
     }
 
     /**

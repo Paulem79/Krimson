@@ -56,6 +56,7 @@ public class CustomBlock {
     @Getter
     private PropertiesField<String> blockInsideField;
     @Getter
+    @Nullable
     private PropertiesField<byte[]> displayedItemField;
 
     private final Predicate<CustomBlock> commonArguments;
@@ -86,7 +87,7 @@ public class CustomBlock {
             ));
 
             properties.set(Keys.CUSTOM_BLOCK_KEY, (byte) 1);
-            Krimson.customBlocks.add(customBlock);
+            Krimson.customBlocks.registerBlock(customBlock);
 
             return true;
         };
@@ -193,7 +194,7 @@ public class CustomBlock {
         ItemDisplay itemDisplay = this.spawnedDisplay;
 
         if(itemDisplay == null) {
-            Krimson.customBlocks.remove(this);
+            Krimson.customBlocks.removeBlock(this);
             return;
         }
 
@@ -217,6 +218,10 @@ public class CustomBlock {
             Block up = block.getRelative(BlockFace.UP);
             this.spawnedDisplay.setBrightness(new Display.Brightness(up.getLightFromBlocks(), up.getLightFromSky()));
         }
+    }
+
+    public Location getPosition() {
+        return spawnedDisplay.getLocation().add(0, -0.5, 0);
     }
 
     /**

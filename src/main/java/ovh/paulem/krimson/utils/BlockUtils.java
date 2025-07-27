@@ -42,6 +42,6 @@ public class BlockUtils {
     }
 
     public static boolean canPlaceOn(Player player, Block target) {
-        return target.getWorld().getNearbyEntities(target.getLocation().add(.5, .5, .5), .5, .5, .5).parallelStream().allMatch(entity -> entity instanceof Item || entity instanceof Display);
+        return target.getWorld().getNearbyEntities(target.getLocation().add(.5, .5, .5), .5, .5, .5).stream().allMatch(entity -> entity instanceof Item || entity instanceof Display);
     }
 }

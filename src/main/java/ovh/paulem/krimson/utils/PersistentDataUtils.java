@@ -1,4 +1,4 @@
-package ovh.paulem.krimson.utils.persistent;
+package ovh.paulem.krimson.utils;
 
 import org.bukkit.persistence.PersistentDataType;
 

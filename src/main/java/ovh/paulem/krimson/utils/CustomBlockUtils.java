@@ -9,7 +9,6 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockEvent;
 import org.jetbrains.annotations.Nullable;
 
 public class CustomBlockUtils {
@@ -97,11 +96,7 @@ public class CustomBlockUtils {
      */
     @Nullable
     public static CustomBlock getCustomBlockFromEntity(Entity entity) {
-        return Krimson.customBlocks
-                .parallelStream()
-                .filter(customBlock -> customBlock.getSpawnedDisplay().getUniqueId().equals(entity.getUniqueId()))
-                .findFirst()
-                .orElse(null);
+        return Krimson.customBlocks.getBlockAt(entity.getLocation().getBlock());
     }
 
     @Nullable
@@ -122,8 +117,15 @@ public class CustomBlockUtils {
      * @param itemDisplay the custom block display to remove
      */
     public static void removeDisplay(ItemDisplay itemDisplay) {
-        itemDisplay.getWorld().getBlockAt(itemDisplay.getLocation()).setType(Material.AIR);
+        Block block = itemDisplay.getLocation().getBlock();
+        CustomBlock foundCustomBlock = Krimson.customBlocks.getBlockAt(block);
 
-        Krimson.customBlocks.removeIf(customBlock -> customBlock.getSpawnedDisplay().getUniqueId().equals(itemDisplay.getUniqueId()));
+        block.setType(Material.AIR);
+
+        if(foundCustomBlock == null) {
+            return;
+        }
+
+        Krimson.customBlocks.removeBlock(foundCustomBlock);
     }
 }

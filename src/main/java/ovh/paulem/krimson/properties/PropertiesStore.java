@@ -6,7 +6,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.utils.persistent.PersistentDataUtils;
+import ovh.paulem.krimson.utils.PersistentDataUtils;
 
 import java.util.Optional;
 

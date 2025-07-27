@@ -74,7 +74,7 @@ public class CommandKrimson implements TabExecutor {
                     sender.sendMessage("§aZone de " + x*y*z + " blocs remplie avec " + itemKey);
                     break;
                 case "count":
-                    sender.sendMessage("Il y a " + Krimson.customBlocks.size() + " blocs custom chargés.");
+                    sender.sendMessage("Il y a " + Krimson.customBlocks.getGlobalContainer().getAllBlocks().size() + " blocs custom chargés dont " + Krimson.customBlocks.getLastTickedCount().getLast() + " ont été mis à jour lors du dernier tick.");
                     break;
                 default:
                     sender.sendMessage("§cSous-commande inconnue: " + subCommand);

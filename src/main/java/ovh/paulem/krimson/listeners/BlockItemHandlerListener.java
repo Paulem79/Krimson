@@ -55,7 +55,14 @@ public class BlockItemHandlerListener implements Listener {
 
         BlockFace face = event.getBlockFace();
 
-        if(!BlockUtils.canPlaceOn(player, block.getRelative(face))) {
+        Block toPlace = block.getRelative(face);
+
+        // If the block is not solid and passable, use the clicked block instead (like for grass)
+        if(!block.getType().isSolid() && block.isPassable()) {
+            toPlace = block;
+        }
+
+        if(!BlockUtils.canPlaceOn(player, toPlace)) {
             return;
         }
 
@@ -102,13 +109,6 @@ public class BlockItemHandlerListener implements Listener {
             // Remove one item from the player's inventory
             item.setAmount(item.getAmount() - 1);
             player.getInventory().setItemInMainHand(item);
-        }
-
-        Block toPlace = block.getRelative(face);
-
-        // If the block is not solid, use the clicked block instead (like for grass)
-        if(!block.getType().isSolid()) {
-            toPlace = block;
         }
 
         blockItem.getAction().accept(blockItem, player, toPlace.getLocation());

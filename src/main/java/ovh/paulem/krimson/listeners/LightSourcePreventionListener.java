@@ -1,6 +1,8 @@
 package ovh.paulem.krimson.listeners;
 
+import org.bukkit.block.BlockFace;
 import ovh.paulem.krimson.Krimson;
+import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.LightBlock;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
 import org.bukkit.Location;
@@ -15,29 +17,26 @@ import org.bukkit.event.block.BlockPlaceEvent;
 public class LightSourcePreventionListener implements Listener {
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        Block block = event.getBlockPlaced();
-        for (LightBlock customBlock : Krimson.customBlocks.getAll(LightBlock.class)) {
-            Location customBlockLocation = CustomBlockUtils.getBlockFromDisplay(customBlock.getSpawnedDisplay()).getLocation();
-            if(customBlockLocation.add(0, 1, 0).equals(block.getLocation())) {
-                event.setCancelled(true);
-                return;
-            }
+        Block blockPlaced = event.getBlockPlaced();
+        CustomBlock customBlock = Krimson.customBlocks.getBlockAt(blockPlaced.getRelative(BlockFace.DOWN));
+
+        if(customBlock instanceof LightBlock) {
+            event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Block brokeBlock = event.getBlock();
-        for (LightBlock customBlock : Krimson.customBlocks.getAll(LightBlock.class)) {
-            Location customBlockLocation = CustomBlockUtils.getBlockFromDisplay(customBlock.getSpawnedDisplay()).getLocation();
-            Block lightBlock = customBlockLocation.add(0, 1, 0).getBlock();
+        CustomBlock customBlock = Krimson.customBlocks.getBlockAt(brokeBlock.getRelative(BlockFace.DOWN));
 
-            if(lightBlock.getLocation().equals(brokeBlock.getLocation())) {
-                if(lightBlock.getType() != Material.LIGHT) {
-                    customBlock.spawnLight();
-                }
+        if(customBlock instanceof LightBlock lightCustomBlock) {
+            Block lightBlock = lightCustomBlock.getLightBlock();
+
+            if(lightBlock.getType() != Material.LIGHT) {
+                lightCustomBlock.spawnLight();
+            } else {
                 event.setCancelled(true);
-                return;
             }
         }
     }
