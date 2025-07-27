@@ -17,10 +17,11 @@ public class ChunkUtils {
         int baseZ = player.getLocation().getChunk().getZ();
 
         int viewDistance = Math.min(player.getClientViewDistance(), Krimson.getConfiguration().getInt("view-distance", 6));
+        int radiusViewDistance = viewDistance / 2;
 
         Set<Chunk> chunksAroundPlayer = new HashSet<>();
-        for (int x = -viewDistance/2; x < viewDistance/2; x++) {
-            for (int z = -viewDistance/2; z < viewDistance/2; z++) {
+        for (int x = -radiusViewDistance; x <= radiusViewDistance; x++) {
+            for (int z = -radiusViewDistance; z <= radiusViewDistance; z++) {
                 Chunk chunk = world.getChunkAt(baseX + x, baseZ + z);
                 chunksAroundPlayer.add(chunk);
             }

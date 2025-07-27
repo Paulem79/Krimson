@@ -1,7 +1,11 @@
 package ovh.paulem.krimson.listeners;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.block.Action;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
 import ovh.paulem.krimson.blocks.CustomBlock;
@@ -23,7 +27,25 @@ public class CustomBlockActionListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if(event.useInteractedBlock() == Event.Result.DENY || notAllowed.contains(event.getPlayer().getUniqueId())) return;
+        Player player = event.getPlayer();
+        if(event.useInteractedBlock() == Event.Result.DENY || notAllowed.contains(player.getUniqueId())) return;
+
+        Action action = event.getAction();
+        if(action != Action.RIGHT_CLICK_BLOCK) {
+            return; // Only handle right or left click actions on blocks
+        }
+
+        EquipmentSlot slot = event.getHand();
+        if (slot != EquipmentSlot.HAND) {
+            return; // Only handle main hand interactions
+        }
+
+        if(player.isSneaking()) {
+            ItemStack item = player.getInventory().getItem(slot);
+            if(item != null && !item.getType().isAir()) {
+                return;
+            }
+        }
 
         Block clickedBlock = event.getClickedBlock();
         if(clickedBlock == null || clickedBlock.isEmpty() || clickedBlock.isLiquid()) {

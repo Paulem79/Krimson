@@ -41,41 +41,46 @@ public class BlockItemHandlerListener implements Listener {
             return; // Only handle right or left click actions on blocks
         }
 
+        EquipmentSlot slot = event.getHand();
+        if (slot != EquipmentSlot.HAND) {
+            return; // Only handle main hand interactions
+        }
+
         Player player = event.getPlayer();
         
         if(player.getGameMode() == GameMode.SPECTATOR || player.getGameMode() == GameMode.ADVENTURE) {
             return; // Do not allow block placement in spectator or adventure mode
         }
         
-        Block block = event.getClickedBlock();
-        if(block == null) return;
+        Block clickedBlock = event.getClickedBlock();
+        if(clickedBlock == null) return;
+
+        // If there is a custom inventory block or a block that opens an inventory at the clicked location (and the player isn't sneaking), do not allow placement
+        if(
+                (CustomBlockUtils.getCustomBlockFromLoc(clickedBlock.getLocation()) instanceof InventoryCustomBlock || clickedBlock.getState() instanceof TileState) &&
+                        !player.isSneaking()
+        ) {
+            ItemStack item = player.getInventory().getItem(slot);
+
+            // If the player is not sneaking and doesn't have an item, open inventory
+            if(item == null || item.getType().isAir()) {
+                return;
+            }
+        }
 
         ItemStack item = event.getItem();
         if(item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) return;
 
         BlockFace face = event.getBlockFace();
 
-        Block toPlace = block.getRelative(face);
+        Block toPlace = clickedBlock.getRelative(face);
 
         // If the block is not solid and passable, use the clicked block instead (like for grass)
-        if(!block.getType().isSolid() && block.isPassable()) {
-            toPlace = block;
+        if(!clickedBlock.getType().isSolid() && clickedBlock.isPassable()) {
+            toPlace = clickedBlock;
         }
 
         if(!BlockUtils.canPlaceOn(player, toPlace)) {
-            return;
-        }
-
-        EquipmentSlot slot = event.getHand();
-        if (slot != EquipmentSlot.HAND) {
-            return; // Only handle main hand interactions
-        }
-
-        // If there is a custom inventory block or a block that opens an inventory at the clicked location (and the player isn't sneaking), do not allow placement
-        if(
-                (CustomBlockUtils.getCustomBlockFromLoc(block.getLocation()) instanceof InventoryCustomBlock || block.getState() instanceof TileState) &&
-                        !player.isSneaking()
-        ) {
             return;
         }
 
@@ -113,11 +118,7 @@ public class BlockItemHandlerListener implements Listener {
 
         blockItem.getAction().accept(blockItem, player, toPlace.getLocation());
 
-        CustomBlockActionListener.notAllowed.add(player.getUniqueId());
-
-        Krimson.getScheduler().runTaskAsynchronously(() -> {
-            CustomBlockActionListener.notAllowed.remove(player.getUniqueId());
-        });
+        cancelCBActionForNextTick(player);
 
         final Block finalToPlace = toPlace;
         Krimson.getScheduler().runTaskLater(() -> {
@@ -125,6 +126,14 @@ public class BlockItemHandlerListener implements Listener {
         }, 2L);
 
         event.setUseInteractedBlock(Event.Result.DENY);
+    }
+
+    private static void cancelCBActionForNextTick(Player player) {
+        CustomBlockActionListener.notAllowed.add(player.getUniqueId());
+
+        Krimson.getScheduler().runTaskAsynchronously(() -> {
+            CustomBlockActionListener.notAllowed.remove(player.getUniqueId());
+        });
     }
 
     @EventHandler

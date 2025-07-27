@@ -10,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.CustomBlockTypeChecker;
+import ovh.paulem.krimson.regions.container.ChunkBlockContainer;
+import ovh.paulem.krimson.regions.container.GlobalBlockContainer;
+import ovh.paulem.krimson.regions.container.WorldBlockContainer;
 import ovh.paulem.krimson.utils.ChunkUtils;
 
 import java.util.ArrayList;
@@ -53,13 +56,8 @@ public class CustomBlockTracker {
     public void handleChunkUnload(Chunk chunk) {
         saveChunk(chunk, holder -> {
             CustomBlock customBlock = (CustomBlock) holder.getData();
-            ItemDisplay display = customBlock.getSpawnedDisplay();
 
-            if (display.getLocation().getChunk().equals(chunk)) {
-                Krimson.getInstance().getLogger().info("Unloading custom block " + customBlock.getBlockInside() + " at " + display.getLocation() + "!");
-
-                customBlock.onUnload();
-            }
+            customBlock.onUnload();
         });
 
         WorldBlockContainer container = globalContainer.getWorldContainer(chunk.getWorld());

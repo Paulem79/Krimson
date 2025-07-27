@@ -1,7 +1,9 @@
-package ovh.paulem.krimson.regions;
+package ovh.paulem.krimson.regions.container;
 
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
+import ovh.paulem.krimson.regions.BlockHolder;
+import ovh.paulem.krimson.regions.ChunkKey;
 
 import java.util.ArrayList;
 import java.util.Collection;

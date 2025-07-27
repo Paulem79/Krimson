@@ -1,9 +1,11 @@
-package ovh.paulem.krimson.regions;
+package ovh.paulem.krimson.regions.container;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
+import ovh.paulem.krimson.regions.BlockHolder;
+import ovh.paulem.krimson.regions.ChunkKey;
 
 import java.util.*;
 

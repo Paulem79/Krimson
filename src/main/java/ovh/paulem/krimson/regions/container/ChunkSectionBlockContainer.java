@@ -1,6 +1,8 @@
-package ovh.paulem.krimson.regions;
+package ovh.paulem.krimson.regions.container;
 
 import lombok.Getter;
+import ovh.paulem.krimson.regions.BlockHolder;
+import ovh.paulem.krimson.regions.container.blocks.DynamicSectionContainer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,14 +15,14 @@ public class ChunkSectionBlockContainer {
 
     @Getter
     private final ChunkBlockContainer parent;
-    private final BlockHolder<?>[] blocks;
+    private final DynamicSectionContainer blocks;
     @Getter
     private final int sectionY;
     private int validCount;
 
     private ChunkSectionBlockContainer(ChunkBlockContainer parent, int sectionY) {
         this.parent = parent;
-        this.blocks = new BlockHolder[VOLUME];
+        this.blocks = DynamicSectionContainer.create(VOLUME);
         this.sectionY = sectionY;
     }
 
@@ -29,13 +31,13 @@ public class ChunkSectionBlockContainer {
     }
 
     public <T> T getBlock(int x, int y, int z) {
-        BlockHolder<T> holder = (BlockHolder<T>) blocks[key(x, y, z)];
+        BlockHolder<T> holder = (BlockHolder<T>) blocks.get(key(x, y, z));
         return holder == null ? null : holder.getData();
     }
 
     public <T> void setBlock(int x, int y, int z, T block) {
-        BlockHolder<?> oldHolder = blocks[key(x, y, z)];
-        blocks[key(x, y, z)] = new BlockHolder<>(x, y, z, block);
+        BlockHolder<?> oldHolder = blocks.get(key(x, y, z));
+        blocks.set(key(x, y, z), new BlockHolder<>(x, y, z, block));
 
         if (oldHolder == null) {
             validCount++;
@@ -43,13 +45,13 @@ public class ChunkSectionBlockContainer {
     }
 
     public void removeBlock(int x, int y, int z) {
-        BlockHolder<?> holder = blocks[key(x, y, z)];
+        BlockHolder<?> holder = blocks.get(key(x, y, z));
 
         if (holder == null) {
             return;
         }
 
-        blocks[key(x, y, z)] = null;
+        blocks.set(key(x, y, z), null);
         validCount--;
 
         notifyParent();
@@ -57,7 +59,7 @@ public class ChunkSectionBlockContainer {
 
     public void clear() {
         for (int index = 0; index < VOLUME; index++) {
-            blocks[index] = null;
+            blocks.set(index, null);
         }
 
         validCount = 0;
@@ -83,7 +85,7 @@ public class ChunkSectionBlockContainer {
         List<BlockHolder<?>> holders = new ArrayList<>();
 
         for (int index = 0; index < VOLUME; index++) {
-            BlockHolder<?> holder = blocks[index];
+            BlockHolder<?> holder = blocks.get(index);
 
             if (holder == null) {
                 continue;

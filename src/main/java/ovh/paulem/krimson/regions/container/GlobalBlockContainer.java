@@ -1,8 +1,9 @@
-package ovh.paulem.krimson.regions;
+package ovh.paulem.krimson.regions.container;
 
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.jetbrains.annotations.Nullable;
+import ovh.paulem.krimson.regions.BlockHolder;
 
 import java.util.*;
 
