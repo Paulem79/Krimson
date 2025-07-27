@@ -1,5 +1,7 @@
 package ovh.paulem.krimson.listeners;
 
+import org.bukkit.Material;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
 import org.bukkit.block.Block;
@@ -18,35 +20,45 @@ public class CustomBlockSuppressionListener implements Listener {
     @EventHandler
     public void onCustomBlockBreak(BlockBreakEvent e) {
         Block block = e.getBlock();
-        CustomBlockUtils.handleBlockSuppression(block, e);
+        if(Krimson.isCustomBlock(block)) {
+            CustomBlockUtils.handleBlockSuppression(block, e);
+        }
     }
 
     @EventHandler
     public void onCustomBlockFromTo(BlockFormEvent e) {
         Block block = e.getBlock();
-        CustomBlockUtils.handleBlockSuppression(block, e);
-    }
-
-    @EventHandler
-    public void onCustomBlockExplosion(BlockExplodeEvent e) {
-        for (Block block : e.blockList()) {
+        if(Krimson.isCustomBlock(block)) {
             CustomBlockUtils.handleBlockSuppression(block, e);
         }
     }
 
-    // FIXME: Makes piston extend block disappear
+    @EventHandler
+    public void onCustomBlockExplosion(EntityExplodeEvent e) {
+        for (Block block : e.blockList()) {
+            if(Krimson.isCustomBlock(block)) {
+                block.setType(Material.AIR);
+                CustomBlockUtils.handleBlockSuppression(block, e);
+            }
+        }
+    }
+
     // TODO : Make custom blocks work with piston
     @EventHandler
     public void onCustomBlockPistonExtend(BlockPistonExtendEvent e) {
         for (Block block : e.getBlocks()) {
-            CustomBlockUtils.handleBlockSuppression(block, e);
+            if(Krimson.isCustomBlock(block)) {
+                CustomBlockUtils.handleBlockSuppression(block, e);
+            }
         }
     }
 
     @EventHandler
     public void onCustomBlockPistonExtend(BlockPistonRetractEvent e) {
         for (Block block : e.getBlocks()) {
-            CustomBlockUtils.handleBlockSuppression(block, e);
+            if(Krimson.isCustomBlock(block)) {
+                CustomBlockUtils.handleBlockSuppression(block, e);
+            }
         }
     }
 

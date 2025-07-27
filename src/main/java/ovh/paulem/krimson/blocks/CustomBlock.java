@@ -1,13 +1,22 @@
 package ovh.paulem.krimson.blocks;
 
 import com.google.common.base.Preconditions;
+import com.jeff_media.customblockdata.CustomBlockData;
 import lombok.Getter;
+import org.bukkit.GameMode;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.codec.Codecs;
 import ovh.paulem.krimson.constants.Keys;
+import ovh.paulem.krimson.items.BlockItem;
+import ovh.paulem.krimson.items.Items;
 import ovh.paulem.krimson.utils.BlockUtils;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
 import org.bukkit.Location;
@@ -23,12 +32,16 @@ import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import ovh.paulem.krimson.properties.PropertiesField;
 import ovh.paulem.krimson.properties.PropertiesStore;
+import ovh.paulem.krimson.utils.NamespacedKeyUtils;
 
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public class CustomBlock {
     public static final Vector3f OFFSET = new Vector3f(.0005f);
 
+    @Getter
+    protected final NamespacedKey dropIdentifier;
     @Getter
     protected final Material blockInside;
     @Getter
@@ -38,6 +51,8 @@ public class CustomBlock {
     @Getter
     protected PropertiesStore properties;
 
+    @Getter
+    private PropertiesField<String> dropIdentifierField;
     @Getter
     private PropertiesField<String> blockInsideField;
     @Getter
@@ -51,8 +66,9 @@ public class CustomBlock {
      *
      * @param displayedItem The item to display
      */
-    public CustomBlock(Material blockInside, ItemStack displayedItem) {
+    public CustomBlock(NamespacedKey dropIdentifier, Material blockInside, ItemStack displayedItem) {
         Preconditions.checkArgument(blockInside.isBlock(), "The material inside must be a block!");
+        this.dropIdentifier = dropIdentifier;
         this.blockInside = blockInside;
         this.displayedItem = displayedItem;
 
@@ -81,15 +97,25 @@ public class CustomBlock {
      * To get the custom block from the item display, you can use {@link CustomBlockUtils#getCustomBlockFromEntity(Entity)}
      */
     public CustomBlock(ItemDisplay itemDisplay) {
-        // Thanks to java being an asshole with before super statements (but available in java 22+), we have to do this shit
-        this(Material.valueOf(new PropertiesStore(itemDisplay).get(Keys.BLOCK_INSIDE_KEY, PersistentDataType.STRING).orElseThrow()),
-                Codecs.ITEM_STACK_CODEC.decode(new PropertiesStore(itemDisplay).get(Keys.DISPLAYED_ITEM_KEY, PersistentDataType.BYTE_ARRAY).orElseThrow()));
+        // Thanks to java not having before super statements (but available in java 22+), we have to do this... horrible thing
+        this(
+                NamespacedKey.fromString(new PropertiesStore(itemDisplay).get(Keys.DROP_IDENTIFIER_KEY, PersistentDataType.STRING).orElseThrow()),
+                Material.valueOf(new PropertiesStore(itemDisplay).get(Keys.BLOCK_INSIDE_KEY, PersistentDataType.STRING).orElseThrow()),
+                Codecs.ITEM_STACK_CODEC.decode(new PropertiesStore(itemDisplay).get(Keys.DISPLAYED_ITEM_KEY, PersistentDataType.BYTE_ARRAY).orElseThrow())
+        );
         setDisplayAndProperties(itemDisplay);
     }
 
     protected void setDisplayAndProperties(ItemDisplay itemDisplay) {
         this.spawnedDisplay = itemDisplay;
         this.properties = new PropertiesStore(itemDisplay);
+
+        if(this.properties.has(Keys.DROP_IDENTIFIER_KEY)) {
+            this.dropIdentifierField = new PropertiesField<>(Keys.DROP_IDENTIFIER_KEY, properties, PersistentDataType.STRING);
+        } else {
+            this.dropIdentifierField = new PropertiesField<>(Keys.DROP_IDENTIFIER_KEY, dropIdentifier.toString());
+            this.properties.set(dropIdentifierField);
+        }
 
         if(this.properties.has(Keys.BLOCK_INSIDE_KEY)) {
             this.blockInsideField = new PropertiesField<>(Keys.BLOCK_INSIDE_KEY, properties, PersistentDataType.STRING);
@@ -115,7 +141,16 @@ public class CustomBlock {
             return;
         }
 
+        blockLoc.setPitch(0);
+        blockLoc.setYaw(0);
+
         blockLoc.getBlock().setType(blockInside);
+
+        PersistentDataContainer pdc = new CustomBlockData(blockLoc.getBlock(), Krimson.getInstance());
+        PropertiesStore blockProperties = new PropertiesStore(pdc);
+
+        blockProperties.set(Keys.CUSTOM_BLOCK_KEY, (byte) 1);
+        blockProperties.set(Keys.IDENTIFIER_KEY, dropIdentifier.toString());
 
         if(displayedItem.getType() == Material.PLAYER_HEAD)
         {
@@ -189,23 +224,47 @@ public class CustomBlock {
      */
     public void onInteract(PlayerInteractEvent event) {
     }
+
     /**
      * Called when the custom block is placed by a player.
      */
     public void onPlace(BlockPlaceEvent event) {
     }
+
     /**
      * Called when the custom block is broken by a player.
      */
     public void onPlayerBreak(BlockBreakEvent event) {
-        onBreak(event);
-    };
+        onBreak(event, event.getPlayer());
+    }
+
     /**
      * Called when the custom block is broken. (called also when a player breaks the block)
      */
-    public void onBreak(BlockEvent event) {
+    public void onBreak(@Nullable Event event, @Nullable Player player) {
+        if(player != null) {
+            if(player.getGameMode() == GameMode.CREATIVE) return;
+        }
+
+        if(dropIdentifier.equals(NamespacedKeyUtils.none())) return;
+
+        Block block = CustomBlockUtils.getBlockFromDisplay(spawnedDisplay);
+
+        Optional<BlockItem> dropItem = Items.REGISTRY.get(dropIdentifier);
+
+        if(dropItem.isEmpty()) {
+            Krimson.getInstance().getLogger().warning("Custom block " + dropIdentifier + " has no corresponding item in the registry!");
+            return;
+        }
+
+        ItemStack itemStack = dropItem.get().getItemStack();
+
+        block.getWorld().dropItemNaturally(block.getLocation().add(.5, .5, .5), itemStack);
     }
 
+    /**
+     * Called when the custom block is unloaded (e.g. when the chunk is unloaded)
+     */
     public void onUnload() {
     }
 }

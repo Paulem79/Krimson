@@ -1,5 +1,9 @@
 plugins {
     id("java")
+    kotlin("jvm") version "2.+"
+
+    id("idea")
+
     id("com.gradleup.shadow")
 
     id("xyz.jpenilla.run-paper") version "2.3.1"
@@ -29,6 +33,9 @@ allprojects {
             name = "papermc"
             url = uri("https://repo.papermc.io/repository/maven-public/")
         }
+
+        maven("https://maven.radsteve.net/public")
+        maven("https://maven.andante.dev/releases/")
     }
 
     dependencies {
@@ -41,8 +48,13 @@ allprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.38")
     }
 
+    artifacts.archives(tasks.shadowJar)
     tasks.shadowJar {
         archiveClassifier.set("")
+        exclude("META-INF/**")
+
+        relocate("com.github.Anon8281.universalScheduler", "ovh.paulem.krimson.libs.universalScheduler")
+        relocate("com.jeff_media.customblockdata", "ovh.paulem.krimson.libs.customblockdata")
     }
 
     tasks.build {
@@ -80,6 +92,22 @@ dependencies {
     }
 
     implementation("com.github.Anon8281:UniversalScheduler:0.+")
+
+    implementation("com.jeff-media:custom-block-data:2.2.4")
+
+    implementation("net.radstevee.packed:packed-core:1.+")
+
+    implementation("net.mcbrawls.inject:spigot:3.+")
+    implementation("net.mcbrawls.inject:api:3.+")
+    implementation("net.mcbrawls.inject:http:3.+")
+    implementation("net.mcbrawls.inject:jetty:3.+")
+    implementation("net.mcbrawls.inject:javalin:3.+"){
+        isTransitive = false
+    }
+    implementation("io.javalin:javalin:6.3.0")
+
+    compileOnly("io.netty:netty-all:4.1.97.Final")
+    compileOnly("org.slf4j:slf4j-api:1.7.30")
 }
 
 var alreadyMappedCommon = false
@@ -107,11 +135,17 @@ subprojects {
         tasks.shadowJar {
             if(alreadyMappedCommon) exclude("**/common/**")
         }
+    } else {
+        dependencies {
+            implementation("com.github.Anon8281:UniversalScheduler:0.+")
+            implementation("com.jeff-media:custom-block-data:2.2.4")
+        }
     }
 }
 
 tasks.shadowJar {
-    relocate("com.github.Anon8281.universalScheduler", "ovh.paulem.krimson.libs.universalScheduler")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    minimize()
 }
 
 tasks.compileJava {

@@ -3,6 +3,7 @@ package ovh.paulem.krimson.blocks;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Light;
@@ -11,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.properties.PropertiesField;
+import ovh.paulem.krimson.utils.CustomBlockUtils;
 
 public class LightBlock extends CustomBlock {
     @Getter
@@ -21,8 +23,8 @@ public class LightBlock extends CustomBlock {
     @Getter
     private Block lightBlock;
 
-    public LightBlock(int emittingLightLevel) {
-        super(Material.SLIME_BLOCK, new ItemStack(Material.AMETHYST_BLOCK));
+    public LightBlock(NamespacedKey dropIdentifier, int emittingLightLevel) {
+        super(dropIdentifier, Material.SLIME_BLOCK, new ItemStack(Material.AMETHYST_BLOCK));
 
         this.baseEmittingLightLevel = emittingLightLevel;
     }
@@ -57,5 +59,14 @@ public class LightBlock extends CustomBlock {
     @Override
     public void tick() {
         super.tick();
+
+        Block block = CustomBlockUtils.getBlockFromDisplay(this.spawnedDisplay);
+        if (block.getType() != this.blockInside) {
+            Block aboveBlock = block.getRelative(BlockFace.UP);
+
+            if(aboveBlock.getType() == lightBlock.getType()) {
+                aboveBlock.setType(Material.AIR);
+            }
+        }
     }
 }

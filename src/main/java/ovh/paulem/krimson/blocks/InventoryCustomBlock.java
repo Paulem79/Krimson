@@ -3,6 +3,7 @@ package ovh.paulem.krimson.blocks;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
@@ -37,8 +38,8 @@ public class InventoryCustomBlock extends CustomBlock {
 
     private final InventoryDiff inventoryDiff = new InventoryDiff();
 
-    public InventoryCustomBlock(Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle) {
-        super(blockInside, displayedItem);
+    public InventoryCustomBlock(NamespacedKey dropIdentifier, Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle) {
+        super(dropIdentifier, blockInside, displayedItem);
 
         this.baseInventorySize = inventorySize;
         this.baseInventoryTitle = inventoryTitle;

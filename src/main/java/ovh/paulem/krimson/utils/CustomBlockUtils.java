@@ -1,5 +1,6 @@
 package ovh.paulem.krimson.utils;
 
+import org.bukkit.event.Event;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import org.bukkit.Location;
@@ -18,7 +19,7 @@ public class CustomBlockUtils {
      *
      * @param block the block to check for custom block suppression
      */
-    public static void handleBlockSuppression(Block block, @Nullable BlockEvent event) {
+    public static void handleBlockSuppression(Block block, @Nullable Event event) {
         Entity entity = getDisplayFromBlock(block);
 
         if(entity == null) {
@@ -26,15 +27,12 @@ public class CustomBlockUtils {
         }
 
         if(Krimson.isCustomBlock(entity) && getBlockFromDisplay(entity).getLocation().equals(block.getLocation())) {
-            if(event != null){
-                CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
-                if(customBlock != null){
-                    if(event instanceof BlockBreakEvent){
-                        customBlock.onPlayerBreak((BlockBreakEvent) event);
-                    } else
-                    {
-                        customBlock.onBreak(event);
-                    }
+            CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
+            if(customBlock != null){
+                if(event instanceof BlockBreakEvent){
+                    customBlock.onPlayerBreak((BlockBreakEvent) event);
+                } else {
+                    customBlock.onBreak(event, null);
                 }
             }
 
@@ -100,12 +98,13 @@ public class CustomBlockUtils {
     @Nullable
     public static CustomBlock getCustomBlockFromEntity(Entity entity) {
         return Krimson.customBlocks
-                .stream()
+                .parallelStream()
                 .filter(customBlock -> customBlock.getSpawnedDisplay().getUniqueId().equals(entity.getUniqueId()))
                 .findFirst()
                 .orElse(null);
     }
 
+    @Nullable
     public static CustomBlock getCustomBlockFromLoc(Location location) {
         Block block = location.getBlock();
         Entity entity = getDisplayFromBlock(block);
@@ -124,8 +123,7 @@ public class CustomBlockUtils {
      */
     public static void removeDisplay(ItemDisplay itemDisplay) {
         itemDisplay.getWorld().getBlockAt(itemDisplay.getLocation()).setType(Material.AIR);
-        itemDisplay.getWorld().getBlockAt(itemDisplay.getLocation().add(0, 1, 0)).setType(Material.AIR);
 
-        Krimson.customBlocks.removeIf(customBlock -> customBlock.getSpawnedDisplay().equals(itemDisplay));
+        Krimson.customBlocks.removeIf(customBlock -> customBlock.getSpawnedDisplay().getUniqueId().equals(itemDisplay.getUniqueId()));
     }
 }

@@ -1,5 +1,6 @@
 package ovh.paulem.krimson.listeners;
 
+import org.bukkit.event.Event;
 import org.bukkit.inventory.InventoryHolder;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
@@ -13,9 +14,17 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
 public class CustomBlockActionListener implements Listener {
+    public static Set<UUID> notAllowed = new HashSet<>();
+
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
+        if(event.useInteractedBlock() == Event.Result.DENY || notAllowed.contains(event.getPlayer().getUniqueId())) return;
+
         Block clickedBlock = event.getClickedBlock();
         if(clickedBlock == null || clickedBlock.isEmpty() || clickedBlock.isLiquid()) {
             return;

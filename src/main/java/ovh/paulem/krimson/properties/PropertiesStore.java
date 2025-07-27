@@ -2,6 +2,7 @@ package ovh.paulem.krimson.properties;
 
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataHolder;
 import org.bukkit.persistence.PersistentDataType;
 import ovh.paulem.krimson.Krimson;
@@ -11,10 +12,14 @@ import java.util.Optional;
 
 public final class PropertiesStore {
     @Getter
-    private final PersistentDataHolder holder;
+    private final PersistentDataContainer container;
 
     public PropertiesStore(PersistentDataHolder holder) {
-        this.holder = holder;
+        this(holder.getPersistentDataContainer());
+    }
+
+    public PropertiesStore(PersistentDataContainer container) {
+        this.container = container;
     }
 
     public <P, C> Optional<C> get(PropertiesField<C> field) {
@@ -23,7 +28,7 @@ public final class PropertiesStore {
 
     public <P, C> Optional<C> get(String key, PersistentDataType<P, C> dataType) {
         return Optional.ofNullable(
-                holder.getPersistentDataContainer().get(
+                getContainer().get(
                         new NamespacedKey(Krimson.getInstance(), key),
                         dataType
                 )
@@ -35,7 +40,7 @@ public final class PropertiesStore {
     }
 
     public boolean has(String key) {
-        return holder.getPersistentDataContainer().has(
+        return getContainer().has(
                 new NamespacedKey(Krimson.getInstance(), key)
         );
     }
@@ -45,7 +50,7 @@ public final class PropertiesStore {
     }
 
     public <P, C> void set(String key, C value) {
-        holder.getPersistentDataContainer().set(
+        getContainer().set(
                 new NamespacedKey(Krimson.getInstance(), key),
                 PersistentDataUtils.getCorrespondType(value),
                 value
@@ -55,7 +60,7 @@ public final class PropertiesStore {
     @Override
     public String toString() {
         return "PropertiesStore{" +
-                "holder=" + holder +
+                "container=" + container +
                 '}';
     }
 }

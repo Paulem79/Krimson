@@ -1,18 +1,22 @@
 package ovh.paulem.krimson.commands;
 
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.InventoryCustomBlock;
 import ovh.paulem.krimson.blocks.LightBlock;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import ovh.paulem.krimson.items.Items;
+import ovh.paulem.krimson.utils.ItemUtils;
+import ovh.paulem.krimson.utils.NamespacedKeyUtils;
 
 import java.util.List;
 
@@ -30,15 +34,15 @@ public class CommandDisplay implements TabExecutor {
 
             switch (subCommand) {
                 case "light":
-                    new LightBlock(15).spawn(blockLoc);
+                    new LightBlock(NamespacedKeyUtils.none(), 15).spawn(blockLoc);
                     sender.sendMessage("§aBloc lumineux affiché.");
                     break;
                 case "inventory":
-                    new InventoryCustomBlock(Material.AMETHYST_BLOCK, new ItemStack(Material.BONE_BLOCK), 54, "Test inventory").spawn(blockLoc);
+                    new InventoryCustomBlock(NamespacedKeyUtils.none(), Material.AMETHYST_BLOCK, Items.TEST.getItemStack(), 54, "Test inventory").spawn(blockLoc);
                     sender.sendMessage("§aBloc d'inventaire affiché.");
                     break;
                 case "basic":
-                    new CustomBlock(Material.BONE_BLOCK, new ItemStack(Material.ACACIA_PLANKS))
+                    new CustomBlock(NamespacedKeyUtils.none(), Material.BONE_BLOCK, new ItemStack(Material.ACACIA_PLANKS))
                             .spawn(blockLoc);
                     sender.sendMessage("§aBloc basique affiché.");
                     break;

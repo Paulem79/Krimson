@@ -9,5 +9,8 @@ website: paulem.ovh
 
 commands:
   display:
-    description: Your description
-    usage: /<command>
+    description: Spawn a display block
+    usage: /display
+  krimson:
+    description: General Krimson command
+    usage: /krimson
