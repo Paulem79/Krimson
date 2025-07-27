@@ -1,6 +1,5 @@
 package ovh.paulem.krimson;
 
-import com.google.common.collect.Iterables;
 import com.jeff_media.customblockdata.CustomBlockData;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -187,32 +186,34 @@ public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
     }
 
     public static void retryCustomBlockFromBlock(Block block, @Nullable Player player) {
-        if (isCustomBlock(block)) {
-            @Nullable Entity display = CustomBlockUtils.getDisplayFromBlock(block);
-
-            if(display == null) {
-                PersistentDataContainer pdc = new CustomBlockData(block, Krimson.getInstance());
-                @Nullable String identifier = new PropertiesStore(pdc).get(Keys.IDENTIFIER_KEY, PersistentDataType.STRING).orElse(null);
-
-                if(identifier == null) {
-                    return;
-                }
-
-                @Nullable NamespacedKey key = NamespacedKey.fromString(identifier);
-                if (key == null) {
-                    getInstance().getLogger().warning("Invalid NamespacedKey for custom block at " + block.getLocation() + ": " + identifier);
-                    return;
-                }
-
-                @Nullable BlockItem blockItem = Items.REGISTRY.getOrNull(key);
-
-                if(blockItem == null) {
-                    getInstance().getLogger().warning("No BlockItem found for custom block at " + block.getLocation() + ": " + identifier);
-                    return;
-                }
-
-                blockItem.getAction().accept(blockItem, player, block.getLocation());
-            }
+        if (!isCustomBlock(block)) {
+            return;
         }
+
+        @Nullable Entity display = CustomBlockUtils.getDisplayFromBlock(block);
+        if (display != null) {
+            return;
+        }
+
+        PersistentDataContainer pdc = new CustomBlockData(block, Krimson.getInstance());
+
+        @Nullable String identifier = new PropertiesStore(pdc).get(Keys.IDENTIFIER_KEY, PersistentDataType.STRING).orElse(null);
+        if(identifier == null) {
+            return;
+        }
+
+        @Nullable NamespacedKey key = NamespacedKey.fromString(identifier);
+        if (key == null) {
+            getInstance().getLogger().warning("Invalid NamespacedKey for custom block at " + block.getLocation() + ": " + identifier);
+            return;
+        }
+
+        @Nullable BlockItem blockItem = Items.REGISTRY.getOrNull(key);
+        if(blockItem == null) {
+            getInstance().getLogger().warning("No BlockItem found for custom block at " + block.getLocation() + ": " + identifier);
+            return;
+        }
+
+        blockItem.getAction().accept(blockItem, player, block.getLocation());
     }
 }
