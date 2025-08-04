@@ -19,11 +19,10 @@ import java.util.UUID;
 
 public class ResourcePackHosting implements Listener {
     public static final UUID RESOURCE_PACK_ID = UUID.randomUUID();
-
-    @Getter
-    private boolean canPlayersJoin = false;
     @Getter
     private final File zipFile;
+    @Getter
+    private boolean canPlayersJoin = false;
     @Getter
     private Javalin javalin;
 

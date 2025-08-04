@@ -1,22 +1,20 @@
 package ovh.paulem.krimson.listeners;
 
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.*;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.utils.CustomBlockUtils;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.InventoryCustomBlock;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.inventory.*;
-import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,10 +26,10 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if(event.useInteractedBlock() == Event.Result.DENY || notAllowed.contains(player.getUniqueId())) return;
+        if (event.useInteractedBlock() == Event.Result.DENY || notAllowed.contains(player.getUniqueId())) return;
 
         Action action = event.getAction();
-        if(action != Action.RIGHT_CLICK_BLOCK) {
+        if (action != Action.RIGHT_CLICK_BLOCK) {
             return; // Only handle right or left click actions on blocks
         }
 
@@ -40,27 +38,22 @@ public class CustomBlockActionListener implements Listener {
             return; // Only handle main hand interactions
         }
 
-        if(player.isSneaking()) {
+        if (player.isSneaking()) {
             ItemStack item = player.getInventory().getItem(slot);
-            if(item != null && !item.getType().isAir()) {
+            if (item != null && !item.getType().isAir()) {
                 return;
             }
         }
 
         Block clickedBlock = event.getClickedBlock();
-        if(clickedBlock == null || clickedBlock.isEmpty() || clickedBlock.isLiquid()) {
+        if (clickedBlock == null || clickedBlock.isEmpty() || clickedBlock.isLiquid()) {
             return;
         }
 
-        Entity entity = CustomBlockUtils.getDisplayFromBlock(clickedBlock);
-        if(entity == null) {
-            return;
-        }
+        if (Krimson.isCustomBlockFromWatcher(clickedBlock)) {
+            CustomBlock customBlock = Krimson.customBlocks.getBlockAt(clickedBlock);
 
-        if(Krimson.isCustomBlock(entity)) {
-            CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
-
-            if(customBlock == null) {
+            if (customBlock == null) {
                 return;
             }
 
@@ -71,19 +64,14 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
         Block clickedBlock = event.getBlockPlaced();
-        if(clickedBlock.isEmpty() || clickedBlock.isLiquid()) {
+        if (clickedBlock.isEmpty() || clickedBlock.isLiquid()) {
             return;
         }
 
-        Entity entity = CustomBlockUtils.getDisplayFromBlock(clickedBlock);
-        if(entity == null) {
-            return;
-        }
+        if (Krimson.isCustomBlockFromWatcher(clickedBlock)) {
+            CustomBlock customBlock = Krimson.customBlocks.getBlockAt(clickedBlock);
 
-        if(Krimson.isCustomBlock(entity)) {
-            CustomBlock customBlock = CustomBlockUtils.getCustomBlockFromEntity(entity);
-
-            if(customBlock == null) {
+            if (customBlock == null) {
                 return;
             }
 
@@ -95,11 +83,11 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onGuiOpen(InventoryOpenEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        if(holder == null) {
+        if (holder == null) {
             return;
         }
 
-        if(holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
+        if (holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
             InventoryCustomBlock customBlock = customBlockHolder.getCustomBlock();
 
             customBlock.onGuiOpen(event);
@@ -109,11 +97,11 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onGuiClose(InventoryCloseEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        if(holder == null) {
+        if (holder == null) {
             return;
         }
 
-        if(holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
+        if (holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
             InventoryCustomBlock customBlock = customBlockHolder.getCustomBlock();
 
             customBlock.onGuiClose(event);
@@ -123,11 +111,11 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onGuiClick(InventoryClickEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        if(holder == null) {
+        if (holder == null) {
             return;
         }
 
-        if(holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
+        if (holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
             InventoryCustomBlock customBlock = customBlockHolder.getCustomBlock();
 
             customBlock.onGuiClick(event);
@@ -137,11 +125,11 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onGuiDrag(InventoryDragEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        if(holder == null) {
+        if (holder == null) {
             return;
         }
 
-        if(holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
+        if (holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
             InventoryCustomBlock customBlock = customBlockHolder.getCustomBlock();
 
             customBlock.onGuiDrag(event);
@@ -151,11 +139,11 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onGuiMoveItemFrom(InventoryMoveItemEvent event) {
         InventoryHolder holder = event.getSource().getHolder();
-        if(holder == null) {
+        if (holder == null) {
             return;
         }
 
-        if(holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
+        if (holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
             InventoryCustomBlock customBlock = customBlockHolder.getCustomBlock();
 
             customBlock.onGuiMoveItem(event);
@@ -165,11 +153,11 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onGuiMoveItemTo(InventoryMoveItemEvent event) {
         InventoryHolder holder = event.getDestination().getHolder();
-        if(holder == null) {
+        if (holder == null) {
             return;
         }
 
-        if(holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
+        if (holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
             InventoryCustomBlock customBlock = customBlockHolder.getCustomBlock();
 
             customBlock.onGuiMoveItem(event);
@@ -179,11 +167,11 @@ public class CustomBlockActionListener implements Listener {
     @EventHandler
     public void onGuiPickupItem(InventoryPickupItemEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        if(holder == null) {
+        if (holder == null) {
             return;
         }
 
-        if(holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
+        if (holder instanceof InventoryCustomBlock.InventoryCustomBlockHolder customBlockHolder) {
             InventoryCustomBlock customBlock = customBlockHolder.getCustomBlock();
 
             customBlock.onGuiPickupItem(event);

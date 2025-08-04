@@ -15,8 +15,8 @@ public class InventoryDiff {
     private ItemStack[] now;
 
     public boolean hasChanges() {
-        if(before == null || now == null) {
-            return false;
+        if (before == null || now == null) {
+            return true;
         }
 
         if (before.length != now.length) {

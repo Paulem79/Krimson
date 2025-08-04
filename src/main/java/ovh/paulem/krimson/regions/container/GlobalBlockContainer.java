@@ -84,7 +84,7 @@ public class GlobalBlockContainer {
         return holders;
     }
 
-    public<T> List<? extends T> getAllBlocks(Class<T> type) {
+    public <T> List<? extends T> getAllBlocks(Class<T> type) {
         List<T> blocks = new ArrayList<>();
 
         for (BlockHolder<?> holder : getAllBlocks()) {

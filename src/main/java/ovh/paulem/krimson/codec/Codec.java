@@ -32,13 +32,13 @@ public interface Codec<T, R> {
      * Encodes an object into the specified output.
      *
      * @param dataOutput the output to encode the object into
-     * @param object the object to encode
+     * @param object     the object to encode
      * @throws Exception if an error occurs during encoding
      */
     R encode(@NotNull OutputStreamHandler<?> dataOutput, T object) throws Exception;
 
     default T decode(R object) {
-        if(object instanceof byte[] datas) {
+        if (object instanceof byte[] datas) {
             try (ByteArrayInputStream inputStream = new ByteArrayInputStream(datas)) {
                 InputStreamHandler<?> dataOutput = CompatAccess.getHandler(inputStream);
 

@@ -1,6 +1,8 @@
 package ovh.paulem.krimson.common.compat.stream.output;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 public abstract class OutputStreamHandler<T extends OutputStream> {
     protected final ByteArrayOutputStream outputStream;

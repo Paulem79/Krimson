@@ -32,12 +32,20 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class BlockItemHandlerListener implements Listener {
+    private static void cancelCBActionForNextTick(Player player) {
+        CustomBlockActionListener.notAllowed.add(player.getUniqueId());
+
+        Krimson.getScheduler().runTaskAsynchronously(() -> {
+            CustomBlockActionListener.notAllowed.remove(player.getUniqueId());
+        });
+    }
+
     @EventHandler(priority = EventPriority.LOW)
     public void onBlockPlace(PlayerInteractEvent event) {
-        if(event.useInteractedBlock() == Event.Result.DENY || event.useItemInHand() == Event.Result.DENY) return;
+        if (event.useInteractedBlock() == Event.Result.DENY || event.useItemInHand() == Event.Result.DENY) return;
 
         Action action = event.getAction();
-        if(action != Action.RIGHT_CLICK_BLOCK) {
+        if (action != Action.RIGHT_CLICK_BLOCK) {
             return; // Only handle right or left click actions on blocks
         }
 
@@ -47,40 +55,40 @@ public class BlockItemHandlerListener implements Listener {
         }
 
         Player player = event.getPlayer();
-        
-        if(player.getGameMode() == GameMode.SPECTATOR || player.getGameMode() == GameMode.ADVENTURE) {
+
+        if (player.getGameMode() == GameMode.SPECTATOR || player.getGameMode() == GameMode.ADVENTURE) {
             return; // Do not allow block placement in spectator or adventure mode
         }
-        
+
         Block clickedBlock = event.getClickedBlock();
-        if(clickedBlock == null) return;
+        if (clickedBlock == null) return;
 
         // If there is a custom inventory block or a block that opens an inventory at the clicked location (and the player isn't sneaking), do not allow placement
-        if(
+        if (
                 (CustomBlockUtils.getCustomBlockFromLoc(clickedBlock.getLocation()) instanceof InventoryCustomBlock || clickedBlock.getState() instanceof TileState) &&
                         !player.isSneaking()
         ) {
             ItemStack item = player.getInventory().getItem(slot);
 
             // If the player is not sneaking and doesn't have an item, open inventory
-            if(item == null || item.getType().isAir()) {
+            if (item == null || item.getType().isAir()) {
                 return;
             }
         }
 
         ItemStack item = event.getItem();
-        if(item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) return;
+        if (item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) return;
 
         BlockFace face = event.getBlockFace();
 
         Block toPlace = clickedBlock.getRelative(face);
 
         // If the block is not solid and passable, use the clicked block instead (like for grass)
-        if(!clickedBlock.getType().isSolid() && clickedBlock.isPassable()) {
+        if (!clickedBlock.getType().isSolid() && clickedBlock.isPassable()) {
             toPlace = clickedBlock;
         }
 
-        if(!BlockUtils.canPlaceOn(player, toPlace)) {
+        if (!BlockUtils.canPlaceOn(player, toPlace)) {
             return;
         }
 
@@ -89,7 +97,7 @@ public class BlockItemHandlerListener implements Listener {
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
         @Nullable String identifier = pdc.get(new NamespacedKey(Krimson.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING);
 
-        if(identifier == null) {
+        if (identifier == null) {
             return;
         }
 
@@ -102,7 +110,7 @@ public class BlockItemHandlerListener implements Listener {
 
         BlockItem blockItem = Items.REGISTRY.getOrThrow(key);
 
-        if(player.getGameMode() != GameMode.CREATIVE) {
+        if (player.getGameMode() != GameMode.CREATIVE) {
             event.setUseItemInHand(Event.Result.DENY);
 
             // If there is only one item remaining, remove it from the player's inventory
@@ -120,27 +128,14 @@ public class BlockItemHandlerListener implements Listener {
 
         cancelCBActionForNextTick(player);
 
-        final Block finalToPlace = toPlace;
-        Krimson.getScheduler().runTaskLater(() -> {
-            Krimson.retryCustomBlockFromBlock(finalToPlace, player);
-        }, 2L);
-
         event.setUseInteractedBlock(Event.Result.DENY);
-    }
-
-    private static void cancelCBActionForNextTick(Player player) {
-        CustomBlockActionListener.notAllowed.add(player.getUniqueId());
-
-        Krimson.getScheduler().runTaskAsynchronously(() -> {
-            CustomBlockActionListener.notAllowed.remove(player.getUniqueId());
-        });
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
 
-        if(CustomBlockActionListener.notAllowed.contains(player.getUniqueId())) {
+        if (CustomBlockActionListener.notAllowed.contains(player.getUniqueId())) {
             event.setCancelled(true);
         }
     }
@@ -149,15 +144,15 @@ public class BlockItemHandlerListener implements Listener {
     public void onTryCraft(PrepareItemCraftEvent event) {
         ItemStack[] matrix = event.getInventory().getMatrix();
 
-        if(Arrays.stream(matrix).anyMatch(item -> {
-            if(item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) return false;
+        if (Arrays.stream(matrix).anyMatch(item -> {
+            if (item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) return false;
 
             ItemMeta meta = item.getItemMeta();
 
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
             @Nullable String identifier = pdc.get(new NamespacedKey(Krimson.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING);
 
-            if(identifier == null) {
+            if (identifier == null) {
                 return false;
             }
 

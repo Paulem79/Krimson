@@ -1,24 +1,25 @@
 package ovh.paulem.krimson.properties;
 
+import com.jeff_media.customblockdata.CustomBlockData;
 import lombok.Getter;
 import org.bukkit.NamespacedKey;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataHolder;
+import org.bukkit.block.Block;
 import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.utils.PersistentDataUtils;
 
 import java.util.Optional;
 
-public final class PropertiesStore {
+public final class PDCWrapper {
     @Getter
-    private final PersistentDataContainer container;
+    private final CustomBlockData container;
 
-    public PropertiesStore(PersistentDataHolder holder) {
-        this(holder.getPersistentDataContainer());
+    public PDCWrapper(@NotNull Block block) {
+        this(new CustomBlockData(block, Krimson.getInstance()));
     }
 
-    public PropertiesStore(PersistentDataContainer container) {
+    public PDCWrapper(CustomBlockData container) {
         this.container = container;
     }
 

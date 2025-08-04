@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.entity.ItemDisplay;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.*;
@@ -18,25 +18,30 @@ import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.inventories.InventoryData;
 import ovh.paulem.krimson.inventories.InventoryDiff;
-import ovh.paulem.krimson.utils.CustomBlockUtils;
 import ovh.paulem.krimson.properties.PropertiesField;
+import ovh.paulem.krimson.utils.CustomBlockUtils;
 
 import java.util.UUID;
 
 // FIXME: there are still some difficulties with this approach, especially around parsing/saving it asynchronously which can become an issue if there are a lot of these and they have large contents, but for a basic approach this will be fine https://discord.com/channels/690411863766466590/741875863271899136/1397175434432614472 (saving in files, with pointers in PDC can be better)
 public class InventoryCustomBlock extends CustomBlock {
+    private final int baseInventorySize;
+    private final String baseInventoryTitle;
+    private final InventoryDiff inventoryDiff = new InventoryDiff();
     @Getter
     protected PropertiesField<Integer> inventorySize;
-    private final int baseInventorySize;
     @Getter
     protected PropertiesField<String> inventoryTitle;
-    private final String baseInventoryTitle;
     @Getter
     protected PropertiesField<byte[]> inventoryBase64;
     @Getter
     private Inventory inventory;
 
-    private final InventoryDiff inventoryDiff = new InventoryDiff();
+    public InventoryCustomBlock(NamespacedKey dropIdentifier, Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle, byte[] inventoryBase64) {
+        this(dropIdentifier, blockInside, displayedItem, inventorySize, inventoryTitle);
+
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, inventoryBase64);
+    }
 
     public InventoryCustomBlock(NamespacedKey dropIdentifier, Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle) {
         super(dropIdentifier, blockInside, displayedItem);
@@ -45,8 +50,8 @@ public class InventoryCustomBlock extends CustomBlock {
         this.baseInventoryTitle = inventoryTitle;
     }
 
-    public InventoryCustomBlock(ItemDisplay itemDisplay) {
-        super(itemDisplay);
+    public InventoryCustomBlock(Block block) {
+        super(block);
 
         this.inventorySize = new PropertiesField<>(Keys.INVENTORY_SIZE, properties, PersistentDataType.INTEGER);
         this.baseInventorySize = this.inventorySize.get();
@@ -83,7 +88,7 @@ public class InventoryCustomBlock extends CustomBlock {
         Player player = event.getPlayer();
         Action action = event.getAction();
 
-        if(action != Action.RIGHT_CLICK_BLOCK) {
+        if (action != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
 
@@ -113,7 +118,7 @@ public class InventoryCustomBlock extends CustomBlock {
     public void onGuiClose(InventoryCloseEvent event) {
         this.inventoryDiff.setNow(event.getInventory().getContents());
 
-        if(inventoryDiff.hasChanges()) {
+        if (inventoryDiff.hasChanges()) {
             this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.CODEC.encode(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
             this.properties.set(this.inventoryBase64);
         }
@@ -141,7 +146,7 @@ public class InventoryCustomBlock extends CustomBlock {
         private final int x, y, z;
 
         public InventoryCustomBlockHolder(InventoryCustomBlock customBlock) {
-            this(customBlock.getSpawnedDisplay().getLocation());
+            this(customBlock.getBlock().getLocation());
         }
 
         public InventoryCustomBlockHolder(Location location) {

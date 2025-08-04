@@ -1,22 +1,17 @@
 package ovh.paulem.krimson.blocks;
 
-import org.bukkit.entity.ItemDisplay;
+import org.bukkit.block.Block;
+import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.constants.Keys;
-import ovh.paulem.krimson.properties.PropertiesStore;
+import ovh.paulem.krimson.properties.PDCWrapper;
 
 public class CustomBlockTypeChecker {
-    private final ItemDisplay itemDisplay;
-    private final PropertiesStore properties;
+    private final Block block;
+    private final PDCWrapper properties;
 
-    public CustomBlockTypeChecker(ItemDisplay itemDisplay) {
-        this.itemDisplay = itemDisplay;
-        this.properties = new PropertiesStore(itemDisplay);
-    }
-
-    public boolean isCustomBlock() {
-        return properties.has(Keys.CUSTOM_BLOCK_KEY) &&
-               properties.has(Keys.BLOCK_INSIDE_KEY) &&
-               properties.has(Keys.DISPLAYED_ITEM_KEY);
+    public CustomBlockTypeChecker(Block block) {
+        this.block = block;
+        this.properties = new PDCWrapper(block);
     }
 
     public boolean isLightBlock() {
@@ -25,18 +20,18 @@ public class CustomBlockTypeChecker {
 
     public boolean isInventoryBlock() {
         return properties.has(Keys.INVENTORY_SIZE) &&
-               properties.has(Keys.INVENTORY_TITLE) &&
-               properties.has(Keys.INVENTORY_BASE64);
+                properties.has(Keys.INVENTORY_TITLE) &&
+                properties.has(Keys.INVENTORY_BASE64);
     }
 
     public CustomBlock get() {
-        if (isCustomBlock()) {
+        if (Krimson.isCustomBlock(block)) {
             if (isLightBlock()) {
-                return new LightBlock(itemDisplay);
+                return new LightBlock(block);
             } else if (isInventoryBlock()) {
-                return new InventoryCustomBlock(itemDisplay);
+                return new InventoryCustomBlock(block);
             }
-            return new CustomBlock(itemDisplay);
+            return new CustomBlock(block);
         }
 
         return null;

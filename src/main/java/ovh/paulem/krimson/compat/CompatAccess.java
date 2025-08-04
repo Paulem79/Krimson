@@ -1,15 +1,15 @@
 package ovh.paulem.krimson.compat;
 
 import ovh.paulem.krimson.common.compat.Versioning;
-import ovh.paulem.krimson.spigot.compat.serialize.SpigotItemSerializer;
 import ovh.paulem.krimson.common.compat.serialize.ItemSerializerHandler;
-import ovh.paulem.krimson.paper.compat.serialize.PaperItemSerializer;
-import ovh.paulem.krimson.spigot.compat.stream.input.SpigotInputStream;
 import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
-import ovh.paulem.krimson.paper.compat.stream.input.PaperInputStream;
-import ovh.paulem.krimson.spigot.compat.stream.output.SpigotOutputStream;
 import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
+import ovh.paulem.krimson.paper.compat.serialize.PaperItemSerializer;
+import ovh.paulem.krimson.paper.compat.stream.input.PaperInputStream;
 import ovh.paulem.krimson.paper.compat.stream.output.PaperOutputStream;
+import ovh.paulem.krimson.spigot.compat.serialize.SpigotItemSerializer;
+import ovh.paulem.krimson.spigot.compat.stream.input.SpigotInputStream;
+import ovh.paulem.krimson.spigot.compat.stream.output.SpigotOutputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

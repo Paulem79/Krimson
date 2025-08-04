@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.entity.ItemDisplay;
 import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.blocks.CustomBlock;
@@ -14,19 +13,22 @@ import ovh.paulem.krimson.regions.container.ChunkBlockContainer;
 import ovh.paulem.krimson.regions.container.GlobalBlockContainer;
 import ovh.paulem.krimson.regions.container.WorldBlockContainer;
 import ovh.paulem.krimson.utils.ChunkUtils;
+import ovh.paulem.krimson.utils.PersistentDataUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class CustomBlockTracker {
     @Getter
     private final GlobalBlockContainer globalContainer = GlobalBlockContainer.of();
+    @Getter
+    private final Map<Boolean, Integer> lastTickedCount = new HashMap<>();
 
     public CustomBlockTracker() {
-        Krimson.getScheduler().runTaskTimerAsynchronously(this::tickBlocks, 1, 1);
+        Krimson.getScheduler().runTaskTimerAsynchronously(() -> tickBlocks(CustomBlock::tickAsync, true), 1, 1);
+
+        Krimson.getScheduler().runTaskTimer(() -> tickBlocks(CustomBlock::tickSync, false), 1, 1);
     }
 
     @Nullable
@@ -43,13 +45,9 @@ public class CustomBlockTracker {
     }
 
     public void handleChunkLoad(Chunk chunk) {
-        Collection<ItemDisplay> itemDisplays = Arrays.stream(chunk.getEntities()).filter(Krimson::isCustomBlock).map(entity -> (ItemDisplay) entity).toList();
-        if(!itemDisplays.isEmpty())
-        {
-            for (ItemDisplay itemDisplay : itemDisplays) {
-                CustomBlock customBlock = new CustomBlockTypeChecker(itemDisplay).get();
-                registerBlock(customBlock);
-            }
+        for (Block block : PersistentDataUtils.getBlocksWithCustomData(Krimson.getInstance(), chunk, Krimson::isCustomBlock)) {
+            CustomBlock customBlock = new CustomBlockTypeChecker(block).get();
+            registerBlock(customBlock);
         }
     }
 
@@ -70,7 +68,11 @@ public class CustomBlockTracker {
     }
 
     public void saveChunk(Chunk chunk) {
-        saveChunk(chunk, holder -> {});
+        saveChunk(chunk, holder -> {
+            CustomBlock customBlock = (CustomBlock) holder.getData();
+
+            customBlock.onUnload();
+        });
     }
 
     public void saveChunk(Chunk chunk, Consumer<BlockHolder<?>> callback) {
@@ -100,10 +102,7 @@ public class CustomBlockTracker {
         block.onUnload();
     }
 
-    @Getter
-    private final List<Integer> lastTickedCount = new ArrayList<>();
-
-    private void tickBlocks() {
+    private void tickBlocks(Consumer<CustomBlock> callback, boolean async) {
         int tickCount = 0;
 
         for (World world : Bukkit.getWorlds()) {
@@ -125,13 +124,12 @@ public class CustomBlockTracker {
                         continue;
                     }
 
-
-                    customBlock.tick();
+                    callback.accept(customBlock);
                     tickCount++;
                 }
             }
         }
 
-        lastTickedCount.add(tickCount);
+        lastTickedCount.put(async, tickCount);
     }
 }

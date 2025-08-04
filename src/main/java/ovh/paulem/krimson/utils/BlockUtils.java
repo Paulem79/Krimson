@@ -2,8 +2,7 @@ package ovh.paulem.krimson.utils;
 
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Display;
-import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.function.Function;
@@ -18,7 +17,7 @@ public class BlockUtils {
         byte computed = computeLight(function, block, false);
 
         // If the computed light is 0, it means all cartesian faces are obstructed
-        if(computed == 0) {
+        if (computed == 0) {
             computed = computeLight(function, block, true);
         }
 
@@ -28,12 +27,12 @@ public class BlockUtils {
     public static byte computeLight(Function<Block, Byte> function, Block block, boolean allFaces) {
         byte maxLight = 0;
         for (BlockFace blockFace : BlockFace.values()) {
-            if(!allFaces && !blockFace.isCartesian()) {
+            if (!allFaces && !blockFace.isCartesian()) {
                 continue;
             }
 
             byte actualLight = function.apply(block.getRelative(blockFace));
-            if(actualLight > maxLight) {
+            if (actualLight > maxLight) {
                 maxLight = actualLight;
             }
         }
@@ -42,6 +41,6 @@ public class BlockUtils {
     }
 
     public static boolean canPlaceOn(Player player, Block target) {
-        return target.getWorld().getNearbyEntities(target.getLocation().add(.5, .5, .5), .5, .5, .5).stream().allMatch(entity -> entity instanceof Item || entity instanceof Display);
+        return target.getWorld().getNearbyEntities(target.getLocation().add(.5, .5, .5), .5, .5, .5).stream().noneMatch(entity -> entity instanceof LivingEntity);
     }
 }

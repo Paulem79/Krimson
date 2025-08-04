@@ -8,7 +8,7 @@ public final class PropertiesField<T> {
     private final String fieldName;
     private final T type;
 
-    public PropertiesField(String fieldName, PropertiesStore properties, PersistentDataType<?, T> dataType) {
+    public PropertiesField(String fieldName, PDCWrapper properties, PersistentDataType<?, T> dataType) {
         this(fieldName, properties.get(fieldName, dataType).orElseThrow());
     }
 

@@ -4,8 +4,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
-import ovh.paulem.krimson.utils.ZLibUtils;
 import ovh.paulem.krimson.compat.CompatAccess;
+import ovh.paulem.krimson.utils.ZLibUtils;
 
 import java.io.ByteArrayInputStream;
 
@@ -42,7 +42,7 @@ public abstract class ZLibCodec<T> implements Codec<T, byte[]> {
      * the ZLIB compression layer, allowing for direct encoding and decoding of objects without compression.
      *
      * @return a {@link Codec} instance capable of encoding objects of type {@code T} to their raw byte array representation
-     *         and decoding them back to objects of type {@code T}, without applying any compression or decompression.
+     * and decoding them back to objects of type {@code T}, without applying any compression or decompression.
      */
     public Codec<T, byte[]> toBasicCodec() {
         return new Codec<>() {

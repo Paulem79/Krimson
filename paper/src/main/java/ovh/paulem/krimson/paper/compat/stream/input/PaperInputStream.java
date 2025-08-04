@@ -2,7 +2,9 @@ package ovh.paulem.krimson.paper.compat.stream.input;
 
 import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 
 public class PaperInputStream extends InputStreamHandler<DataInputStream> {
     public PaperInputStream(ByteArrayInputStream inputStream) {

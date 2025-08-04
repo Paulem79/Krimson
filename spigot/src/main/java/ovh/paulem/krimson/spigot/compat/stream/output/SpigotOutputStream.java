@@ -3,7 +3,8 @@ package ovh.paulem.krimson.spigot.compat.stream.output;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class SpigotOutputStream extends OutputStreamHandler<BukkitObjectOutputStream> {
     public SpigotOutputStream(ByteArrayOutputStream outputStream) {

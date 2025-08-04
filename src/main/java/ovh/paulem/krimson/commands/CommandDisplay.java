@@ -1,21 +1,18 @@
 package ovh.paulem.krimson.commands;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.blocks.CustomBlock;
 import ovh.paulem.krimson.blocks.InventoryCustomBlock;
 import ovh.paulem.krimson.blocks.LightBlock;
-import org.bukkit.Location;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 import ovh.paulem.krimson.items.Items;
-import ovh.paulem.krimson.utils.ItemUtils;
 import ovh.paulem.krimson.utils.NamespacedKeyUtils;
 
 import java.util.List;

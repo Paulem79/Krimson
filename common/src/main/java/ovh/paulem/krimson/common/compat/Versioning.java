@@ -3,10 +3,8 @@ package ovh.paulem.krimson.common.compat;
 import org.bukkit.Bukkit;
 
 public class Versioning {
-    private static final String[] mcParts = getMcParts();
-
     private static String[] getMcParts() {
-        if(mcParts != null) return mcParts;
+        if (mcParts != null) return mcParts;
 
         String version = Bukkit.getVersion();
         String[] parts = version.substring(version.indexOf("MC: ") + 4, version.length() - 1).split("\\.");
@@ -17,7 +15,7 @@ public class Versioning {
         }
 
         return parts;
-    }
+    }    private static final String[] mcParts = getMcParts();
 
     public static boolean isPost(int v) {
         String[] mcParts = getMcParts();
@@ -37,4 +35,6 @@ public class Versioning {
             return false;
         }
     }
+
+
 }

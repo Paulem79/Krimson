@@ -8,7 +8,7 @@ import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 
 public class SpigotItemSerializer extends ItemSerializerHandler {
     public SpigotItemSerializer() {
-        if(!messageSent) {
+        if (!messageSent) {
             KrimsonPlugin.getInstance().getLogger().info("Using Bukkit's ItemStack (de)serialization, which is less performant than Paper's one.");
             messageSent = true;
         }

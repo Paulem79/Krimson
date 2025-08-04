@@ -39,7 +39,7 @@ allprojects {
     }
 
     dependencies {
-        if(project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+        if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
         else compileOnly("org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT")
 
         compileOnly("org.jetbrains:annotations:26.0.2")
@@ -101,7 +101,7 @@ dependencies {
     implementation("net.mcbrawls.inject:api:3.+")
     implementation("net.mcbrawls.inject:http:3.+")
     implementation("net.mcbrawls.inject:jetty:3.+")
-    implementation("net.mcbrawls.inject:javalin:3.+"){
+    implementation("net.mcbrawls.inject:javalin:3.+") {
         isTransitive = false
     }
     implementation("io.javalin:javalin:6.3.0")
@@ -119,7 +119,7 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
-    if(project.name != "common") {
+    if (project.name != "common") {
         dependencies {
             implementation(project(":common")) {
                 isTransitive = false
@@ -133,7 +133,7 @@ subprojects {
         alreadyMappedCommon = true
 
         tasks.shadowJar {
-            if(alreadyMappedCommon) exclude("**/common/**")
+            if (alreadyMappedCommon) exclude("**/common/**")
         }
     } else {
         dependencies {

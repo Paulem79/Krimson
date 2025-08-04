@@ -7,19 +7,15 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Light;
-import org.bukkit.entity.ItemDisplay;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.properties.PropertiesField;
-import ovh.paulem.krimson.utils.CustomBlockUtils;
 
 public class LightBlock extends CustomBlock {
+    private final int baseEmittingLightLevel;
     @Getter
     protected PropertiesField<Integer> emittingLightLevel;
-
-    private final int baseEmittingLightLevel;
-
     @Getter
     private Block lightBlock;
 
@@ -29,8 +25,8 @@ public class LightBlock extends CustomBlock {
         this.baseEmittingLightLevel = emittingLightLevel;
     }
 
-    public LightBlock(ItemDisplay itemDisplay) {
-        super(itemDisplay);
+    public LightBlock(Block block) {
+        super(block);
 
         this.emittingLightLevel = new PropertiesField<>(Keys.EMITTING_LIGHT_LEVEL, properties, PersistentDataType.INTEGER);
         this.baseEmittingLightLevel = this.emittingLightLevel.get();
@@ -57,16 +53,16 @@ public class LightBlock extends CustomBlock {
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void tickAsync() {
+        super.tickAsync();
 
-        Block block = CustomBlockUtils.getBlockFromDisplay(this.spawnedDisplay);
-        if (block.getType() != this.blockInside) {
+        if (block.getType() != this.blockMaterial) {
             Block aboveBlock = block.getRelative(BlockFace.UP);
 
-            if(aboveBlock.getType() == lightBlock.getType()) {
+            if (aboveBlock.getType() == lightBlock.getType()) {
                 aboveBlock.setType(Material.AIR);
             }
         }
     }
+
 }

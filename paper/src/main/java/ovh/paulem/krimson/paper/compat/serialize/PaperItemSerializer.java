@@ -8,7 +8,7 @@ import ovh.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
 
 public class PaperItemSerializer extends ItemSerializerHandler {
     public PaperItemSerializer() {
-        if(!messageSent) {
+        if (!messageSent) {
             KrimsonPlugin.getInstance().getLogger().info("Hooray! Using Paper's ItemStack (de)serialization, which gives you much better performance than Bukkit's!");
             messageSent = true;
         }

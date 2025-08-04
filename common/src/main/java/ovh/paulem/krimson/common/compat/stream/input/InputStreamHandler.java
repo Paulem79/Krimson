@@ -1,6 +1,8 @@
 package ovh.paulem.krimson.common.compat.stream.input;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public abstract class InputStreamHandler<T extends InputStream> {
     protected final ByteArrayInputStream inputStream;

@@ -11,7 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlugin {
     @Getter
-    protected static KrimsonPlugin<?> instance;
+    private static KrimsonPlugin<?> instance;
 
     @Getter
     private static TaskScheduler scheduler;

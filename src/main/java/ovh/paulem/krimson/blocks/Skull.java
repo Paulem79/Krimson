@@ -40,7 +40,7 @@ public class Skull {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD);
 
         SkullMeta meta = (SkullMeta) head.getItemMeta();
-        if(meta == null) {
+        if (meta == null) {
             return head;
         }
 

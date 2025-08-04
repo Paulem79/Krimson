@@ -7,6 +7,7 @@ import ovh.paulem.krimson.regions.BlockHolder;
 public interface SectionContainer {
 
     BlockHolder<?> get(int position);
+
     void set(int position, BlockHolder<?> holder);
 
     Int2ObjectOpenHashMap<BlockHolder<?>> getAll();

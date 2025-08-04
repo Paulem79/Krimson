@@ -18,31 +18,17 @@ import ovh.paulem.krimson.items.BlockItem;
 import ovh.paulem.krimson.items.Items;
 
 public class MigrationListener implements Listener {
-    @EventHandler
-    public void onPlayerJoinBlockItemMigration(PlayerJoinEvent event) {
-        Krimson.getScheduler().runTaskAsynchronously(() -> {
-            migrateInventory(event.getPlayer(), event.getPlayer().getInventory());
-        });
-    }
-
-    @EventHandler
-    public void onInventoryOpenMigration(InventoryOpenEvent event) {
-        Krimson.getScheduler().runTaskAsynchronously(() -> {
-            migrateInventory(event.getPlayer(), event.getInventory());
-        });
-    }
-
     private static void migrateInventory(HumanEntity player, Inventory inventory) {
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack item = inventory.getItem(i);
-            if(item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) continue;
+            if (item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) continue;
 
             ItemMeta meta = item.getItemMeta();
 
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
             @Nullable String identifier = pdc.get(new NamespacedKey(Krimson.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING);
 
-            if(identifier == null) {
+            if (identifier == null) {
                 continue;
             }
 
@@ -57,12 +43,26 @@ public class MigrationListener implements Listener {
             ItemStack toGive = blockItem.getItemStack();
             toGive.setAmount(item.getAmount());
 
-            if(!toGive.equals(item)) {
+            if (!toGive.equals(item)) {
                 inventory.setItem(i, toGive);
                 Krimson.getInstance().getLogger().info("Migrated item: " + item.getType() + " for player: " + player.getName() + " to his new reference.");
             }
         }
 
         Krimson.getInstance().getLogger().info("Migrated BlockItems in inventory of " + player.getName() + " to his new references.");
+    }
+
+    @EventHandler
+    public void onPlayerJoinBlockItemMigration(PlayerJoinEvent event) {
+        Krimson.getScheduler().runTaskAsynchronously(() -> {
+            migrateInventory(event.getPlayer(), event.getPlayer().getInventory());
+        });
+    }
+
+    @EventHandler
+    public void onInventoryOpenMigration(InventoryOpenEvent event) {
+        Krimson.getScheduler().runTaskAsynchronously(() -> {
+            migrateInventory(event.getPlayer(), event.getInventory());
+        });
     }
 }

@@ -1,26 +1,23 @@
 package ovh.paulem.krimson.listeners;
 
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
-import org.bukkit.block.Block;
-import org.bukkit.entity.ItemDisplay;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
 
 public class CustomBlockSuppressionListener implements Listener {
-    public static void onCustomBlockDeath(ItemDisplay itemDisplay, boolean passCheck) {
-        if(passCheck || Krimson.isCustomBlock(itemDisplay)) {
-            CustomBlockUtils.removeDisplay(itemDisplay);
-        }
-    }
 
     @EventHandler
     public void onCustomBlockBreak(BlockBreakEvent e) {
         Block block = e.getBlock();
-        if(Krimson.isCustomBlock(block)) {
+        if (Krimson.isCustomBlockFromWatcher(block)) {
             CustomBlockUtils.handleBlockSuppression(block, e);
         }
     }
@@ -28,7 +25,7 @@ public class CustomBlockSuppressionListener implements Listener {
     @EventHandler
     public void onCustomBlockFromTo(BlockFormEvent e) {
         Block block = e.getBlock();
-        if(Krimson.isCustomBlock(block)) {
+        if (Krimson.isCustomBlockFromWatcher(block)) {
             CustomBlockUtils.handleBlockSuppression(block, e);
         }
     }
@@ -36,7 +33,7 @@ public class CustomBlockSuppressionListener implements Listener {
     @EventHandler
     public void onCustomBlockExplosion(EntityExplodeEvent e) {
         for (Block block : e.blockList()) {
-            if(Krimson.isCustomBlock(block)) {
+            if (Krimson.isCustomBlockFromWatcher(block)) {
                 block.setType(Material.AIR);
                 CustomBlockUtils.handleBlockSuppression(block, e);
             }
@@ -47,7 +44,7 @@ public class CustomBlockSuppressionListener implements Listener {
     @EventHandler
     public void onCustomBlockPistonExtend(BlockPistonExtendEvent e) {
         for (Block block : e.getBlocks()) {
-            if(Krimson.isCustomBlock(block)) {
+            if (Krimson.isCustomBlock(block)) {
                 CustomBlockUtils.handleBlockSuppression(block, e);
             }
         }
@@ -56,11 +53,9 @@ public class CustomBlockSuppressionListener implements Listener {
     @EventHandler
     public void onCustomBlockPistonExtend(BlockPistonRetractEvent e) {
         for (Block block : e.getBlocks()) {
-            if(Krimson.isCustomBlock(block)) {
+            if (Krimson.isCustomBlock(block)) {
                 CustomBlockUtils.handleBlockSuppression(block, e);
             }
         }
     }
-
-
 }
