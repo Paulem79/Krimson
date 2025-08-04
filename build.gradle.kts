@@ -107,7 +107,6 @@ dependencies {
     implementation("io.javalin:javalin:6.3.0")
 
     compileOnly("io.netty:netty-all:4.1.97.Final")
-    compileOnly("org.slf4j:slf4j-api:1.7.30")
 }
 
 var alreadyMappedCommon = false
