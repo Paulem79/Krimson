@@ -106,7 +106,7 @@ dependencies {
     }
     implementation("io.javalin:javalin:6.3.0")
 
-    compileOnly("io.netty:netty-all:4.1.97.Final")
+    compileOnly("io.netty:netty-all:4.2.3.Final")
 }
 
 var alreadyMappedCommon = false
