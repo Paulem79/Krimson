@@ -67,3 +67,9 @@ jobs:
           --max-workers=$PARALLELISM \
           --build-cache \
           --no-daemon
+
+      - name: 📦 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: build/libs/*.jar
