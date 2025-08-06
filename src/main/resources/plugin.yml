@@ -8,9 +8,6 @@ description: A lib to create custom blocks in a Spigot environment.
 website: paulem.ovh
 
 commands:
-  display:
-    description: Spawn a display block
-    usage: /display
   krimson:
     description: General Krimson command
     usage: /krimson

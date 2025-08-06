@@ -9,7 +9,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.plugin.PluginManager;
-import ovh.paulem.krimson.commands.CommandDisplay;
 import ovh.paulem.krimson.commands.CommandKrimson;
 import ovh.paulem.krimson.common.KrimsonPlugin;
 import ovh.paulem.krimson.constants.Keys;
@@ -67,11 +66,6 @@ public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
         CustomBlockData.registerListener(this);
 
         // Commands
-        PluginCommand displayCommand = getCommand("display");
-        CommandDisplay displayCommandInstance = new CommandDisplay();
-        displayCommand.setExecutor(displayCommandInstance);
-        displayCommand.setTabCompleter(displayCommandInstance);
-
         PluginCommand krimsonCommand = getCommand("krimson");
         CommandKrimson krimsonCommandInstance = new CommandKrimson();
         krimsonCommand.setExecutor(krimsonCommandInstance);
