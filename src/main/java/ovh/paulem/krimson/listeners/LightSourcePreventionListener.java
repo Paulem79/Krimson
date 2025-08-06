@@ -8,8 +8,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.blocks.CustomBlock;
-import ovh.paulem.krimson.blocks.LightBlock;
+import ovh.paulem.krimson.blocks.custom.CustomBlock;
+import ovh.paulem.krimson.blocks.custom.LightBlock;
 
 // TODO: Falling sand can still obfuscate the light source, need to find a way to prevent that, but I don't want to make sand fly magically
 public class LightSourcePreventionListener implements Listener {

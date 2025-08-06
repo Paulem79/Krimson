@@ -5,7 +5,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.blocks.InventoryCustomBlock;
+import ovh.paulem.krimson.blocks.custom.InventoryCustomBlock;
 import ovh.paulem.krimson.codec.Codecs;
 import ovh.paulem.krimson.codec.ZLibCodec;
 import ovh.paulem.krimson.common.compat.stream.input.InputStreamHandler;

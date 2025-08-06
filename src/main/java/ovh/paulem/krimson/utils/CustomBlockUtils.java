@@ -6,7 +6,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.blocks.CustomBlock;
+import ovh.paulem.krimson.blocks.custom.CustomBlock;
 
 public class CustomBlockUtils {
     /**
@@ -16,8 +16,6 @@ public class CustomBlockUtils {
      * @param block the block to check for custom block suppression
      */
     public static void handleBlockSuppression(Block block, @Nullable Event event) {
-        System.out.println(block.getType() + " at " + block.getLocation() + " is a custom block, handling suppression...");
-        System.out.println(event);
         if (Krimson.isCustomBlockFromWatcher(block)) {
             CustomBlock customBlock = Krimson.customBlocks.getBlockAt(block);
             if (customBlock != null) {

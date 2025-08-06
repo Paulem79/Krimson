@@ -1,7 +1,8 @@
-package ovh.paulem.krimson.blocks;
+package ovh.paulem.krimson.blocks.custom;
 
 import com.google.common.base.Preconditions;
 import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -16,6 +17,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Nullable;
@@ -24,27 +27,27 @@ import org.joml.Vector3f;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.codec.Codecs;
 import ovh.paulem.krimson.constants.Keys;
-import ovh.paulem.krimson.items.BlockItem;
+import ovh.paulem.krimson.items.CustomItem;
 import ovh.paulem.krimson.items.Items;
 import ovh.paulem.krimson.properties.PDCWrapper;
 import ovh.paulem.krimson.properties.PropertiesField;
-import ovh.paulem.krimson.utils.BlockUtils;
-import ovh.paulem.krimson.utils.CustomBlockUtils;
-import ovh.paulem.krimson.utils.NamespacedKeyUtils;
-import ovh.paulem.krimson.utils.PersistentDataUtils;
+import ovh.paulem.krimson.registry.RegistryKey;
+import ovh.paulem.krimson.utils.*;
 
 import java.util.Optional;
+import java.util.function.Consumer;
 
-public class CustomBlock {
+public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
     public static final Vector3f OFFSET = new Vector3f(.0005f);
 
+    @Getter
+    protected boolean registryReference; // This is used to check if this instance is a registry instance, so that we need to clone it before using it
+
+    private final NamespacedKey key;
     @Getter
     protected final NamespacedKey dropIdentifier;
     @Getter
     protected final Material blockMaterial;
-    @Getter
-    protected final ItemStack displayedItem;
-    private final Runnable commonArguments;
     @Getter
     protected ItemDisplay linkedDisplay;
     @Getter
@@ -61,33 +64,14 @@ public class CustomBlock {
 
     /**
      * Create a custom block with the given item
-     *
-     * @param displayedItem The item to display
      */
-    public CustomBlock(NamespacedKey dropIdentifier, Material blockMaterial, ItemStack displayedItem) {
+    public CustomBlock(NamespacedKey key, NamespacedKey dropIdentifier, Material blockMaterial) {
         Preconditions.checkArgument(blockMaterial.isBlock(), "The material inside must be a block!");
+        this.key = key;
         this.dropIdentifier = dropIdentifier;
         this.blockMaterial = blockMaterial;
-        this.displayedItem = displayedItem;
 
-        commonArguments = () -> {
-            linkedDisplay.setItemStack(displayedItem);
-
-            setDisplayAndProperties(block);
-
-            Transformation actualTransformation = linkedDisplay.getTransformation();
-            linkedDisplay.setTransformation(new Transformation(
-                    actualTransformation.getTranslation(),
-                    actualTransformation.getLeftRotation().rotateY((float) Math.toRadians(180)),
-                    actualTransformation.getScale().add(OFFSET),
-                    actualTransformation.getRightRotation()
-            ));
-
-            tickLight();
-
-            properties.set(Keys.CUSTOM_BLOCK_KEY, (byte) 1);
-            Krimson.customBlocks.registerBlock(this);
-        };
+        this.registryReference = true; // This is a registry reference, so we need to clone it before using it
     }
 
     /**
@@ -96,10 +80,15 @@ public class CustomBlock {
     public CustomBlock(Block block) {
         // Thanks to java not having before super statements (but available in java 22+), we have to do this... horrible thing
         this(
+                // Get the key from the block's persistent data container
+                NamespacedKey.fromString(new PDCWrapper(block).get(Keys.IDENTIFIER_KEY, PersistentDataType.STRING).orElseThrow()),
+                // Get drop item
                 NamespacedKey.fromString(new PDCWrapper(block).get(Keys.DROP_IDENTIFIER_KEY, PersistentDataType.STRING).orElseThrow()),
-                Material.valueOf(new PDCWrapper(block).get(Keys.BLOCK_INSIDE_KEY, PersistentDataType.STRING).orElseThrow()),
-                Codecs.ITEM_STACK_CODEC.decode(new PDCWrapper(block).get(Keys.DISPLAYED_ITEM_KEY, PersistentDataType.BYTE_ARRAY).orElseThrow())
+                // Get block material
+                Material.valueOf(new PDCWrapper(block).get(Keys.BLOCK_INSIDE_KEY, PersistentDataType.STRING).orElseThrow())
         );
+
+        this.registryReference = false; // This is not a registry reference, so we can use it directly
 
         spawnDisplay(block.getLocation());
 
@@ -107,10 +96,12 @@ public class CustomBlock {
     }
 
     protected void setDisplayAndProperties(Block block) {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         this.block = block;
         this.properties = new PDCWrapper(block);
 
-        this.properties.set(Keys.IDENTIFIER_KEY, dropIdentifier.toString());
+        this.properties.set(Keys.IDENTIFIER_KEY, key.toString());
 
         if (this.properties.has(Keys.DROP_IDENTIFIER_KEY)) {
             this.dropIdentifierField = new PropertiesField<>(Keys.DROP_IDENTIFIER_KEY, properties, PersistentDataType.STRING);
@@ -129,7 +120,7 @@ public class CustomBlock {
         if (this.properties.has(Keys.DISPLAYED_ITEM_KEY)) {
             this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, properties, PersistentDataType.BYTE_ARRAY);
         } else {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, Codecs.ITEM_STACK_CODEC.encode(displayedItem));
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, Codecs.ITEM_STACK_CODEC.encode(getItemStack()));
             this.properties.set(displayedItemField);
         }
     }
@@ -140,6 +131,8 @@ public class CustomBlock {
      * @param blockLoc The location of the block
      */
     public void spawn(Location blockLoc) {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         if (blockLoc.getWorld() == null) {
             return;
         }
@@ -150,6 +143,10 @@ public class CustomBlock {
     }
 
     public void spawnDisplay(Location blockLoc) {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
+        blockLoc = blockLoc.clone();
+
         if (blockLoc.getWorld() == null) {
             return;
         }
@@ -159,42 +156,64 @@ public class CustomBlock {
         blockLoc.setPitch(0);
         blockLoc.setYaw(0);
 
-        if (displayedItem.getType() == Material.PLAYER_HEAD) {
+        if (getItemStack().getType() == Material.PLAYER_HEAD) {
             // HEAD
             blockLoc.getWorld().spawn(blockLoc.add(.5, 0 + OFFSET.y(), .5), ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
+                linkedDisplay.setItemStack(getItemStack());
 
-                itemDisplay.setRotation(180F, 0F);
-
-                itemDisplay.setTransformation(new Transformation(
+                linkedDisplay.setTransformation(new Transformation(
                         new Vector3f(0f, 1f, 0f),
                         new AxisAngle4f(0f, 0f, 0f, 1f),
                         new Vector3f(2f).add(OFFSET.mul(2)),
                         new AxisAngle4f(0f, 0f, 0f, 1f)
                 ));
 
-                commonArguments.run();
+                Transformation actualTransformation = linkedDisplay.getTransformation();
+                linkedDisplay.setTransformation(new Transformation(
+                        actualTransformation.getTranslation(),
+                        actualTransformation.getLeftRotation().rotateY((float) Math.toRadians(180)),
+                        actualTransformation.getScale().add(OFFSET),
+                        actualTransformation.getRightRotation()
+                ));
+
+                tickLight();
             });
         } else {
             // BLOCK
             linkedDisplay = blockLoc.getWorld().spawn(blockLoc.add(.5, .5, .5), ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
+                linkedDisplay.setItemStack(getItemStack());
 
-                itemDisplay.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
+                linkedDisplay.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
 
-                itemDisplay.setTransformation(new Transformation(
+                linkedDisplay.setTransformation(new Transformation(
                         new Vector3f(0f),
                         new AxisAngle4f(0f, 0f, 0f, 1f),
                         new Vector3f(1f),
                         new AxisAngle4f(0f, 0f, 0f, 1f)
                 ));
 
-                commonArguments.run();
+                Transformation actualTransformation = linkedDisplay.getTransformation();
+                linkedDisplay.setTransformation(new Transformation(
+                        actualTransformation.getTranslation(),
+                        actualTransformation.getLeftRotation().rotateY((float) Math.toRadians(180)),
+                        actualTransformation.getScale().add(OFFSET),
+                        actualTransformation.getRightRotation()
+                ));
+
+                tickLight();
             });
         }
+
+        setDisplayAndProperties(block);
+        properties.set(Keys.CUSTOM_BLOCK_KEY, (byte) 1);
+        Krimson.customBlocks.registerBlock(this);
     }
 
     public void tickAsync() {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         if (block.getType() != this.blockMaterial) {
             Krimson.getScheduler().runTask(() -> {
                 CustomBlockUtils.handleBlockSuppression(block, null);
@@ -205,12 +224,16 @@ public class CustomBlock {
     }
 
     public void tickSync() {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         if (linkedDisplay == null || !linkedDisplay.isValid()) {
             spawnDisplay(block.getLocation());
         }
     }
 
     public final void tickLight() {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         // TODO : if you want more accurate per-face lighting, spawn 6 block displays, one for each face, and use the scale transform to flatten them so they're 2d planes; and then do the light get's per-face and apply them to that face only https://discord.com/channels/690411863766466590/741875863271899136/1396952975494217933
         if (Krimson.getConfiguration().getBoolean("preciseLightning", true)) {
             // Precise lightning: check the light level of the block in all cartesian directions
@@ -223,6 +246,26 @@ public class CustomBlock {
             Block up = block.getRelative(BlockFace.UP);
             linkedDisplay.setBrightness(new Display.Brightness(up.getLightFromBlocks(), up.getLightFromSky()));
         }
+    }
+
+    // Registry of item meta to get the reference from OR better get from original block reference
+    @Setter
+    @Nullable
+    private Consumer<ItemMeta> meta;
+
+    public ItemStack getItemStack() {
+        ItemStack stack = ItemUtils.getWithItemModel(new ItemStack(getBlockMaterial()), key);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            PersistentDataContainer pdc = meta.getPersistentDataContainer();
+            pdc.set(new NamespacedKey(Krimson.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING, key.toString());
+
+            if(this.meta != null) this.meta.accept(meta);
+
+            stack.setItemMeta(meta);
+        }
+
+        return stack;
     }
 
     public Location getPosition() {
@@ -252,6 +295,8 @@ public class CustomBlock {
      * Called when the custom block is broken. (called also when a player breaks the block)
      */
     public void onBreak(@Nullable Event event, @Nullable Player player) {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         remove();
 
         if (player != null) {
@@ -261,14 +306,14 @@ public class CustomBlock {
         // DROP ITEM PART
         if (dropIdentifier.equals(NamespacedKeyUtils.none())) return;
 
-        Optional<BlockItem> dropItem = Items.REGISTRY.get(dropIdentifier);
+        Optional<CustomItem> dropItem = Items.REGISTRY.get(dropIdentifier);
 
         if (dropItem.isEmpty()) {
             Krimson.getInstance().getLogger().warning("Custom block " + dropIdentifier + " has no corresponding item in the registry!");
             return;
         }
 
-        ItemStack itemStack = dropItem.get().getItemStack();
+        ItemStack itemStack = getItemStack();
         block.getWorld().dropItemNaturally(block.getLocation().add(.5, .5, .5), itemStack);
     }
 
@@ -276,12 +321,16 @@ public class CustomBlock {
      * Called when the custom block is unloaded (e.g. when the chunk is unloaded)
      */
     public void onUnload() {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         Krimson.getInstance().getLogger().info("Unloading custom block " + dropIdentifier + " at " + block.getLocation());
 
         linkedDisplay.remove();
     }
 
     public void remove() {
+        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+
         onUnload();
 
         block.setType(Material.AIR);
@@ -296,4 +345,21 @@ public class CustomBlock {
         Krimson.customBlocks.removeBlock(this);
     }
 
+    @Override
+    public CustomBlock clone() {
+        try {
+            CustomBlock clone = (CustomBlock) super.clone();
+
+            clone.registryReference = false;
+
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
+    }
+
+    @Override
+    public NamespacedKey getKey() {
+        return key;
+    }
 }

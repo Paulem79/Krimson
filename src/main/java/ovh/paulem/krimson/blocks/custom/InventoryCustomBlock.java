@@ -1,4 +1,4 @@
-package ovh.paulem.krimson.blocks;
+package ovh.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
 import org.bukkit.Location;
@@ -11,13 +11,13 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.inventories.InventoryData;
 import ovh.paulem.krimson.inventories.InventoryDiff;
+import ovh.paulem.krimson.items.CustomItem;
 import ovh.paulem.krimson.properties.PropertiesField;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
 
@@ -37,14 +37,14 @@ public class InventoryCustomBlock extends CustomBlock {
     @Getter
     private Inventory inventory;
 
-    public InventoryCustomBlock(NamespacedKey dropIdentifier, Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle, byte[] inventoryBase64) {
-        this(dropIdentifier, blockInside, displayedItem, inventorySize, inventoryTitle);
+    public InventoryCustomBlock(NamespacedKey key, NamespacedKey dropIdentifier, Material blockInside, int inventorySize, String inventoryTitle, byte[] inventoryBase64) {
+        this(key, dropIdentifier, blockInside, inventorySize, inventoryTitle);
 
         this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, inventoryBase64);
     }
 
-    public InventoryCustomBlock(NamespacedKey dropIdentifier, Material blockInside, ItemStack displayedItem, int inventorySize, String inventoryTitle) {
-        super(dropIdentifier, blockInside, displayedItem);
+    public InventoryCustomBlock(NamespacedKey key, NamespacedKey dropIdentifier, Material blockInside, int inventorySize, String inventoryTitle) {
+        super(key, dropIdentifier, blockInside);
 
         this.baseInventorySize = inventorySize;
         this.baseInventoryTitle = inventoryTitle;

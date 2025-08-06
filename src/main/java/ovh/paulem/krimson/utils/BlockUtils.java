@@ -9,25 +9,12 @@ import java.util.function.Function;
 
 public class BlockUtils {
     /**
-     * Computes the maximum light level around a block, if all cartesian faces are obstructed,
-     * it will compute the light level on non-cartesian faces to avoid dark light glitch before
-     * update when a cartesian face is being broken
+     * Computes the maximum light level around a block in all Cartesian directions
      */
     public static byte computeLight(Function<Block, Byte> function, Block block) {
-        byte computed = computeLight(function, block, false);
-
-        // If the computed light is 0, it means all cartesian faces are obstructed
-        if (computed == 0) {
-            computed = computeLight(function, block, true);
-        }
-
-        return computed;
-    }
-
-    public static byte computeLight(Function<Block, Byte> function, Block block, boolean allFaces) {
         byte maxLight = 0;
         for (BlockFace blockFace : BlockFace.values()) {
-            if (!allFaces && !blockFace.isCartesian()) {
+            if (!blockFace.isCartesian()) {
                 continue;
             }
 

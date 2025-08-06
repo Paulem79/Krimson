@@ -1,4 +1,4 @@
-package ovh.paulem.krimson.blocks;
+package ovh.paulem.krimson.blocks.custom;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

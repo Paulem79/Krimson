@@ -14,7 +14,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
 import ovh.paulem.krimson.constants.Keys;
-import ovh.paulem.krimson.items.BlockItem;
+import ovh.paulem.krimson.items.CustomBlockItem;
 import ovh.paulem.krimson.items.Items;
 
 public class MigrationListener implements Listener {
@@ -39,8 +39,8 @@ public class MigrationListener implements Listener {
                 continue;
             }
 
-            BlockItem blockItem = Items.REGISTRY.getOrThrow(key);
-            ItemStack toGive = blockItem.getItemStack();
+            CustomBlockItem customBlockItem = (CustomBlockItem) Items.REGISTRY.getOrThrow(key);
+            ItemStack toGive = customBlockItem.getCustomBlock().getItemStack();
             toGive.setAmount(item.getAmount());
 
             if (!toGive.equals(item)) {

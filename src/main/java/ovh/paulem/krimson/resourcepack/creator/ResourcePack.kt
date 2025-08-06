@@ -7,6 +7,7 @@ import net.radstevee.packed.core.key.Key
 import net.radstevee.packed.core.pack.PackFormat
 import net.radstevee.packed.core.pack.ResourcePack
 import net.radstevee.packed.core.pack.ResourcePackBuilder.Companion.resourcePack
+import ovh.paulem.krimson.items.CustomBlockItem
 import ovh.paulem.krimson.items.Items
 import java.io.File
 
@@ -40,8 +41,8 @@ fun main(dataFolder: File): File {
     }
 
     for (namespacedKey in Items.REGISTRY.keys()) {
-        val blockItem = Items.REGISTRY.getOrThrow(namespacedKey)
-        val modelPath = blockItem.itemStack.itemMeta!!.itemModel ?: continue
+        val blockItem: CustomBlockItem = Items.REGISTRY.getOrThrow(namespacedKey) as CustomBlockItem
+        val modelPath = blockItem.customBlock.itemStack.itemMeta!!.itemModel ?: continue
         createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
     }
 

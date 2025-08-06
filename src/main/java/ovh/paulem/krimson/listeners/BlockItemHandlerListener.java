@@ -21,9 +21,10 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.blocks.InventoryCustomBlock;
+import ovh.paulem.krimson.blocks.custom.InventoryCustomBlock;
 import ovh.paulem.krimson.constants.Keys;
-import ovh.paulem.krimson.items.BlockItem;
+import ovh.paulem.krimson.items.CustomBlockItem;
+import ovh.paulem.krimson.items.CustomItem;
 import ovh.paulem.krimson.items.Items;
 import ovh.paulem.krimson.utils.BlockUtils;
 import ovh.paulem.krimson.utils.CustomBlockUtils;
@@ -108,7 +109,12 @@ public class BlockItemHandlerListener implements Listener {
             return;
         }
 
-        BlockItem blockItem = Items.REGISTRY.getOrThrow(key);
+        CustomItem blockItem = Items.REGISTRY.getOrThrow(key);
+
+        if(!(blockItem instanceof CustomBlockItem customBlockItem)) {
+            Krimson.getInstance().getLogger().warning("Item " + blockItem.getKey() + " is not a CustomBlockItem, cannot place it as a block.");
+            return;
+        }
 
         if (player.getGameMode() != GameMode.CREATIVE) {
             event.setUseItemInHand(Event.Result.DENY);
@@ -124,7 +130,7 @@ public class BlockItemHandlerListener implements Listener {
             player.getInventory().setItemInMainHand(item);
         }
 
-        blockItem.getAction().accept(blockItem, player, toPlace.getLocation());
+        customBlockItem.getAction().accept(customBlockItem.getCustomBlock(), player, toPlace.getLocation());
 
         cancelCBActionForNextTick(player);
 
@@ -163,7 +169,7 @@ public class BlockItemHandlerListener implements Listener {
                 return false;
             }
 
-            Optional<BlockItem> blockItem = Items.REGISTRY.get(key);
+            Optional<CustomItem> blockItem = Items.REGISTRY.get(key);
 
             return blockItem.isPresent();
         })) {

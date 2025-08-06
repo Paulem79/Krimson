@@ -8,28 +8,29 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.items.BlockItem;
+import ovh.paulem.krimson.items.CustomBlockItem;
+import ovh.paulem.krimson.items.CustomItem;
 import ovh.paulem.krimson.items.Items;
 
 import java.util.List;
 
 public class CommandKrimson implements TabExecutor {
     @Nullable
-    public static BlockItem getItem(CommandSender sender, String[] args) {
+    public static CustomItem getItem(CommandSender sender, String[] args) {
         String itemKey = args[1];
         NamespacedKey key = NamespacedKey.fromString(itemKey);
         if (key == null) {
             sender.sendMessage("§cClé d'item invalide: " + itemKey);
             return null;
         }
-        BlockItem item = Items.REGISTRY.getOrNull(key);
+        CustomItem customItem = Items.REGISTRY.getOrNull(key);
 
-        if (item == null) {
+        if (customItem == null) {
             sender.sendMessage("§cItem non trouvé: " + itemKey);
             return null;
         }
 
-        return item;
+        return customItem;
     }
 
     @Override
@@ -48,7 +49,7 @@ public class CommandKrimson implements TabExecutor {
                         return true;
                     }
 
-                    BlockItem item = getItem(sender, args);
+                    CustomItem item = getItem(sender, args);
 
                     if (item == null) {
                         return true; // Item not found, error message already sent
@@ -63,10 +64,11 @@ public class CommandKrimson implements TabExecutor {
                         return true;
                     }
 
-                    BlockItem item = getItem(sender, args);
+                    CustomItem item = getItem(sender, args);
 
-                    if (item == null) {
-                        return true; // Item not found, error message already sent
+                    if(!(item instanceof CustomBlockItem customBlockItem)) {
+                        sender.sendMessage("§cL'item doit être un item-bloc.");
+                        return true;
                     }
 
                     int x, y, z;
@@ -84,12 +86,12 @@ public class CommandKrimson implements TabExecutor {
                         for (int dy = 0; dy <= y; dy++) {
                             for (int dz = 0; dz <= z; dz++) {
                                 var blockLoc = loc.clone().add(dx, dy, dz);
-                                item.getAction().accept(item, player, blockLoc);
+                                customBlockItem.getAction().accept(customBlockItem.getCustomBlock(), player, blockLoc);
                             }
                         }
                     }
 
-                    sender.sendMessage("§aZone de " + x * y * z + " blocs remplie avec " + item.getKey());
+                    sender.sendMessage("§aZone de " + x * y * z + " blocs remplie avec " + customBlockItem.getKey());
                 }
                 case "count" ->
                         sender.sendMessage("Il y a " + Krimson.customBlocks.getGlobalContainer().getAllBlocks().size() + " blocs custom chargés.\nTické:\n" +

@@ -9,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.plugin.PluginManager;
+import ovh.paulem.krimson.blocks.Blocks;
 import ovh.paulem.krimson.commands.CommandKrimson;
 import ovh.paulem.krimson.common.KrimsonPlugin;
 import ovh.paulem.krimson.constants.Keys;
@@ -40,6 +41,7 @@ public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
     public static boolean isCustomBlock(Block block) {
         PDCWrapper properties = new PDCWrapper(block);
         return properties.has(Keys.CUSTOM_BLOCK_KEY) &&
+                properties.has(Keys.IDENTIFIER_KEY) &&
                 properties.has(Keys.BLOCK_INSIDE_KEY) &&
                 properties.has(Keys.DISPLAYED_ITEM_KEY) && !block.getType().isAir();
     }
@@ -54,6 +56,7 @@ public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
         getLogger().info("Scheduled ticking!");
 
         Items.init();
+        Blocks.init();
 
         // Events
         PluginManager pluginManager = getServer().getPluginManager();

@@ -13,8 +13,8 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import ovh.paulem.krimson.Krimson;
-import ovh.paulem.krimson.blocks.CustomBlock;
-import ovh.paulem.krimson.blocks.InventoryCustomBlock;
+import ovh.paulem.krimson.blocks.custom.CustomBlock;
+import ovh.paulem.krimson.blocks.custom.InventoryCustomBlock;
 
 import java.util.HashSet;
 import java.util.Set;

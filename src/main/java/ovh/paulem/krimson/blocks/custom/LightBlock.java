@@ -1,4 +1,4 @@
-package ovh.paulem.krimson.blocks;
+package ovh.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
 import org.bukkit.Location;
@@ -7,7 +7,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Light;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import ovh.paulem.krimson.constants.Keys;
 import ovh.paulem.krimson.properties.PropertiesField;
@@ -19,8 +18,8 @@ public class LightBlock extends CustomBlock {
     @Getter
     private Block lightBlock;
 
-    public LightBlock(NamespacedKey dropIdentifier, int emittingLightLevel) {
-        super(dropIdentifier, Material.SLIME_BLOCK, new ItemStack(Material.AMETHYST_BLOCK));
+    public LightBlock(NamespacedKey key, NamespacedKey dropIdentifier, int emittingLightLevel) {
+        super(key, dropIdentifier, Material.SLIME_BLOCK);
 
         this.baseEmittingLightLevel = emittingLightLevel;
     }
