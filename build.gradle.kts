@@ -6,7 +6,7 @@ plugins {
 
     id("com.gradleup.shadow")
 
-    id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("xyz.jpenilla.run-paper") version "3.0.0"
 }
 
 group = "ovh.paulem"
