@@ -42,7 +42,7 @@ allprojects {
         if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
         else compileOnly("org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT")
 
-        compileOnly("org.jetbrains:annotations:26.0.2")
+        compileOnly("org.jetbrains:annotations:26.0.2-1")
 
         compileOnly("org.projectlombok:lombok:1.18.42")
         annotationProcessor("org.projectlombok:lombok:1.18.42")
