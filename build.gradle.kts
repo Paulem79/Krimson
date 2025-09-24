@@ -96,7 +96,7 @@ dependencies {
 
     implementation("net.radstevee.packed:packed-core:1.+")
 
-    implementation("org.apache.commons:commons-lang3:3.18.0")
+    implementation("org.apache.commons:commons-lang3:3.19.0")
 
     implementation("net.mcbrawls.inject:spigot:3.+")
     implementation("net.mcbrawls.inject:api:3.+")
