@@ -35,7 +35,7 @@ allprojects {
         }
 
         maven("https://maven.radsteve.net/public")
-        maven("https://maven.andante.dev/releases/")
+        maven("https://maven.mcbrawls.net/releases/")
     }
 
     dependencies {
