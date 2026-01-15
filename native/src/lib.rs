@@ -9,14 +9,16 @@ use jni::sys::jintArray;
 /// simple string slicing operations.
 /// 
 /// # Format
-/// Expected format: `x(\d+)y(-?\d+)z(\d+)`
-/// - x coordinate: non-negative integer
+/// Expected format: `x(\d+)y(-?\d+)z(\d+)` (matching Java regex)
+/// - x coordinate: non-negative integer (0 or positive)
 /// - y coordinate: signed integer (can be negative)
-/// - z coordinate: non-negative integer
+/// - z coordinate: non-negative integer (0 or positive)
 /// 
 /// # Examples
 /// - `"x5y64z10"` → `[5, 64, 10]`
 /// - `"x0y-64z15"` → `[0, -64, 15]`
+/// - `"x-5y64z10"` → `None` (negative x is invalid)
+/// - `"x5y64z-10"` → `None` (negative z is invalid)
 /// 
 /// # Parameters
 /// - `env`: JNI environment pointer
@@ -88,16 +90,25 @@ fn parse_block_key(key: &str) -> Option<[i32; 3]> {
     let y_pos = y_pos?;
     let z_pos = z_pos?;
 
-    // Parse x coordinate (between position 1 and y_pos)
+    // Parse x coordinate (between position 1 and y_pos) - must be non-negative
     let x_str = &key[1..y_pos];
+    if x_str.is_empty() || x_str.starts_with('-') {
+        return None;
+    }
     let x = x_str.parse::<i32>().ok()?;
 
-    // Parse y coordinate (between y_pos+1 and z_pos)
+    // Parse y coordinate (between y_pos+1 and z_pos) - can be negative
     let y_str = &key[y_pos + 1..z_pos];
+    if y_str.is_empty() {
+        return None;
+    }
     let y = y_str.parse::<i32>().ok()?;
 
-    // Parse z coordinate (from z_pos+1 to end)
+    // Parse z coordinate (from z_pos+1 to end) - must be non-negative
     let z_str = &key[z_pos + 1..];
+    if z_str.is_empty() || z_str.starts_with('-') {
+        return None;
+    }
     let z = z_str.parse::<i32>().ok()?;
 
     Some([x, y, z])
@@ -126,5 +137,9 @@ mod tests {
         assert_eq!(parse_block_key("x5yz10"), None);
         assert_eq!(parse_block_key("x5y64z"), None);
         assert_eq!(parse_block_key("xay64z10"), None);
+        // Negative x and z should be rejected
+        assert_eq!(parse_block_key("x-5y64z10"), None);
+        assert_eq!(parse_block_key("x5y64z-10"), None);
+        assert_eq!(parse_block_key("x-5y64z-10"), None);
     }
 }
