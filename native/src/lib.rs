@@ -146,8 +146,9 @@ pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_compress(
         Err(_) => return std::ptr::null_mut(),
     };
 
-    // Compress the data using Deflate
-    let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+    // Compress the data using Deflate with balanced compression
+    // Level 6 provides good compression ratio while maintaining reasonable speed
+    let mut encoder = DeflateEncoder::new(Vec::new(), Compression::new(6));
     if encoder.write_all(&input_bytes).is_err() {
         return std::ptr::null_mut();
     }
@@ -242,14 +243,10 @@ mod tests {
 
     #[test]
     fn test_compression_decompression() {
-        use flate2::write::{DeflateEncoder, DeflateDecoder};
-        use flate2::Compression;
-        use std::io::Write;
-
         let original_data = b"This is test data for compression. It should compress and decompress correctly.";
         
         // Compress
-        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::new(6));
         encoder.write_all(original_data).unwrap();
         let compressed = encoder.finish().unwrap();
         
@@ -267,13 +264,9 @@ mod tests {
 
     #[test]
     fn test_compression_empty_data() {
-        use flate2::write::DeflateEncoder;
-        use flate2::Compression;
-        use std::io::Write;
-
         let empty_data = b"";
         
-        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::new(6));
         encoder.write_all(empty_data).unwrap();
         let compressed = encoder.finish().unwrap();
         
