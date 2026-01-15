@@ -4,12 +4,32 @@ use jni::sys::jintArray;
 
 /// Parses a block key string in the format "x{num}y{num}z{num}" into [x, y, z] coordinates.
 /// 
-/// This function uses fast string slicing instead of regex for maximum performance.
-/// Expected format: x(\d+)y(-?\d+)z(\d+)
-/// Example: "x5y64z10" -> [5, 64, 10]
-/// Example: "x0y-64z15" -> [0, -64, 15]
-///
-/// Returns null if the string doesn't match the expected format or if parsing fails.
+/// This is a JNI function exposed to Java as `NativeUtil.parseBlockKey(String)`.
+/// It provides a high-performance alternative to regex-based parsing by using
+/// simple string slicing operations.
+/// 
+/// # Format
+/// Expected format: `x(\d+)y(-?\d+)z(\d+)`
+/// - x coordinate: non-negative integer
+/// - y coordinate: signed integer (can be negative)
+/// - z coordinate: non-negative integer
+/// 
+/// # Examples
+/// - `"x5y64z10"` → `[5, 64, 10]`
+/// - `"x0y-64z15"` → `[0, -64, 15]`
+/// 
+/// # Parameters
+/// - `env`: JNI environment pointer
+/// - `_class`: Java class reference (unused)
+/// - `key`: Java String containing the block key to parse
+/// 
+/// # Returns
+/// - Success: A Java int array containing `[x, y, z]` coordinates
+/// - Failure: `null` if the string doesn't match the expected format or parsing fails
+/// 
+/// # Safety
+/// This function is safe to call from Java. All error conditions (invalid format,
+/// invalid integers, null strings) are handled gracefully by returning null.
 #[no_mangle]
 pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_parseBlockKey(
     mut env: JNIEnv,

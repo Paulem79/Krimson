@@ -89,7 +89,7 @@ public class PersistentDataUtils {
         // Try using native implementation first for better performance
         if (NativeUtil.isLoaded()) {
             final int[] coords = NativeUtil.parseBlockKey(key.getKey());
-            if (coords == null) return null;
+            if (coords == null || coords.length != 3) return null;
             x = coords[0];
             y = coords[1];
             z = coords[2];

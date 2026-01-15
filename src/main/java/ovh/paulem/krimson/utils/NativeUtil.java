@@ -77,8 +77,12 @@ public class NativeUtil {
                 throw new IOException("Native library not found in resources: " + resourcePath);
             }
 
-            // Create temp file
-            File tempLib = File.createTempFile(LIBRARY_NAME, libFileName.substring(libFileName.lastIndexOf('.')));
+            // Create temp file with appropriate extension
+            int dotIndex = libFileName.lastIndexOf('.');
+            String prefix = LIBRARY_NAME;
+            String suffix = dotIndex >= 0 ? libFileName.substring(dotIndex) : "";
+            
+            File tempLib = File.createTempFile(prefix, suffix);
             tempLib.deleteOnExit();
 
             // Copy library to temp file

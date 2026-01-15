@@ -5,6 +5,9 @@ package ovh.paulem.krimson.utils;
  */
 public class FallbackParsingTest {
     
+    private static final java.util.regex.Pattern KEY_REGEX = 
+        java.util.regex.Pattern.compile("^x(\\d+)y(-?\\d+)z(\\d+)$");
+    
     public static void main(String[] args) {
         System.out.println("Testing Fallback Regex Parsing");
         System.out.println("================================");
@@ -41,8 +44,7 @@ public class FallbackParsingTest {
     
     private static boolean testValidCase(String input, int expectedX, int expectedY, int expectedZ) {
         try {
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("^x(\\d+)y(-?\\d+)z(\\d+)$");
-            java.util.regex.Matcher matcher = pattern.matcher(input);
+            java.util.regex.Matcher matcher = KEY_REGEX.matcher(input);
             if (matcher.matches()) {
                 int x = Integer.parseInt(matcher.group(1));
                 int y = Integer.parseInt(matcher.group(2));
@@ -68,8 +70,7 @@ public class FallbackParsingTest {
     
     private static boolean testInvalidCase(String input) {
         try {
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("^x(\\d+)y(-?\\d+)z(\\d+)$");
-            java.util.regex.Matcher matcher = pattern.matcher(input);
+            java.util.regex.Matcher matcher = KEY_REGEX.matcher(input);
             if (!matcher.matches()) {
                 System.out.println("✓ \"" + input + "\" -> correctly rejected");
                 return true;
