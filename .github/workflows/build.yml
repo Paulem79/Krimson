@@ -5,8 +5,53 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: 🔨 Build gradle project
+  build-natives:
+    name: 🦀 Build Native Library (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_pattern: "lib*.so"
+            asset_name: linux-lib
+          - os: windows-latest
+            artifact_pattern: "*.dll"
+            asset_name: windows-lib
+          - os: macos-latest
+            artifact_pattern: "lib*.dylib"
+            asset_name: macos-lib
+    steps:
+      - name: ✅ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦀 Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: 🦀 Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native
+
+      - name: 🧪 Run Rust Tests
+        working-directory: native
+        run: cargo test --verbose
+
+      - name: 🔨 Build Rust Release
+        working-directory: native
+        run: cargo build --release
+
+      - name: 📤 Upload Native Library
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: native/target/release/${{ matrix.artifact_pattern }}
+          if-no-files-found: error
+
+  build-project:
+    name: 🔨 Build Gradle Project
+    needs: build-natives
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
@@ -53,9 +98,15 @@ jobs:
           distribution: 'jetbrains'
           java-version: 21
           java-package: jdk
-        # To prevent rate limiting on GitHub Actions
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📥 Download Native Libraries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-lib"
+          path: native/libs
+          merge-multiple: true
 
       - name: 🆙 Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -63,7 +114,7 @@ jobs:
       - name: 🔨 Build project
         run: |
           PARALLELISM=$(($(nproc) * 2))
-          ./gradlew build --stacktrace --parallel \
+          ./gradlew build -PskipRustBuild --stacktrace --parallel \
           --max-workers=$PARALLELISM \
           --build-cache \
           --no-daemon

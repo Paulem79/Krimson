@@ -173,6 +173,23 @@ tasks {
     }
 }
 
+val buildRust by tasks.registering(Exec::class) {
+    workingDir = file("native")
+    val cargoExe = if (System.getProperty("os.name").lowercase().contains("win")) "cargo.exe" else "cargo"
+    val userHome = System.getProperty("user.home")
+    val cargoPath = file("$userHome/.cargo/bin/$cargoExe")
+    val skipRustBuild = project.hasProperty("skipRustBuild")
+    if (cargoPath.exists()) {
+        commandLine(cargoPath, "build", "--release")
+    } else {
+        commandLine("cargo", "build", "--release")
+    }
+    onlyIf { !skipRustBuild }
+    inputs.files(fileTree("native/src"))
+    inputs.file("native/Cargo.toml")
+    outputs.dir("native/target/release")
+}
+
 tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
     javaLauncher = javaToolchains.launcherFor {
         vendor = JvmVendorSpec.JETBRAINS
@@ -182,6 +199,21 @@ tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
 }
 
 tasks.processResources {
+    val skipRustBuild = project.hasProperty("skipRustBuild")
+    if (!skipRustBuild) {
+        dependsOn(buildRust)
+    }
+
+    from("native/target/release") {
+        include("*.dll", "*.so", "*.dylib")
+        into("native")
+    }
+
+    from("native/libs") {
+        include("*.dll", "*.so", "*.dylib")
+        into("native")
+    }
+
     val props = mapOf("version" to version)
     inputs.properties(props)
     filteringCharset = "UTF-8"
