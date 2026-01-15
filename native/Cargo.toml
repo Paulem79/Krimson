@@ -9,3 +9,5 @@ crate-type = ["cdylib"]
 
 [dependencies]
 jni = "0.21"
+flate2 = "1.0"
+base64 = "0.22"

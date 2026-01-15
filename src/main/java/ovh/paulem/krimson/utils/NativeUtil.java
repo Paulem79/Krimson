@@ -117,4 +117,30 @@ public class NativeUtil {
      */
     @Nullable
     public static native int[] parseBlockKey(String key);
+
+    /**
+     * Compresses a byte array using ZLIB/Deflate compression.
+     * This is a native method implemented in Rust for optimal performance.
+     * <p>
+     * Provides significantly better performance than Java's DeflaterOutputStream,
+     * especially for frequent compression operations during chunk saving.
+     *
+     * @param data the byte array to compress
+     * @return the compressed byte array, or null if compression fails
+     */
+    @Nullable
+    public static native byte[] compress(byte[] data);
+
+    /**
+     * Decompresses a ZLIB/Deflate compressed byte array.
+     * This is a native method implemented in Rust for optimal performance.
+     * <p>
+     * Provides significantly better performance than Java's InflaterInputStream,
+     * especially for frequent decompression operations during chunk loading.
+     *
+     * @param data the compressed byte array
+     * @return the decompressed byte array, or null if decompression fails
+     */
+    @Nullable
+    public static native byte[] decompress(byte[] data);
 }

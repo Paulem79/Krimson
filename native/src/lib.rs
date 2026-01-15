@@ -1,6 +1,9 @@
 use jni::JNIEnv;
-use jni::objects::{JClass, JString};
-use jni::sys::jintArray;
+use jni::objects::{JClass, JString, JByteArray};
+use jni::sys::{jintArray, jbyteArray};
+use flate2::Compression;
+use flate2::write::{DeflateEncoder, DeflateDecoder};
+use std::io::Write;
 
 /// Parses a block key string in the format "x{num}y{num}z{num}" into [x, y, z] coordinates.
 /// 
@@ -114,6 +117,100 @@ fn parse_block_key(key: &str) -> Option<[i32; 3]> {
     Some([x, y, z])
 }
 
+/// Compresses a byte array using ZLIB/Deflate compression.
+/// 
+/// This is a JNI function exposed to Java as `NativeUtil.compress(byte[])`.
+/// It provides high-performance compression using the Rust flate2 library.
+/// 
+/// # Parameters
+/// - `env`: JNI environment pointer
+/// - `_class`: Java class reference (unused)
+/// - `data`: Java byte array to compress
+/// 
+/// # Returns
+/// - Success: A compressed Java byte array
+/// - Failure: `null` if compression fails or input is invalid
+/// 
+/// # Safety
+/// This function is safe to call from Java. All error conditions are handled
+/// gracefully by returning null.
+#[no_mangle]
+pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_compress(
+    env: JNIEnv,
+    _class: JClass,
+    data: JByteArray,
+) -> jbyteArray {
+    // Convert Java byte array to Rust Vec<u8>
+    let input_bytes = match env.convert_byte_array(&data) {
+        Ok(bytes) => bytes,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    // Compress the data using Deflate
+    let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+    if encoder.write_all(&input_bytes).is_err() {
+        return std::ptr::null_mut();
+    }
+    
+    let compressed = match encoder.finish() {
+        Ok(data) => data,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    // Convert back to Java byte array
+    match env.byte_array_from_slice(&compressed) {
+        Ok(arr) => arr.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Decompresses a ZLIB/Deflate compressed byte array.
+/// 
+/// This is a JNI function exposed to Java as `NativeUtil.decompress(byte[])`.
+/// It provides high-performance decompression using the Rust flate2 library.
+/// 
+/// # Parameters
+/// - `env`: JNI environment pointer
+/// - `_class`: Java class reference (unused)
+/// - `data`: Java byte array containing compressed data
+/// 
+/// # Returns
+/// - Success: A decompressed Java byte array
+/// - Failure: `null` if decompression fails or input is invalid
+/// 
+/// # Safety
+/// This function is safe to call from Java. All error conditions are handled
+/// gracefully by returning null.
+#[no_mangle]
+pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_decompress(
+    env: JNIEnv,
+    _class: JClass,
+    data: JByteArray,
+) -> jbyteArray {
+    // Convert Java byte array to Rust Vec<u8>
+    let compressed_bytes = match env.convert_byte_array(&data) {
+        Ok(bytes) => bytes,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    // Decompress the data using Inflate
+    let mut decoder = DeflateDecoder::new(Vec::new());
+    if decoder.write_all(&compressed_bytes).is_err() {
+        return std::ptr::null_mut();
+    }
+    
+    let decompressed = match decoder.finish() {
+        Ok(data) => data,
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    // Convert back to Java byte array
+    match env.byte_array_from_slice(&decompressed) {
+        Ok(arr) => arr.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -141,5 +238,46 @@ mod tests {
         assert_eq!(parse_block_key("x-5y64z10"), None);
         assert_eq!(parse_block_key("x5y64z-10"), None);
         assert_eq!(parse_block_key("x-5y64z-10"), None);
+    }
+
+    #[test]
+    fn test_compression_decompression() {
+        use flate2::write::{DeflateEncoder, DeflateDecoder};
+        use flate2::Compression;
+        use std::io::Write;
+
+        let original_data = b"This is test data for compression. It should compress and decompress correctly.";
+        
+        // Compress
+        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(original_data).unwrap();
+        let compressed = encoder.finish().unwrap();
+        
+        // Verify compression actually reduced size
+        assert!(compressed.len() < original_data.len());
+        
+        // Decompress
+        let mut decoder = DeflateDecoder::new(Vec::new());
+        decoder.write_all(&compressed).unwrap();
+        let decompressed = decoder.finish().unwrap();
+        
+        // Verify round-trip
+        assert_eq!(original_data, &decompressed[..]);
+    }
+
+    #[test]
+    fn test_compression_empty_data() {
+        use flate2::write::DeflateEncoder;
+        use flate2::Compression;
+        use std::io::Write;
+
+        let empty_data = b"";
+        
+        let mut encoder = DeflateEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(empty_data).unwrap();
+        let compressed = encoder.finish().unwrap();
+        
+        // Empty data should still compress to something
+        assert!(!compressed.is_empty());
     }
 }
