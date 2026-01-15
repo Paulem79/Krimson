@@ -80,7 +80,7 @@ public class NativeUtil {
             // Create temp file with appropriate extension
             int dotIndex = libFileName.lastIndexOf('.');
             String prefix = LIBRARY_NAME;
-            String suffix = dotIndex >= 0 ? libFileName.substring(dotIndex) : "";
+            String suffix = (dotIndex > 0) ? libFileName.substring(dotIndex) : "";
             
             File tempLib = File.createTempFile(prefix, suffix);
             tempLib.deleteOnExit();
