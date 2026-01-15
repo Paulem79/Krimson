@@ -34,7 +34,10 @@ allprojects {
             url = uri("https://repo.papermc.io/repository/maven-public/")
         }
 
-        maven("https://maven.radsteve.net/public")
+        maven {
+            name = "radRepoPublic"
+            url = uri("https://maven.rad.vg/public")
+        }
         maven("https://maven.mcbrawls.net/releases/")
     }
 
