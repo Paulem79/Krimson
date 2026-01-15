@@ -15,6 +15,16 @@ public class ZLibUtils {
      * @throws IOException if an I/O error occurs during compression
      */
     public static byte[] compress(byte[] data) throws IOException {
+        // Try using native implementation first for better performance
+        if (NativeUtil.isLoaded()) {
+            byte[] compressed = NativeUtil.compress(data);
+            if (compressed != null) {
+                return compressed;
+            }
+            // If native compression failed, fall through to Java implementation
+        }
+
+        // Fallback to Java implementation
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         try (DeflaterOutputStream dos = new DeflaterOutputStream(bos)) {
@@ -32,6 +42,16 @@ public class ZLibUtils {
      * @throws IOException if an I/O error occurs during decompression
      */
     public static byte[] decompress(byte[] data) throws IOException {
+        // Try using native implementation first for better performance
+        if (NativeUtil.isLoaded()) {
+            byte[] decompressed = NativeUtil.decompress(data);
+            if (decompressed != null) {
+                return decompressed;
+            }
+            // If native decompression failed, fall through to Java implementation
+        }
+
+        // Fallback to Java implementation
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
         try (InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(data))) {

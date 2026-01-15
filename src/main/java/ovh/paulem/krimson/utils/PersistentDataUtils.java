@@ -84,11 +84,24 @@ public class PersistentDataUtils {
      */
     @Nullable
     public static Block getBlockFromKey(final NamespacedKey key, final Chunk chunk) {
-        final Matcher matcher = KEY_REGEX.matcher(key.getKey());
-        if (!matcher.matches()) return null;
-        final int x = Integer.parseInt(matcher.group(1));
-        final int y = Integer.parseInt(matcher.group(2));
-        final int z = Integer.parseInt(matcher.group(3));
+        final int x, y, z;
+        
+        // Try using native implementation first for better performance
+        if (NativeUtil.isLoaded()) {
+            final int[] coords = NativeUtil.parseBlockKey(key.getKey());
+            if (coords == null || coords.length != 3) return null;
+            x = coords[0];
+            y = coords[1];
+            z = coords[2];
+        } else {
+            // Fallback to regex-based parsing
+            final Matcher matcher = KEY_REGEX.matcher(key.getKey());
+            if (!matcher.matches()) return null;
+            x = Integer.parseInt(matcher.group(1));
+            y = Integer.parseInt(matcher.group(2));
+            z = Integer.parseInt(matcher.group(3));
+        }
+        
         if ((x < CHUNK_MIN_XZ || x > CHUNK_MAX_XZ) || (z < CHUNK_MIN_XZ || z > CHUNK_MAX_XZ) || (y < getWorldMinHeight(chunk.getWorld()) || y > chunk.getWorld().getMaxHeight() - 1))
             return null;
         return chunk.getBlock(x, y, z);
