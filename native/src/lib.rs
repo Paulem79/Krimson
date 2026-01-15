@@ -1,0 +1,110 @@
+use jni::JNIEnv;
+use jni::objects::{JClass, JString};
+use jni::sys::jintArray;
+
+/// Parses a block key string in the format "x{num}y{num}z{num}" into [x, y, z] coordinates.
+/// 
+/// This function uses fast string slicing instead of regex for maximum performance.
+/// Expected format: x(\d+)y(-?\d+)z(\d+)
+/// Example: "x5y64z10" -> [5, 64, 10]
+/// Example: "x0y-64z15" -> [0, -64, 15]
+///
+/// Returns null if the string doesn't match the expected format or if parsing fails.
+#[no_mangle]
+pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_parseBlockKey(
+    mut env: JNIEnv,
+    _class: JClass,
+    key: JString,
+) -> jintArray {
+    // Convert JString to Rust String
+    let key_str: String = match env.get_string(&key) {
+        Ok(s) => s.into(),
+        Err(_) => return std::ptr::null_mut(),
+    };
+
+    // Parse the key using fast string slicing
+    match parse_block_key(&key_str) {
+        Some([x, y, z]) => {
+            // Create a new int array and populate it
+            match env.new_int_array(3) {
+                Ok(arr) => {
+                    let coords = [x, y, z];
+                    if env.set_int_array_region(&arr, 0, &coords).is_ok() {
+                        arr.into_raw()
+                    } else {
+                        std::ptr::null_mut()
+                    }
+                }
+                Err(_) => std::ptr::null_mut(),
+            }
+        }
+        None => std::ptr::null_mut(),
+    }
+}
+
+/// Fast parser for block key format: x{num}y{num}z{num}
+/// Uses simple string slicing without regex overhead
+fn parse_block_key(key: &str) -> Option<[i32; 3]> {
+    let bytes = key.as_bytes();
+    
+    // Must start with 'x'
+    if bytes.is_empty() || bytes[0] != b'x' {
+        return None;
+    }
+
+    // Find positions of 'y' and 'z'
+    let mut y_pos = None;
+    let mut z_pos = None;
+    
+    for (i, &byte) in bytes.iter().enumerate().skip(1) {
+        if byte == b'y' && y_pos.is_none() {
+            y_pos = Some(i);
+        } else if byte == b'z' && y_pos.is_some() {
+            z_pos = Some(i);
+            break;
+        }
+    }
+
+    let y_pos = y_pos?;
+    let z_pos = z_pos?;
+
+    // Parse x coordinate (between position 1 and y_pos)
+    let x_str = &key[1..y_pos];
+    let x = x_str.parse::<i32>().ok()?;
+
+    // Parse y coordinate (between y_pos+1 and z_pos)
+    let y_str = &key[y_pos + 1..z_pos];
+    let y = y_str.parse::<i32>().ok()?;
+
+    // Parse z coordinate (from z_pos+1 to end)
+    let z_str = &key[z_pos + 1..];
+    let z = z_str.parse::<i32>().ok()?;
+
+    Some([x, y, z])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_valid_keys() {
+        assert_eq!(parse_block_key("x5y64z10"), Some([5, 64, 10]));
+        assert_eq!(parse_block_key("x0y0z0"), Some([0, 0, 0]));
+        assert_eq!(parse_block_key("x15y-64z7"), Some([15, -64, 7]));
+        assert_eq!(parse_block_key("x10y100z10"), Some([10, 100, 10]));
+        assert_eq!(parse_block_key("x0y-1z0"), Some([0, -1, 0]));
+    }
+
+    #[test]
+    fn test_parse_invalid_keys() {
+        assert_eq!(parse_block_key(""), None);
+        assert_eq!(parse_block_key("invalid"), None);
+        assert_eq!(parse_block_key("x5y64"), None);
+        assert_eq!(parse_block_key("5y64z10"), None);
+        assert_eq!(parse_block_key("xy64z10"), None);
+        assert_eq!(parse_block_key("x5yz10"), None);
+        assert_eq!(parse_block_key("x5y64z"), None);
+        assert_eq!(parse_block_key("xay64z10"), None);
+    }
+}
