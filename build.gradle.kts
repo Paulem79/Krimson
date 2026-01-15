@@ -81,6 +81,16 @@ allprojects {
             options.release.set(targetJavaVersion)
         }
     }
+
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        }
+    }
+
+    tasks.withType<Test>().configureEach {
+        failOnNoDiscoveredTests = false
+    }
 }
 
 dependencies {
