@@ -1,6 +1,8 @@
 package ovh.paulem.krimson.utils;
 
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
+import ovh.paulem.krimson.common.KrimsonPlugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,8 +17,14 @@ import java.util.logging.Logger;
  * Provides optimized implementations of performance-critical operations.
  */
 public class NativeUtil {
-    private static final Logger LOGGER = Logger.getLogger(NativeUtil.class.getName());
     private static final String LIBRARY_NAME = "krimson_native";
+    /**
+     * -- GETTER --
+     *  Checks if the native library was successfully loaded.
+     *
+     * @return true if the native library is available, false otherwise
+     */
+    @Getter
     private static boolean loaded = false;
     private static boolean attemptedLoad = false;
 
@@ -38,16 +46,16 @@ public class NativeUtil {
             // Try loading from system library path first
             System.loadLibrary(LIBRARY_NAME);
             loaded = true;
-            LOGGER.info("Successfully loaded native library: " + LIBRARY_NAME);
+            KrimsonPlugin.getInstance().getLogger().info("Successfully loaded native library: " + LIBRARY_NAME);
         } catch (UnsatisfiedLinkError e) {
-            LOGGER.log(Level.WARNING, "Failed to load native library from system path: " + e.getMessage());
-            
+            KrimsonPlugin.getInstance().getLogger().warning("Failed to load native library from system path: " + e.getMessage());
+
             // Try to extract and load from resources
             try {
                 loadLibraryFromResources();
             } catch (Exception ex) {
-                LOGGER.log(Level.WARNING, "Failed to load native library from resources: " + ex.getMessage());
-                LOGGER.info("Native library not available. Will use fallback implementations.");
+                KrimsonPlugin.getInstance().getLogger().warning("Failed to load native library from resources: " + ex.getMessage());
+                KrimsonPlugin.getInstance().getLogger().info("Native library not available. Will use fallback implementations.");
             }
         }
     }
@@ -91,17 +99,8 @@ public class NativeUtil {
             // Load the library
             System.load(tempLib.getAbsolutePath());
             loaded = true;
-            LOGGER.info("Successfully loaded native library from resources: " + resourcePath);
+            KrimsonPlugin.getInstance().getLogger().info("Successfully loaded native library from resources: " + resourcePath);
         }
-    }
-
-    /**
-     * Checks if the native library was successfully loaded.
-     *
-     * @return true if the native library is available, false otherwise
-     */
-    public static boolean isLoaded() {
-        return loaded;
     }
 
     /**
@@ -115,8 +114,7 @@ public class NativeUtil {
      * @param key the block key string to parse
      * @return an array of three integers [x, y, z], or null if parsing fails
      */
-    @Nullable
-    public static native int[] parseBlockKey(String key);
+    public static native int @Nullable [] parseBlockKey(String key);
 
     /**
      * Compresses a byte array using ZLIB/Deflate compression.
@@ -128,8 +126,7 @@ public class NativeUtil {
      * @param data the byte array to compress
      * @return the compressed byte array, or null if compression fails
      */
-    @Nullable
-    public static native byte[] compress(byte[] data);
+    public static native byte @Nullable [] compress(byte[] data);
 
     /**
      * Decompresses a ZLIB/Deflate compressed byte array.
@@ -141,6 +138,5 @@ public class NativeUtil {
      * @param data the compressed byte array
      * @return the decompressed byte array, or null if decompression fails
      */
-    @Nullable
-    public static native byte[] decompress(byte[] data);
+    public static native byte @Nullable [] decompress(byte[] data);
 }
