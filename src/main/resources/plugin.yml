@@ -1,6 +1,6 @@
 name: Krimson
 version: ${version}
-main: ovh.paulem.krimson.Krimson
+main: net.paulem.krimson.Krimson
 api-version: '1.19'
 load: STARTUP
 authors: [ Paulem ]

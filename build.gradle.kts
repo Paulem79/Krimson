@@ -9,7 +9,7 @@ plugins {
     id("xyz.jpenilla.run-paper") version "3.0.0"
 }
 
-group = "ovh.paulem"
+group = "net.paulem"
 version = "1.0"
 
 val targetJavaVersion = 21
