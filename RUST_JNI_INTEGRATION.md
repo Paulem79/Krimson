@@ -128,7 +128,7 @@ cd native && cargo test
 
 # Test Java fallback
 javac -d /tmp/test src/test/java/ovh/paulem/krimson/utils/FallbackParsingTest.java
-java -cp /tmp/test ovh.paulem.krimson.utils.FallbackParsingTest
+java -cp /tmp/test net.paulem.krimson.utils.FallbackParsingTest
 ```
 
 ## Files Changed

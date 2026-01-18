@@ -3,6 +3,7 @@ package net.paulem.krimson.blocks.custom;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.Setter;
+import net.paulem.krimson.common.KrimsonPlugin;
 import net.paulem.krimson.utils.*;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -33,13 +34,13 @@ import net.paulem.krimson.items.Items;
 import net.paulem.krimson.properties.PDCWrapper;
 import net.paulem.krimson.properties.PropertiesField;
 import net.paulem.krimson.registry.RegistryKey;
-import ovh.paulem.krimson.utils.*;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
-public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
+public class CustomBlock implements RegistryKey<NamespacedKey> {
     public static final Vector3f OFFSET = new Vector3f(.0005f);
+    private static final String REGISTRY_REFERENCE_ERROR_MESSAGE = "You must clone this registry instance of the custom block before editing it.";
 
     @Getter
     protected boolean registryReference; // This is used to check if this instance is a registry instance, so that we need to clone it before using it
@@ -96,8 +97,23 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
         setDisplayAndProperties(block);
     }
 
+    /**
+     * Creates a live instance from this registry template.
+     * This replaces the clone() implementation.
+     */
+    public CustomBlock copyOf() {
+        // 1. Create a new instance using this object's data
+        CustomBlock copy = new CustomBlock(this.key, this.dropIdentifier, this.blockMaterial);
+
+        // 2. Configure the specific state for a "live" block
+        copy.registryReference = false;
+        copy.meta = this.meta;
+
+        return copy;
+    }
+
     protected void setDisplayAndProperties(Block block) {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         this.block = block;
         this.properties = new PDCWrapper(block);
@@ -132,7 +148,7 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
      * @param blockLoc The location of the block
      */
     public void spawn(Location blockLoc) {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         if (blockLoc.getWorld() == null) {
             return;
@@ -144,7 +160,7 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
     }
 
     public void spawnDisplay(Location blockLoc) {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         blockLoc = blockLoc.clone();
 
@@ -213,19 +229,19 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
     }
 
     public void tickAsync() {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         if (block.getType() != this.blockMaterial) {
-            Krimson.getScheduler().runTask(() -> {
-                CustomBlockUtils.handleBlockSuppression(block, null);
-            });
+            KrimsonPlugin.getScheduler().runTask(() ->
+                CustomBlockUtils.handleBlockSuppression(block, null)
+            );
         }
 
         tickLight();
     }
 
     public void tickSync() {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         if (linkedDisplay == null || !linkedDisplay.isValid()) {
             spawnDisplay(block.getLocation());
@@ -233,10 +249,10 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
     }
 
     public final void tickLight() {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         // TODO : if you want more accurate per-face lighting, spawn 6 block displays, one for each face, and use the scale transform to flatten them so they're 2d planes; and then do the light get's per-face and apply them to that face only https://discord.com/channels/690411863766466590/741875863271899136/1396952975494217933
-        if (Krimson.getConfiguration().getBoolean("preciseLightning", true)) {
+        if (KrimsonPlugin.getConfiguration().getBoolean("preciseLightning", true)) {
             // Precise lightning: check the light level of the block in all cartesian directions
             byte skyLight = BlockUtils.computeLight(Block::getLightFromSky, block);
             byte blockLight = BlockUtils.computeLight(Block::getLightFromBlocks, block);
@@ -256,14 +272,14 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
 
     public ItemStack getItemStack() {
         ItemStack stack = ItemUtils.getWithItemModel(new ItemStack(getBlockMaterial()), key);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            PersistentDataContainer pdc = meta.getPersistentDataContainer();
-            pdc.set(new NamespacedKey(Krimson.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING, key.toString());
+        ItemMeta stackItemMeta = stack.getItemMeta();
+        if (stackItemMeta != null) {
+            PersistentDataContainer pdc = stackItemMeta.getPersistentDataContainer();
+            pdc.set(new NamespacedKey(KrimsonPlugin.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING, key.toString());
 
-            if(this.meta != null) this.meta.accept(meta);
+            if(this.meta != null) this.meta.accept(stackItemMeta);
 
-            stack.setItemMeta(meta);
+            stack.setItemMeta(stackItemMeta);
         }
 
         return stack;
@@ -277,12 +293,14 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
      * Called when a player interacts with the custom block
      */
     public void onInteract(PlayerInteractEvent event) {
+        // Default implementation does nothing
     }
 
     /**
      * Called when the custom block is placed by a player.
      */
     public void onPlace(BlockPlaceEvent event) {
+        // Default implementation does nothing
     }
 
     /**
@@ -296,13 +314,11 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
      * Called when the custom block is broken. (called also when a player breaks the block)
      */
     public void onBreak(@Nullable Event event, @Nullable Player player) {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         remove();
 
-        if (player != null) {
-            if (player.getGameMode() == GameMode.CREATIVE) return;
-        }
+        if (player != null && player.getGameMode() == GameMode.CREATIVE) return;
 
         // DROP ITEM PART
         if (dropIdentifier.equals(NamespacedKeyUtils.none())) return;
@@ -310,7 +326,7 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
         Optional<CustomItem> dropItem = Items.REGISTRY.get(dropIdentifier);
 
         if (dropItem.isEmpty()) {
-            Krimson.getInstance().getLogger().warning("Custom block " + dropIdentifier + " has no corresponding item in the registry!");
+            KrimsonPlugin.getInstance().getLogger().warning("Custom block " + dropIdentifier + " has no corresponding item in the registry!");
             return;
         }
 
@@ -322,15 +338,15 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
      * Called when the custom block is unloaded (e.g. when the chunk is unloaded)
      */
     public void onUnload() {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
-        Krimson.getInstance().getLogger().info("Unloading custom block " + dropIdentifier + " at " + block.getLocation());
+        KrimsonPlugin.getInstance().getLogger().info("Unloading custom block " + dropIdentifier + " at " + block.getLocation());
 
         linkedDisplay.remove();
     }
 
     public void remove() {
-        Preconditions.checkState(!isRegistryReference(), "You must clone this registry instance of the custom block before editing it.");
+        Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         onUnload();
 
@@ -340,23 +356,10 @@ public class CustomBlock implements Cloneable, RegistryKey<NamespacedKey> {
 
         Block pdcBlock = getProperties().getContainer().getBlock();
         if (pdcBlock != null) {
-            pdcBlock.getChunk().getPersistentDataContainer().remove(PersistentDataUtils.getKey(Krimson.getInstance(), pdcBlock));
+            pdcBlock.getChunk().getPersistentDataContainer().remove(PersistentDataUtils.getKey(KrimsonPlugin.getInstance(), pdcBlock));
         }
 
         Krimson.customBlocks.removeBlock(this);
-    }
-
-    @Override
-    public CustomBlock clone() {
-        try {
-            CustomBlock clone = (CustomBlock) super.clone();
-
-            clone.registryReference = false;
-
-            return clone;
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
     }
 
     @Override

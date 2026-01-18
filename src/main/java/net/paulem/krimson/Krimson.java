@@ -16,7 +16,6 @@ import net.paulem.krimson.commands.CommandKrimson;
 import net.paulem.krimson.common.KrimsonPlugin;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.items.Items;
-import ovh.paulem.krimson.listeners.*;
 import net.paulem.krimson.properties.PDCWrapper;
 import net.paulem.krimson.regions.CustomBlockTracker;
 import net.paulem.krimson.resourcepack.ResourcePackHosting;
@@ -29,7 +28,6 @@ import net.paulem.krimson.resourcepack.ResourcePackHosting;
  */
 public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
     public static ResourcePackHosting packHosting;
-
     public static CustomBlockTracker customBlocks;
 
     /**

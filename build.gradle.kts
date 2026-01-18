@@ -56,8 +56,8 @@ allprojects {
         archiveClassifier.set("")
         exclude("META-INF/**")
 
-        relocate("com.github.Anon8281.universalScheduler", "ovh.paulem.krimson.libs.universalScheduler")
-        relocate("com.jeff_media.customblockdata", "ovh.paulem.krimson.libs.customblockdata")
+        relocate("com.github.Anon8281.universalScheduler", "net.paulem.krimson.libs.universalScheduler")
+        relocate("com.jeff_media.customblockdata", "net.paulem.krimson.libs.customblockdata")
     }
 
     tasks.build {
@@ -120,7 +120,7 @@ dependencies {
     }
     implementation("io.javalin:javalin:6.7.0")
 
-    compileOnly("io.netty:netty-all:4.2.3.Final")
+    compileOnly("io.netty:netty-all:4.2.5.Final")
 }
 
 var alreadyMappedCommon = false
