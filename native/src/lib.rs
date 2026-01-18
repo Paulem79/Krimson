@@ -36,7 +36,7 @@ use std::io::Write;
 /// This function is safe to call from Java. All error conditions (invalid format,
 /// invalid integers, null strings) are handled gracefully by returning null.
 #[no_mangle]
-pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_parseBlockKey(
+pub extern "system" fn Java_net_paulem_krimson_utils_NativeUtil_parseBlockKey(
     mut env: JNIEnv,
     _class: JClass,
     key: JString,
@@ -135,7 +135,7 @@ fn parse_block_key(key: &str) -> Option<[i32; 3]> {
 /// This function is safe to call from Java. All error conditions are handled
 /// gracefully by returning null.
 #[no_mangle]
-pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_compress(
+pub extern "system" fn Java_net_paulem_krimson_utils_NativeUtil_compress(
     env: JNIEnv,
     _class: JClass,
     data: JByteArray,
@@ -183,7 +183,7 @@ pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_compress(
 /// This function is safe to call from Java. All error conditions are handled
 /// gracefully by returning null.
 #[no_mangle]
-pub extern "system" fn Java_ovh_paulem_krimson_utils_NativeUtil_decompress(
+pub extern "system" fn Java_net_paulem_krimson_utils_NativeUtil_decompress(
     env: JNIEnv,
     _class: JClass,
     data: JByteArray,

@@ -34,7 +34,7 @@ public class CustomBlockActionListener implements Listener {
         }
 
         EquipmentSlot slot = event.getHand();
-        if (slot != EquipmentSlot.HAND) {
+        if (slot != EquipmentSlot.HAND && slot != EquipmentSlot.OFF_HAND) {
             return; // Only handle main hand interactions
         }
 

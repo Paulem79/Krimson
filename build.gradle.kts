@@ -42,8 +42,8 @@ allprojects {
     }
 
     dependencies {
-        if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
-        else compileOnly("org.spigotmc:spigot-api:1.21.8-R0.1-SNAPSHOT")
+        if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+        else compileOnly("org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT")
 
         compileOnly("org.jetbrains:annotations:26.0.2-1")
 
@@ -169,7 +169,7 @@ tasks.compileJava {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.8")
+        minecraftVersion("1.21.11")
     }
 }
 

@@ -87,6 +87,8 @@ public class InventoryCustomBlock extends CustomBlock {
         Player player = event.getPlayer();
         Action action = event.getAction();
 
+        player.sendMessage("Debug: Interacted with InventoryCustomBlock at " + block.getLocation());
+
         if (action != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
@@ -172,5 +174,15 @@ public class InventoryCustomBlock extends CustomBlock {
         public Inventory getInventory() {
             return getCustomBlock().getInventory();
         }
+    }
+
+    @Override
+    public CustomBlock copyOf() {
+        InventoryCustomBlock copy = new InventoryCustomBlock(this.getKey(), this.getDropIdentifier(), this.getBlockMaterial(), this.baseInventorySize, this.baseInventoryTitle);
+
+        copy.registryReference = false;
+        copy.setMeta(this.getMeta());
+
+        return copy;
     }
 }

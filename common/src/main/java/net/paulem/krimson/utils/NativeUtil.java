@@ -26,6 +26,14 @@ public class NativeUtil {
     private static boolean loaded = false;
     private static boolean attemptedLoad = false;
 
+    private NativeUtil() {
+        // Prevent instantiation
+    }
+
+    public static void init() {
+        KrimsonPlugin.getInstance().getLogger().info("Loading Krimson Native...");
+    }
+
     static {
         tryLoadNativeLibrary();
     }
@@ -138,3 +146,4 @@ public class NativeUtil {
      */
     public static native byte @Nullable [] decompress(byte[] data);
 }
+

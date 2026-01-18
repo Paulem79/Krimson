@@ -3,6 +3,7 @@ package net.paulem.krimson.common;
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
 import lombok.Getter;
+import net.paulem.krimson.utils.NativeUtil;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -29,6 +30,8 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
         configuration = getConfig();
 
         scheduler = UniversalScheduler.getScheduler(this);
+
+        NativeUtil.init();
 
         getLogger().info("KrimsonPlugin instantiated!");
     }

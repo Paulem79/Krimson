@@ -175,8 +175,16 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
 
         if (getItemStack().getType() == Material.PLAYER_HEAD) {
             // HEAD
-            blockLoc.getWorld().spawn(blockLoc.add(.5, 0 + OFFSET.y(), .5), ItemDisplay.class, itemDisplay -> {
+            Location spawnLoc = blockLoc.add(.5, 0 + OFFSET.y(), .5);
+
+            // Remove existing displays to prevent ghosts
+            spawnLoc.getWorld().getNearbyEntities(spawnLoc, 0.2, 0.2, 0.2).stream()
+                    .filter(e -> e instanceof ItemDisplay)
+                    .forEach(org.bukkit.entity.Entity::remove);
+
+            blockLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
+                linkedDisplay.setPersistent(false);
                 linkedDisplay.setItemStack(getItemStack());
 
                 linkedDisplay.setTransformation(new Transformation(
@@ -198,8 +206,16 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
             });
         } else {
             // BLOCK
-            linkedDisplay = blockLoc.getWorld().spawn(blockLoc.add(.5, .5, .5), ItemDisplay.class, itemDisplay -> {
+            Location spawnLoc = blockLoc.add(.5, .5, .5);
+
+            // Remove existing displays to prevent ghosts
+            spawnLoc.getWorld().getNearbyEntities(spawnLoc, 0.2, 0.2, 0.2).stream()
+                    .filter(e -> e instanceof ItemDisplay)
+                    .forEach(org.bukkit.entity.Entity::remove);
+
+            linkedDisplay = blockLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
+                linkedDisplay.setPersistent(false);
                 linkedDisplay.setItemStack(getItemStack());
 
                 linkedDisplay.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
@@ -267,6 +283,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
 
     // Registry of item meta to get the reference from OR better get from original block reference
     @Setter
+    @Getter(lombok.AccessLevel.PROTECTED)
     @Nullable
     private Consumer<ItemMeta> meta;
 
@@ -293,7 +310,8 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
      * Called when a player interacts with the custom block
      */
     public void onInteract(PlayerInteractEvent event) {
-        // Default implementation does nothing
+        event.getPlayer().sendMessage("You interacted with a custom block: " + key.toString());
+        event.getPlayer().sendMessage("Class type: " + this.getClass().getSimpleName());
     }
 
     /**
@@ -341,6 +359,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         KrimsonPlugin.getInstance().getLogger().info("Unloading custom block " + dropIdentifier + " at " + block.getLocation());
+
 
         linkedDisplay.remove();
     }
