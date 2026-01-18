@@ -43,7 +43,7 @@ jobs:
         run: cargo build --release
 
       - name: 📤 Upload Native Library
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.asset_name }}
           path: native/target/release/${{ matrix.artifact_pattern }}
@@ -102,7 +102,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 📥 Download Native Libraries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           pattern: "*-lib"
           path: native/libs
@@ -120,7 +120,7 @@ jobs:
           --no-daemon
 
       - name: 📦 Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-artifacts
           path: build/libs/*.jar
