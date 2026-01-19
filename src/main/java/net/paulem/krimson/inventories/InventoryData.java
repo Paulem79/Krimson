@@ -24,15 +24,15 @@ public record InventoryData(Inventory inventory, String title) {
             InventoryCustomBlock.InventoryCustomBlockHolder holder = (InventoryCustomBlock.InventoryCustomBlockHolder) inventory.getHolder();
 
             assert holder != null;
-            byte[] UUIDbytes = UuidUtils.asBytes(holder.getWorldUUID());
+            byte[] UUIDbytes = UuidUtils.asBytes(holder.worldUUID());
             // Write the world UUID length
             dataOutput.writeInt(UUIDbytes.length);
             // Write the world UUID
             dataOutput.write(UUIDbytes);
             // Write the inventory holder x, y, z coordinates
-            dataOutput.writeInt(holder.getX());
-            dataOutput.writeInt(holder.getY());
-            dataOutput.writeInt(holder.getZ());
+            dataOutput.writeInt(holder.x());
+            dataOutput.writeInt(holder.y());
+            dataOutput.writeInt(holder.z());
 
             // Write the size of the inventory
             dataOutput.writeInt(inventory.getSize());

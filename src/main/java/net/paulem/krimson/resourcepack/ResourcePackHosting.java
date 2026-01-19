@@ -7,25 +7,24 @@ import net.mcbrawls.inject.javalin.InjectJavalinFactory;
 import net.mcbrawls.inject.spigot.InjectSpigot;
 import net.paulem.krimson.common.KrimsonPlugin;
 import net.paulem.krimson.resourcepack.creator.ResourcePackKt;
-import net.radstevee.packed.core.pack.PackFormat;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import net.paulem.krimson.Krimson;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.*;
 
 public class ResourcePackHosting implements Listener {
+    private static final String RESOURCE_PACK_PREFIX = "krimson-pack-";
+
     public final Map<String, File> versionToFileMap = new HashMap<>();
 
     @Getter
@@ -34,6 +33,7 @@ public class ResourcePackHosting implements Listener {
     private Javalin javalin;
 
     public ResourcePackHosting() {
+        // This constructor is intentionally empty
     }
 
     public void aggregate(String version, File zipFile) {
@@ -43,25 +43,24 @@ public class ResourcePackHosting implements Listener {
 
         versionToFileMap.put(version, zipFile);
 
-        // TODO : Make krimson-pack a constant
-        javalin.get("/krimson-pack-" + version, (ctx -> {
-            ctx.result(Files.readAllBytes(zipFile.toPath()));
-        }));
+        javalin.get("/" + RESOURCE_PACK_PREFIX + version, (ctx ->
+            ctx.result(Files.readAllBytes(zipFile.toPath()))
+        ));
     }
 
     public void start() {
         javalin = InjectJavalinFactory.create(InjectSpigot.INSTANCE);
 
-        Krimson.getInstance().getLogger().info("Javalin initialized");
+        KrimsonPlugin.getInstance().getLogger().info("Javalin initialized");
 
         javalin.events(eventConfig -> {
             eventConfig.serverStarted(() -> {
-                Krimson.getInstance().getLogger().info("Javalin started");
+                KrimsonPlugin.getInstance().getLogger().info("Javalin started");
                 canPlayersJoin = true;
             });
 
             eventConfig.serverStartFailed(() -> {
-                Krimson.getInstance().getLogger().info("Javalin failed to start");
+                KrimsonPlugin.getInstance().getLogger().info("Javalin failed to start");
                 canPlayersJoin = true;
             });
         });
@@ -72,7 +71,7 @@ public class ResourcePackHosting implements Listener {
     public void stop() {
         if (javalin != null) {
             javalin.stop();
-            Krimson.getInstance().getLogger().info("Javalin stopped");
+            KrimsonPlugin.getInstance().getLogger().info("Javalin stopped");
         }
     }
 
@@ -102,7 +101,12 @@ public class ResourcePackHosting implements Listener {
         }
 
         // TODO : Make krimson-pack a constant + Customize message + Make force configurable
-        player.addResourcePack(UUID.nameUUIDFromBytes(selectedVersion.getBytes()), "http://localhost:" + Bukkit.getPort() + "/krimson-pack-" + selectedVersion, createSha1(versionToFileMap.get(selectedVersion)), ChatColor.GREEN + "Krimson Resource Pack", true);
+        player.addResourcePack(
+                UUID.nameUUIDFromBytes(selectedVersion.getBytes()),
+                "http://localhost:" + Bukkit.getPort() + "/" + RESOURCE_PACK_PREFIX + selectedVersion,
+                createSha1(versionToFileMap.get(selectedVersion)),
+                ChatColor.GREEN + "Krimson Resource Pack",
+                true);
     }
 
     public byte[] createSha1(File file) {

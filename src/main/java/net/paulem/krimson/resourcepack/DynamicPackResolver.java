@@ -42,13 +42,7 @@ public class DynamicPackResolver {
     }
 
     // Classe de comparaison de version
-    private static class MinecraftVersion implements Comparable<MinecraftVersion> {
-        final int major, minor, patch;
-
-        MinecraftVersion(int major, int minor, int patch) {
-            this.major = major; this.minor = minor; this.patch = patch;
-        }
-
+    private record MinecraftVersion(int major, int minor, int patch) implements Comparable<MinecraftVersion> {
         static MinecraftVersion parse(String v) {
             // remove any suffixes like "-SNAPSHOT"
             int suffixIndex = v.indexOf('-');

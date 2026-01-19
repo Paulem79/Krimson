@@ -1,6 +1,7 @@
 package net.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
+import net.paulem.krimson.common.KrimsonPlugin;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -87,8 +88,6 @@ public class InventoryCustomBlock extends CustomBlock {
         Player player = event.getPlayer();
         Action action = event.getAction();
 
-        player.sendMessage("Debug: Interacted with InventoryCustomBlock at " + block.getLocation());
-
         if (action != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
@@ -140,12 +139,7 @@ public class InventoryCustomBlock extends CustomBlock {
     public void onGuiPickupItem(InventoryPickupItemEvent event) {
     }
 
-    public static class InventoryCustomBlockHolder implements InventoryHolder {
-        @Getter
-        private final UUID worldUUID;
-        @Getter
-        private final int x, y, z;
-
+    public record InventoryCustomBlockHolder(UUID worldUUID, int x, int y, int z) implements InventoryHolder {
         public InventoryCustomBlockHolder(InventoryCustomBlock customBlock) {
             this(customBlock.getBlock().getLocation());
         }
@@ -154,15 +148,8 @@ public class InventoryCustomBlock extends CustomBlock {
             this(location.getWorld().getUID(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
         }
 
-        public InventoryCustomBlockHolder(UUID worldUUID, int x, int y, int z) {
-            this.worldUUID = worldUUID;
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
         public Location getCustomBlockLoc() {
-            return new Location(Krimson.getInstance().getServer().getWorld(worldUUID), x, y, z);
+            return new Location(KrimsonPlugin.getInstance().getServer().getWorld(worldUUID), x, y, z);
         }
 
         public InventoryCustomBlock getCustomBlock() {

@@ -23,7 +23,7 @@ fun createBlockModel(
 }
 
 fun main(dataFolder: File, packFormat: PackFormat): File {
-    val zipFile = File(dataFolder, "pack.zip")
+    val zipFile = File(dataFolder, "krimson_resource_pack_v${packFormat.rev}.zip")
     zipFile.delete()
 
     val tmpDir = dataFolder.resolve("tmp")
@@ -32,7 +32,7 @@ fun main(dataFolder: File, packFormat: PackFormat): File {
 
     val pack = resourcePack {
         meta {
-            description = "§eServer Pack"
+            description = "§eKrimson Resource Pack"
             format = packFormat
             outputDir = tmpDir
         }
