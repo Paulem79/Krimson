@@ -24,7 +24,11 @@ fun createBlockModel(
 
 fun main(dataFolder: File, packFormat: PackFormat): File {
     val zipFile = File(dataFolder, "krimson_resource_pack_v${packFormat.rev}.zip")
-    zipFile.delete()
+    val deleted = zipFile.delete()
+
+    if (!deleted) {
+        println("No existing resource pack zip to delete.")
+    }
 
     val tmpDir = dataFolder.resolve("tmp")
     tmpDir.deleteRecursively()
