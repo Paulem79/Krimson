@@ -42,6 +42,7 @@ public class MigrationListener implements Listener {
             }
 
             CustomBlockItem customBlockItem = (CustomBlockItem) Items.REGISTRY.getOrThrow(key);
+
             ItemStack toGive = customBlockItem.getCustomBlock().getItemStack();
             toGive.setAmount(item.getAmount());
 
@@ -53,8 +54,9 @@ public class MigrationListener implements Listener {
             }
         }
 
-        if (hasMigrated)
+        if (hasMigrated) {
             KrimsonPlugin.getInstance().getLogger().info("Migrated BlockItems in inventory of " + player.getName() + " to his new references.");
+        }
     }
 
     @EventHandler

@@ -20,7 +20,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-// FIXME: The last custom block in the inventory (when stack is at count 1) placed on an already placed custom block's face will not place the new custom block, remove it from the inventory, and trigger the opening of the existing custom block's inventory GUI.
 public class CustomBlockActionListener implements Listener {
     public static Set<UUID> notAllowed = new HashSet<>();
 
@@ -36,7 +35,7 @@ public class CustomBlockActionListener implements Listener {
 
         EquipmentSlot slot = event.getHand();
         if (slot != EquipmentSlot.HAND && slot != EquipmentSlot.OFF_HAND) {
-            return; // Only handle main hand interactions
+            return; // Only handle main hand interactions and off-hand interactions (when no item in main hand)
         }
 
         if (player.isSneaking()) {
@@ -59,6 +58,10 @@ public class CustomBlockActionListener implements Listener {
             }
 
             customBlock.onInteract(event);
+
+            if (event.useItemInHand() == Event.Result.DENY && slot == EquipmentSlot.HAND) {
+                player.updateInventory();
+            }
         }
     }
 

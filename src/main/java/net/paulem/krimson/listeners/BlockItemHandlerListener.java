@@ -122,12 +122,11 @@ public class BlockItemHandlerListener implements Listener {
             // If there is only one item remaining, remove it from the player's inventory
             if (item.getAmount() == 1) {
                 player.getInventory().setItem(slot, null);
-                return;
+            } else {
+                // Remove one item from the player's inventory
+                item.setAmount(item.getAmount() - 1);
+                player.getInventory().setItemInMainHand(item);
             }
-
-            // Remove one item from the player's inventory
-            item.setAmount(item.getAmount() - 1);
-            player.getInventory().setItemInMainHand(item);
         }
 
         customBlockItem.getAction().accept(customBlockItem.getCustomBlock(), player, toPlace.getLocation());
