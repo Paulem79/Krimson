@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+// FIXME: The last custom block in the inventory (when stack is at count 1) placed on an already placed custom block's face will not place the new custom block, remove it from the inventory, and trigger the opening of the existing custom block's inventory GUI.
 public class CustomBlockActionListener implements Listener {
     public static Set<UUID> notAllowed = new HashSet<>();
 
