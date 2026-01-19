@@ -22,7 +22,7 @@ fun createBlockModel(
     pack.addItemDefinition(ItemDefinition(texture, BasicItem(texture)))
 }
 
-fun main(dataFolder: File): File {
+fun main(dataFolder: File, packFormat: PackFormat): File {
     val zipFile = File(dataFolder, "pack.zip")
     zipFile.delete()
 
@@ -33,7 +33,7 @@ fun main(dataFolder: File): File {
     val pack = resourcePack {
         meta {
             description = "§eServer Pack"
-            format = PackFormat.LATEST
+            format = packFormat
             outputDir = tmpDir
         }
 

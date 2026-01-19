@@ -7,6 +7,9 @@ authors: [ Paulem ]
 description: A lib to create custom blocks in a Spigot environment.
 website: paulem.ovh
 
+softdepend:
+  - ViaVersion
+
 commands:
   krimson:
     description: General Krimson command

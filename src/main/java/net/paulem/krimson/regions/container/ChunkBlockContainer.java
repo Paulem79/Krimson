@@ -14,6 +14,7 @@ public class ChunkBlockContainer {
     private static final int MIN_HEIGHT = -64;
     private static final int MAX_HEIGHT = 256;
     private static final int SECTION_COUNT = (MAX_HEIGHT - MIN_HEIGHT) / SECTION_SIZE;
+    private static final int MIN_SECTION_Y = MIN_HEIGHT / SECTION_SIZE;
 
     @Getter
     private final WorldBlockContainer parent;
@@ -32,23 +33,35 @@ public class ChunkBlockContainer {
     }
 
     public ChunkSectionBlockContainer getSection(int sectionY) {
-        return sections[sectionY];
+        int index = sectionY - MIN_SECTION_Y;
+        if (index < 0 || index >= sections.length) {
+            return null;
+        }
+        return sections[index];
     }
 
     public ChunkSectionBlockContainer getOrCreateSection(int sectionY) {
         ChunkSectionBlockContainer section = getSection(sectionY);
 
         if (section == null) {
+            int index = sectionY - MIN_SECTION_Y;
+            // Ensure index is within bounds before creating
+            if (index < 0 || index >= sections.length) {
+                return null;
+            }
             section = ChunkSectionBlockContainer.of(this, sectionY);
-            sections[sectionY] = section;
+            sections[index] = section;
         }
 
         return section;
     }
 
     public void removeSection(ChunkSectionBlockContainer section) {
-        sections[section.getSectionY()] = null;
-        notifyParent();
+        int index = section.getSectionY() - MIN_SECTION_Y;
+        if (index >= 0 && index < sections.length) {
+            sections[index] = null;
+            notifyParent();
+        }
     }
 
     public void clear() {
@@ -59,7 +72,7 @@ public class ChunkBlockContainer {
 
     @Nullable
     public <T> T getBlock(int x, int y, int z) {
-        if (y < MIN_HEIGHT || y > MAX_HEIGHT) {
+        if (y < MIN_HEIGHT || y >= MAX_HEIGHT) {
             return null;
         }
 
@@ -73,7 +86,7 @@ public class ChunkBlockContainer {
     }
 
     public <T> void setBlock(int x, int y, int z, T block) {
-        if (y < MIN_HEIGHT || y > MAX_HEIGHT) {
+        if (y < MIN_HEIGHT || y >= MAX_HEIGHT) {
             return;
         }
 
@@ -87,7 +100,7 @@ public class ChunkBlockContainer {
     }
 
     public void removeBlock(int x, int y, int z) {
-        if (y < MIN_HEIGHT || y > MAX_HEIGHT) {
+        if (y < MIN_HEIGHT || y >= MAX_HEIGHT) {
             return;
         }
 

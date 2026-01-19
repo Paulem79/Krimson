@@ -39,11 +39,19 @@ allprojects {
             url = uri("https://maven.rad.vg/public")
         }
         maven("https://maven.mcbrawls.net/releases/")
+        maven("https://repo.viaversion.com")
+        maven {
+            name = "paulemReleases"
+            url = uri("https://maven.paulem.net/releases")
+        }
     }
 
     dependencies {
         if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
         else compileOnly("org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT")
+
+        // Spigot libraries
+        compileOnly("com.viaversion:viaversion-api:5.+")
 
         compileOnly("org.jetbrains:annotations:26.0.2-1")
 
@@ -107,7 +115,7 @@ dependencies {
     implementation("com.github.Anon8281:UniversalScheduler:0.+")
     implementation("com.jeff-media:custom-block-data:2.2.5")
 
-    implementation("net.radstevee.packed:packed-core:1.+")
+    implementation("net.radstevee.packed:packed-core:1.1.4")
 
     implementation("org.apache.commons:commons-lang3:3.20.0")
 
@@ -120,6 +128,7 @@ dependencies {
     }
     implementation("io.javalin:javalin:6.7.0")
 
+    // MC libraries
     compileOnly("io.netty:netty-all:4.2.9.Final")
 }
 
@@ -169,7 +178,7 @@ tasks.compileJava {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.11")
+        minecraftVersion("1.21.4")
     }
 }
 

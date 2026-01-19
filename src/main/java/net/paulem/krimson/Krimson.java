@@ -3,6 +3,7 @@ package net.paulem.krimson;
 import com.jeff_media.customblockdata.CustomBlockData;
 import net.paulem.krimson.listeners.*;
 import net.paulem.krimson.resourcepack.creator.ResourcePackKt;
+import net.radstevee.packed.core.pack.PackFormat;
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
@@ -74,7 +75,7 @@ public final class Krimson extends KrimsonPlugin<Krimson> implements Listener {
         krimsonCommand.setTabCompleter(krimsonCommandInstance);
         getLogger().info("Registered commands!");
 
-        packHosting = new ResourcePackHosting(ResourcePackKt.main(getDataFolder()));
+        packHosting = new ResourcePackHosting();
         pluginManager.registerEvents(packHosting, this);
         packHosting.start();
 

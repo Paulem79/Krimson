@@ -1,9 +1,9 @@
 package net.paulem.krimson.utils;
 
+import net.paulem.krimson.common.KrimsonPlugin;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import net.paulem.krimson.Krimson;
 import net.paulem.krimson.regions.ChunkKey;
 
 import java.util.Collection;
@@ -11,12 +11,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ChunkUtils {
+    public static final int VIEW_DISTANCE = KrimsonPlugin.getConfiguration().getInt("view-distance", 6);
+
     public static Collection<Chunk> getChunksAroundPlayer(Player player) {
         World world = player.getWorld();
         int baseX = player.getLocation().getChunk().getX();
         int baseZ = player.getLocation().getChunk().getZ();
 
-        int viewDistance = Math.min(player.getClientViewDistance(), Krimson.getConfiguration().getInt("view-distance", 6));
+        int viewDistance = Math.min(player.getClientViewDistance(), VIEW_DISTANCE);
         int radiusViewDistance = viewDistance / 2;
 
         Set<Chunk> chunksAroundPlayer = new HashSet<>();
