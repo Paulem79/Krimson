@@ -43,7 +43,7 @@ public class MigrationListener implements Listener {
 
             CustomBlockItem customBlockItem = (CustomBlockItem) Items.REGISTRY.getOrThrow(key);
 
-            ItemStack toGive = customBlockItem.getCustomBlock().getItemStack();
+            ItemStack toGive = customBlockItem.getCustomBlock().getItemDisplayStack();
             toGive.setAmount(item.getAmount());
 
             if (!toGive.equals(item)) {

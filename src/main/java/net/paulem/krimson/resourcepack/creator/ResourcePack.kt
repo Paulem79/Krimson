@@ -46,7 +46,7 @@ fun main(dataFolder: File, packFormat: PackFormat): File {
 
     for (namespacedKey in Items.REGISTRY.keys()) {
         val blockItem: CustomBlockItem = Items.REGISTRY.getOrThrow(namespacedKey) as CustomBlockItem
-        val modelPath = blockItem.customBlock.itemStack.itemMeta!!.itemModel ?: continue
+        val modelPath = blockItem.customBlock.itemDisplayStack.itemMeta!!.itemModel ?: continue
         createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
     }
 

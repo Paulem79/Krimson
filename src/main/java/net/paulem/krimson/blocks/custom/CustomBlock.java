@@ -137,7 +137,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         if (this.properties.has(Keys.DISPLAYED_ITEM_KEY)) {
             this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, properties, PersistentDataType.BYTE_ARRAY);
         } else {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, Codecs.ITEM_STACK_CODEC.encode(getItemStack()));
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, Codecs.ITEM_STACK_CODEC.encode(getItemDisplayStack()));
             this.properties.set(displayedItemField);
         }
     }
@@ -173,7 +173,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         blockLoc.setPitch(0);
         blockLoc.setYaw(0);
 
-        if (getItemStack().getType() == Material.PLAYER_HEAD) {
+        if (getItemDisplayStack().getType() == Material.PLAYER_HEAD) {
             // HEAD
             Location spawnLoc = blockLoc.add(.5, 0 + OFFSET.y(), .5);
 
@@ -185,7 +185,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
             blockLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
                 linkedDisplay.setPersistent(false);
-                linkedDisplay.setItemStack(getItemStack());
+                linkedDisplay.setItemStack(getItemDisplayStack());
 
                 linkedDisplay.setTransformation(new Transformation(
                         new Vector3f(0f, 1f, 0f),
@@ -216,7 +216,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
             linkedDisplay = blockLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
                 linkedDisplay.setPersistent(false);
-                linkedDisplay.setItemStack(getItemStack());
+                linkedDisplay.setItemStack(getItemDisplayStack());
 
                 linkedDisplay.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
 
@@ -287,7 +287,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     @Nullable
     private Consumer<ItemMeta> meta;
 
-    public ItemStack getItemStack() {
+    public ItemStack getItemDisplayStack() {
         ItemStack stack = ItemUtils.getWithItemModel(new ItemStack(getBlockMaterial()), key);
         ItemMeta stackItemMeta = stack.getItemMeta();
         if (stackItemMeta != null) {
@@ -339,6 +339,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         if (player != null && player.getGameMode() == GameMode.CREATIVE) return;
 
         // DROP ITEM PART
+        System.out.println(dropIdentifier);
         if (dropIdentifier.equals(NamespacedKeyUtils.none())) return;
 
         Optional<CustomItem> dropItem = Items.REGISTRY.get(dropIdentifier);
@@ -348,7 +349,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
             return;
         }
 
-        ItemStack itemStack = getItemStack();
+        ItemStack itemStack = dropItem.get().getItemStack();
         block.getWorld().dropItemNaturally(block.getLocation().add(.5, .5, .5), itemStack);
     }
 

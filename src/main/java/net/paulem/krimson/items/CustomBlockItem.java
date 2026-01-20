@@ -24,6 +24,6 @@ public class CustomBlockItem extends CustomItem {
 
     @Override
     public ItemStack getItemStack() {
-        return getCustomBlock().getItemStack();
+        return getCustomBlock().getItemDisplayStack();
     }
 }
