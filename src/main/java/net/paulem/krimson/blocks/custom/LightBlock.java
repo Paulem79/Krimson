@@ -12,11 +12,14 @@ import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.properties.PropertiesField;
 
 public class LightBlock extends CustomBlock {
+    @Getter
     private final int baseEmittingLightLevel;
     @Getter
-    protected PropertiesField<Integer> emittingLightLevel;
-    @Getter
     private Block lightBlock;
+
+    public PropertiesField<Integer> getEmittingLightLevelField() {
+        return getProperties().getEmittingLightLevelField();
+    }
 
     public LightBlock(NamespacedKey key, NamespacedKey dropIdentifier, int emittingLightLevel) {
         super(key, dropIdentifier, Material.SLIME_BLOCK);
@@ -27,16 +30,23 @@ public class LightBlock extends CustomBlock {
     public LightBlock(Block block) {
         super(block);
 
-        this.emittingLightLevel = new PropertiesField<>(Keys.EMITTING_LIGHT_LEVEL, properties, PersistentDataType.INTEGER);
-        this.baseEmittingLightLevel = this.emittingLightLevel.get();
+        this.baseEmittingLightLevel = getEmittingLightLevelField().get();
+    }
+
+    @Override
+    public LightCustomBlockProperties getProperties() {
+        return (LightCustomBlockProperties) super.getProperties();
+    }
+
+    @Override
+    protected CustomBlockProperties createProperties(Block block) {
+        return new LightCustomBlockProperties(block, this);
     }
 
     @Override
     public void spawn(Location blockLoc) {
         super.spawn(blockLoc);
-
-        this.emittingLightLevel = new PropertiesField<>(Keys.EMITTING_LIGHT_LEVEL, this.baseEmittingLightLevel);
-        properties.set(this.emittingLightLevel);
+        // Properties loaded in super.spawn -> setDisplayAndProperties -> createProperties
 
         lightBlock = blockLoc.getBlock().getRelative(BlockFace.UP);
         spawnLight();
@@ -46,7 +56,7 @@ public class LightBlock extends CustomBlock {
         // Spawn the light
         lightBlock.setType(Material.LIGHT);
         Light light = (Light) lightBlock.getBlockData();
-        light.setLevel(this.emittingLightLevel.get());
+        light.setLevel(getEmittingLightLevelField().get());
         lightBlock.setBlockData(light);
         lightBlock.getState().update();
     }

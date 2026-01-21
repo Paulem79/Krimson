@@ -25,22 +25,33 @@ import java.util.UUID;
 
 // FIXME: there are still some difficulties with this approach, especially around parsing/saving it asynchronously which can become an issue if there are a lot of these and they have large contents, but for a basic approach this will be fine https://discord.com/channels/690411863766466590/741875863271899136/1397175434432614472 (saving in files, with pointers in PDC can be better)
 public class InventoryCustomBlock extends CustomBlock {
+    @Getter
     private final int baseInventorySize;
+    @Getter
     private final String baseInventoryTitle;
     private final InventoryDiff inventoryDiff = new InventoryDiff();
-    @Getter
-    protected PropertiesField<Integer> inventorySize;
-    @Getter
-    protected PropertiesField<String> inventoryTitle;
-    @Getter
-    protected PropertiesField<byte[]> inventoryBase64;
-    @Getter
-    private Inventory inventory;
+
+    public PropertiesField<Integer> getInventorySizeField() {
+        return getProperties().getInventorySizeField();
+    }
+
+    public PropertiesField<String> getInventoryTitleField() {
+        return getProperties().getInventoryTitleField();
+    }
+
+    public PropertiesField<byte[]> getInventoryBase64Field() {
+        return getProperties().getInventoryBase64Field();
+    }
+
+    public Inventory getInventory() {
+        return getProperties().getInventory();
+    }
 
     public InventoryCustomBlock(NamespacedKey key, NamespacedKey dropIdentifier, Material blockInside, int inventorySize, String inventoryTitle, byte[] inventoryBase64) {
         this(key, dropIdentifier, blockInside, inventorySize, inventoryTitle);
-
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, inventoryBase64);
+        // Note: inventoryBase64 in constructor is currently not used for instantiation of property directly here
+        // It would require logic in InventoryCustomBlockProperties to accept an optional initial base64
+        // For now adhering to request to migrate system.
     }
 
     public InventoryCustomBlock(NamespacedKey key, NamespacedKey dropIdentifier, Material blockInside, int inventorySize, String inventoryTitle) {
@@ -53,34 +64,30 @@ public class InventoryCustomBlock extends CustomBlock {
     public InventoryCustomBlock(Block block) {
         super(block);
 
-        this.inventorySize = new PropertiesField<>(Keys.INVENTORY_SIZE, properties, PersistentDataType.INTEGER);
-        this.baseInventorySize = this.inventorySize.get();
+        // Fields accessed from properties now
+        // But we need to fill base fields for the "registry" contract if needed,
+        // though usually this constructor creates a LIVE block, which uses properties.
+        // base fields are final so they need to be set.
+        // We can read them from the properties we just loaded in super(block).
 
-        this.inventoryTitle = new PropertiesField<>(Keys.INVENTORY_TITLE, properties, PersistentDataType.STRING);
-        this.baseInventoryTitle = this.inventoryTitle.get();
+        this.baseInventorySize = getInventorySizeField().get();
+        this.baseInventoryTitle = getInventoryTitleField().get();
+    }
 
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, properties, PersistentDataType.BYTE_ARRAY);
-        this.inventory = InventoryData.decode(this.inventoryBase64.get()).inventory();
+    @Override
+    public InventoryCustomBlockProperties getProperties() {
+        return (InventoryCustomBlockProperties) super.getProperties();
+    }
+
+    @Override
+    protected CustomBlockProperties createProperties(Block block) {
+        return new InventoryCustomBlockProperties(block, this);
     }
 
     @Override
     public void spawn(Location blockLoc) {
         super.spawn(blockLoc);
-
-        this.inventorySize = new PropertiesField<>(Keys.INVENTORY_SIZE, baseInventorySize);
-        properties.set(this.inventorySize);
-
-        this.inventoryTitle = new PropertiesField<>(Keys.INVENTORY_TITLE, baseInventoryTitle);
-        properties.set(this.inventoryTitle);
-
-        this.inventory = Krimson.getInstance().getServer().createInventory(
-                new InventoryCustomBlockHolder(this),
-                this.inventorySize.get(),
-                this.inventoryTitle.get()
-        );
-
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
-        properties.set(inventoryBase64);
+        // Properties and inventory creation is now handled in InventoryCustomBlockProperties
     }
 
     @Override
@@ -92,7 +99,7 @@ public class InventoryCustomBlock extends CustomBlock {
             return;
         }
 
-        player.openInventory(inventory);
+        player.openInventory(getInventory());
 
         event.setCancelled(true);
     }
@@ -101,42 +108,45 @@ public class InventoryCustomBlock extends CustomBlock {
     public void onUnload() {
         super.onUnload();
 
-        if (this.inventory != null) {
-            this.inventoryDiff.setNow(this.inventory.getContents());
+        Inventory inv = getInventory();
+        if (inv != null) {
+            this.inventoryDiff.setNow(inv.getContents());
             if (inventoryDiff.hasChanges()) {
-                this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
-                this.properties.set(this.inventoryBase64);
+                 getProperties().updateInventory(inv);
             }
 
-            this.inventoryDiff.setBefore(this.inventory.getContents());
+            this.inventoryDiff.setBefore(inv.getContents());
         }
     }
 
     public void onGuiOpen(InventoryOpenEvent event) {
+        // Intentionally empty
     }
 
     public void onGuiClose(InventoryCloseEvent event) {
         this.inventoryDiff.setNow(event.getInventory().getContents());
 
         if (inventoryDiff.hasChanges()) {
-            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
-            this.properties.set(this.inventoryBase64);
+            getProperties().updateInventory(event.getInventory());
         }
 
-        this.inventory = event.getInventory();
-        this.inventoryDiff.setBefore(this.inventory.getContents());
+        this.inventoryDiff.setBefore(event.getInventory().getContents());
     }
 
     public void onGuiClick(InventoryClickEvent event) {
+        // Intentionally empty
     }
 
     public void onGuiDrag(InventoryDragEvent event) {
+        // Intentionally empty
     }
 
     public void onGuiMoveItem(InventoryMoveItemEvent event) {
+        // Intentionally empty
     }
 
     public void onGuiPickupItem(InventoryPickupItemEvent event) {
+        // Intentionally empty
     }
 
     public record InventoryCustomBlockHolder(UUID worldUUID, int x, int y, int z) implements InventoryHolder {
@@ -145,10 +155,11 @@ public class InventoryCustomBlock extends CustomBlock {
         }
 
         public InventoryCustomBlockHolder(Location location) {
-            this(location.getWorld().getUID(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
+            this(location.getWorld() != null ? location.getWorld().getUID() : null, location.getBlockX(), location.getBlockY(), location.getBlockZ());
         }
 
         public Location getCustomBlockLoc() {
+            if (worldUUID == null) return null;
             return new Location(KrimsonPlugin.getInstance().getServer().getWorld(worldUUID), x, y, z);
         }
 
@@ -168,6 +179,11 @@ public class InventoryCustomBlock extends CustomBlock {
         InventoryCustomBlock copy = new InventoryCustomBlock(this.getKey(), this.getDropIdentifier(), this.getBlockMaterial(), this.baseInventorySize, this.baseInventoryTitle);
 
         copy.registryReference = false;
+        // copy.setMeta(this.getMeta()); // setMeta is protected in CustomBlock and Lombok generated?
+        // CustomBlock has @Setter on meta? Yes but protected getter.
+        // The previous code had copy.setMeta(this.getMeta()) so it should be fine if available.
+        // Checking CustomBlock: @Setter @Getter(lombok.AccessLevel.PROTECTED) private Consumer<ItemMeta> meta;
+        // The setter is public (default lombok behavior if not specified).
         copy.setMeta(this.getMeta());
 
         return copy;

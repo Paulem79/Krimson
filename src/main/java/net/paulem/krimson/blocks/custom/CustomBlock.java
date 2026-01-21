@@ -56,14 +56,19 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     @Getter
     protected Block block;
     @Getter
-    protected PDCWrapper properties;
-    @Getter
-    private PropertiesField<String> dropIdentifierField;
-    @Getter
-    private PropertiesField<String> blockMaterialField;
-    @Getter
-    @Nullable
-    private PropertiesField<String> displayedItemField;
+    protected CustomBlockProperties properties;
+
+    public PropertiesField<String> getDropIdentifierField() {
+        return properties.getDropIdentifierField();
+    }
+
+    public PropertiesField<String> getBlockMaterialField() {
+        return properties.getBlockMaterialField();
+    }
+
+    public PropertiesField<String> getDisplayedItemField() {
+        return properties.getDisplayedItemField();
+    }
 
     /**
      * Create a custom block with the given item
@@ -117,34 +122,11 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
         this.block = block;
-        this.properties = new PDCWrapper(block);
+        this.properties = createProperties(block);
+    }
 
-        this.properties.set(Keys.IDENTIFIER_KEY, key.toString());
-
-        if (this.properties.has(Keys.DROP_IDENTIFIER_KEY)) {
-            this.dropIdentifierField = new PropertiesField<>(Keys.DROP_IDENTIFIER_KEY, properties, PersistentDataType.STRING);
-        } else {
-            this.dropIdentifierField = new PropertiesField<>(Keys.DROP_IDENTIFIER_KEY, dropIdentifier.toString());
-            this.properties.set(dropIdentifierField);
-        }
-
-        if (this.properties.has(Keys.BLOCK_INSIDE_KEY)) {
-            this.blockMaterialField = new PropertiesField<>(Keys.BLOCK_INSIDE_KEY, properties, PersistentDataType.STRING);
-        } else {
-            this.blockMaterialField = new PropertiesField<>(Keys.BLOCK_INSIDE_KEY, blockMaterial.name());
-            this.properties.set(blockMaterialField);
-        }
-
-        if (this.properties.has(Keys.DISPLAYED_ITEM_KEY)) {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, properties, PersistentDataType.STRING);
-        } else {
-            String encoded = Codecs.ITEM_STACK.encodeStart(JsonOps.INSTANCE, getItemDisplayStack())
-                    .resultOrPartial(error -> KrimsonPlugin.getInstance().getLogger().severe(error))
-                    .orElseThrow(() -> new RuntimeException("Failed to encode Item Display Stack"))
-                    .getAsString();
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, encoded);
-            this.properties.set(displayedItemField);
-        }
+    protected CustomBlockProperties createProperties(Block block) {
+        return new CustomBlockProperties(block, this);
     }
 
     /**
@@ -245,7 +227,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         }
 
         setDisplayAndProperties(block);
-        properties.set(Keys.CUSTOM_BLOCK_KEY, (byte) 1);
+        properties.getContainer().set(Keys.CUSTOM_BLOCK_KEY, (byte) 1);
         Krimson.customBlocks.registerBlock(this);
     }
 
@@ -377,9 +359,9 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
 
         block.setType(Material.AIR);
 
-        getProperties().getContainer().clear();
+        getProperties().getContainer().getContainer().clear();
 
-        Block pdcBlock = getProperties().getContainer().getBlock();
+        Block pdcBlock = getProperties().getContainer().getContainer().getBlock();
         if (pdcBlock != null) {
             pdcBlock.getChunk().getPersistentDataContainer().remove(PersistentDataUtils.getKey(KrimsonPlugin.getInstance(), pdcBlock));
         }
