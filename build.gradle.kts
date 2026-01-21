@@ -1,5 +1,5 @@
 plugins {
-    id("java")
+    `java-library`
     kotlin("jvm") version "2.+"
 
     id("idea")
@@ -43,6 +43,9 @@ allprojects {
         maven {
             name = "paulemReleases"
             url = uri("https://maven.paulem.net/releases")
+        }
+        maven {
+            url = uri("https://libraries.minecraft.net/")
         }
     }
 
@@ -130,6 +133,7 @@ dependencies {
 
     // MC libraries
     compileOnly("io.netty:netty-all:4.2.9.Final")
+    compileOnlyApi("com.mojang:datafixerupper:9.1.20")
 }
 
 var alreadyMappedCommon = false

@@ -1,6 +1,7 @@
 package net.paulem.krimson.blocks.custom;
 
 import com.google.common.base.Preconditions;
+import com.mojang.serialization.JsonOps;
 import lombok.Getter;
 import lombok.Setter;
 import net.paulem.krimson.common.KrimsonPlugin;
@@ -62,7 +63,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     private PropertiesField<String> blockMaterialField;
     @Getter
     @Nullable
-    private PropertiesField<byte[]> displayedItemField;
+    private PropertiesField<String> displayedItemField;
 
     /**
      * Create a custom block with the given item
@@ -135,9 +136,13 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         }
 
         if (this.properties.has(Keys.DISPLAYED_ITEM_KEY)) {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, properties, PersistentDataType.BYTE_ARRAY);
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, properties, PersistentDataType.STRING);
         } else {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, Codecs.ITEM_STACK_CODEC.encode(getItemDisplayStack()));
+            String encoded = Codecs.ITEM_STACK.encodeStart(JsonOps.INSTANCE, getItemDisplayStack())
+                    .resultOrPartial(error -> KrimsonPlugin.getInstance().getLogger().severe(error))
+                    .orElseThrow(() -> new RuntimeException("Failed to encode Item Display Stack"))
+                    .getAsString();
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, encoded);
             this.properties.set(displayedItemField);
         }
     }

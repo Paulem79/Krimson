@@ -60,7 +60,7 @@ public class InventoryCustomBlock extends CustomBlock {
         this.baseInventoryTitle = this.inventoryTitle.get();
 
         this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, properties, PersistentDataType.BYTE_ARRAY);
-        this.inventory = InventoryData.CODEC.decode(this.inventoryBase64.get()).inventory();
+        this.inventory = InventoryData.decode(this.inventoryBase64.get()).inventory();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class InventoryCustomBlock extends CustomBlock {
                 this.inventoryTitle.get()
         );
 
-        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.CODEC.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
+        this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
         properties.set(inventoryBase64);
     }
 
@@ -104,7 +104,7 @@ public class InventoryCustomBlock extends CustomBlock {
         if (this.inventory != null) {
             this.inventoryDiff.setNow(this.inventory.getContents());
             if (inventoryDiff.hasChanges()) {
-                this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.CODEC.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
+                this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(this.inventory, this.inventoryTitle.get())));
                 this.properties.set(this.inventoryBase64);
             }
 
@@ -119,7 +119,7 @@ public class InventoryCustomBlock extends CustomBlock {
         this.inventoryDiff.setNow(event.getInventory().getContents());
 
         if (inventoryDiff.hasChanges()) {
-            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.CODEC.encode(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
+            this.inventoryBase64 = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(event.getInventory(), this.inventoryTitle.get())));
             this.properties.set(this.inventoryBase64);
         }
 
