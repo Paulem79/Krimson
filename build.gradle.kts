@@ -51,7 +51,7 @@ allprojects {
 
     dependencies {
         if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-        else compileOnly("org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT")
+        else compileOnly("org.spigotmc:spigot-api:1.21.11-R0.2-SNAPSHOT")
 
         // Spigot libraries
         compileOnly("com.viaversion:viaversion-api:5.+")
