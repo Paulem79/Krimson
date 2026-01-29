@@ -22,8 +22,8 @@ fun createBlockModel(
     pack.addItemDefinition(ItemDefinition(texture, BasicItem(texture)))
 }
 
-fun main(dataFolder: File, packFormat: PackFormat): File {
-    val zipFile = File(dataFolder, "krimson_resource_pack_v${packFormat.rev}.zip")
+fun main(dataFolder: File, packFormat: Int): File {
+    val zipFile = File(dataFolder, "krimson_resource_pack_v${packFormat}.zip")
     val deleted = zipFile.delete()
 
     if (!deleted) {

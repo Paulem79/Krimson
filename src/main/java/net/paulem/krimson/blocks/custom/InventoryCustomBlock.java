@@ -164,7 +164,7 @@ public class InventoryCustomBlock extends CustomBlock {
         }
 
         public InventoryCustomBlock getCustomBlock() {
-            return (InventoryCustomBlock) CustomBlockUtils.getCustomBlockFromLoc(getCustomBlockLoc());
+            return CustomBlockUtils.getCustomBlockFromLoc(getCustomBlockLoc());
         }
 
         @NotNull

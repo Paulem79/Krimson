@@ -31,10 +31,14 @@ public class CustomBlockUtils {
     }
 
     @Nullable
-    public static CustomBlock getCustomBlockFromLoc(Location location) {
+    public static<T extends CustomBlock> T getCustomBlockFromLoc(@Nullable Location location) {
+        if (location == null) {
+            return null;
+        }
+
         Block block = location.getBlock();
 
-        return Krimson.customBlocks.getBlockAt(block);
+        return (T) Krimson.customBlocks.getBlockAt(block);
     }
 
     /**

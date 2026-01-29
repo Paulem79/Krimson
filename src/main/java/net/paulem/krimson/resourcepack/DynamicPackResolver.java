@@ -2,6 +2,7 @@ package net.paulem.krimson.resourcepack;
 
 import net.paulem.krimson.common.KrimsonPlugin;
 import net.radstevee.packed.core.pack.PackFormat;
+import java.lang.reflect.Field;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,23 +12,35 @@ public class DynamicPackResolver {
         // Utility class
     }
 
-    private static final TreeMap<MinecraftVersion, PackFormat> VERSION_MAP = new TreeMap<>();
+    private static final TreeMap<MinecraftVersion, Integer> VERSION_MAP = new TreeMap<>();
     // Regex pour capturer le premier groupe de chiffres (ex: 1_21_4)
     private static final Pattern VERSION_PATTERN = Pattern.compile("V(\\d+)_(\\d+)(?:_(\\d+))?");
 
     static {
-        for (PackFormat format : PackFormat.getEntries()) {
-            // On ignore l'enum "LATEST" qui n'est pas une version réelle
-            if (format.name().equals("LATEST")) continue;
+        try {
+            Field[] fields = PackFormat.class.getDeclaredFields();
+            for (Field field : fields) {
+                String fieldName = field.getName();
+                // Traiter uniquement les champs qui commencent par "V"
+                if (fieldName.startsWith("V")) {
+                    Matcher matcher = VERSION_PATTERN.matcher(fieldName);
+                    if (matcher.find()) {
+                        try {
+                            int fieldValue = field.getInt(null);
 
-            Matcher matcher = VERSION_PATTERN.matcher(format.name());
-            if (matcher.find()) {
-                int major = Integer.parseInt(matcher.group(1));
-                int minor = Integer.parseInt(matcher.group(2));
-                int patch = (matcher.group(3) != null) ? Integer.parseInt(matcher.group(3)) : 0;
+                            int major = Integer.parseInt(matcher.group(1));
+                            int minor = Integer.parseInt(matcher.group(2));
+                            int patch = (matcher.group(3) != null) ? Integer.parseInt(matcher.group(3)) : 0;
 
-                VERSION_MAP.put(new MinecraftVersion(major, minor, patch), format);
+                            VERSION_MAP.put(new MinecraftVersion(major, minor, patch), fieldValue);
+                        } catch (IllegalAccessException e) {
+                            KrimsonPlugin.getInstance().getLogger().severe("Error accessing PackFormat field: " + e.getMessage());
+                        }
+                    }
+                }
             }
+        } catch (Exception e) {
+            KrimsonPlugin.getInstance().getLogger().severe("Error loading PackFormat fields via reflection: " + e.getMessage());
         }
     }
 
@@ -35,7 +48,7 @@ public class DynamicPackResolver {
      * @param versionStr La version client (ex: "1.21.3")
      * @return Le PackFormat correspondant ou le plus proche en dessous
      */
-    public static PackFormat getFromVersionName(String versionStr) {
+    public static Integer getFromVersionName(String versionStr) {
         MinecraftVersion inputVersion = MinecraftVersion.parse(versionStr);
         var entry = VERSION_MAP.floorEntry(inputVersion);
         return (entry != null) ? entry.getValue() : PackFormat.LATEST;
@@ -50,7 +63,7 @@ public class DynamicPackResolver {
                 v = v.substring(0, suffixIndex);
             }
 
-            KrimsonPlugin.getInstance().getLogger().info("Parsing version: " + v);
+            KrimsonPlugin.getInstance().getLogger().info("Parsing version: %s".formatted(v));
             String[] parts = v.split("\\.");
             return new MinecraftVersion(
                     parts.length > 0 ? Integer.parseInt(parts[0]) : 0,

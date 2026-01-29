@@ -41,10 +41,6 @@ allprojects {
         maven("https://maven.mcbrawls.net/releases/")
         maven("https://repo.viaversion.com")
         maven {
-            name = "paulemReleases"
-            url = uri("https://maven.paulem.net/releases")
-        }
-        maven {
             url = uri("https://libraries.minecraft.net/")
         }
     }
