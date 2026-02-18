@@ -52,7 +52,7 @@ allprojects {
         // Spigot libraries
         compileOnly("com.viaversion:viaversion-api:5.+")
 
-        compileOnly("org.jetbrains:annotations:26.0.2-1")
+        compileOnly("org.jetbrains:annotations:26.1.0")
 
         compileOnly("org.projectlombok:lombok:1.18.42")
         annotationProcessor("org.projectlombok:lombok:1.18.42")
