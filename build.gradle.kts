@@ -125,7 +125,7 @@ dependencies {
     implementation("net.mcbrawls.inject:javalin:3.+") {
         isTransitive = false
     }
-    implementation("io.javalin:javalin:6.7.0")
+    implementation("io.javalin:javalin:7.2.2")
 
     // MC libraries
     compileOnly("io.netty:netty-all:4.2.9.Final")
