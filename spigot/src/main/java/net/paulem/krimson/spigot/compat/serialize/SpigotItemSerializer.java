@@ -1,15 +1,15 @@
 package net.paulem.krimson.spigot.compat.serialize;
 
 import org.bukkit.inventory.ItemStack;
-import net.paulem.krimson.common.KrimsonPlugin;
 import net.paulem.krimson.common.compat.serialize.ItemSerializerHandler;
 import net.paulem.krimson.common.compat.stream.input.InputStreamHandler;
 import net.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class SpigotItemSerializer extends ItemSerializerHandler {
-    public SpigotItemSerializer() {
+    public SpigotItemSerializer(JavaPlugin plugin) {
         if (!messageSent) {
-            KrimsonPlugin.getInstance().getLogger().info("Using Bukkit's ItemStack (de)serialization, which is less performant than Paper's one.");
+            plugin.getLogger().info("Using Bukkit's ItemStack (de)serialization, which is less performant than Paper's one.");
             messageSent = true;
         }
     }

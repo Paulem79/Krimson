@@ -14,3 +14,4 @@ plugins {
 include("paper")
 include("spigot")
 include("common")
+include("api")

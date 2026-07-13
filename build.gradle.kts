@@ -16,6 +16,7 @@ val targetJavaVersion = 21
 
 allprojects {
     plugins.apply("java")
+    plugins.apply("org.jetbrains.kotlin.jvm")
     plugins.apply("com.gradleup.shadow")
 
     repositories {
@@ -46,6 +47,8 @@ allprojects {
     }
 
     dependencies {
+        implementation("org.apache.commons:commons-lang3:3.20.0")
+
         if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
         else compileOnly("org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT")
 
@@ -58,9 +61,9 @@ allprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    artifacts.archives(tasks.shadowJar)
+    //artifacts.archives(tasks.shadowJar)
     tasks.shadowJar {
-        archiveClassifier.set("")
+        //archiveClassifier.set("")
         exclude("META-INF/**")
 
         relocate("com.github.Anon8281.universalScheduler", "net.paulem.krimson.libs.universalScheduler")
@@ -101,35 +104,9 @@ allprojects {
 }
 
 dependencies {
-    implementation(project(":paper")) {
+    implementation(project(":api")) {
         isTransitive = false
     }
-    implementation(project(":spigot")) {
-        isTransitive = false
-    }
-    implementation(project(":common")) {
-        isTransitive = false
-    }
-
-    implementation("com.github.Anon8281:UniversalScheduler:0.+")
-    implementation("com.jeff-media:custom-block-data:2.2.5")
-
-    implementation("net.radstevee.packed:packed-core:1.1.4")
-
-    implementation("org.apache.commons:commons-lang3:3.20.0")
-
-    implementation("net.mcbrawls.inject:spigot:3.+")
-    implementation("net.mcbrawls.inject:api:3.+")
-    implementation("net.mcbrawls.inject:http:3.+")
-    implementation("net.mcbrawls.inject:jetty:3.+")
-    implementation("net.mcbrawls.inject:javalin:3.+") {
-        isTransitive = false
-    }
-    implementation("io.javalin:javalin:6.7.0")
-
-    // MC libraries
-    compileOnly("io.netty:netty-all:4.2.9.Final")
-    compileOnlyApi("com.mojang:datafixerupper:9.1.20")
 }
 
 var alreadyMappedCommon = false
@@ -141,7 +118,7 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
-    if (project.name != "common") {
+    if (project.name != "common" && project.name != "api") {
         dependencies {
             implementation(project(":common")) {
                 isTransitive = false
@@ -159,13 +136,41 @@ subprojects {
         }
     } else {
         dependencies {
+            if(project.name == "api") {
+                implementation(project(":paper")) {
+                    isTransitive = false
+                }
+                implementation(project(":spigot")) {
+                    isTransitive = false
+                }
+                implementation(project(":common")) {
+                    isTransitive = false
+                }
+            }
+
             implementation("com.github.Anon8281:UniversalScheduler:0.+")
             implementation("com.jeff-media:custom-block-data:2.2.5")
+
+            implementation("net.radstevee.packed:packed-core:1.1.4")
+
+            implementation("net.mcbrawls.inject:spigot:3.+")
+            implementation("net.mcbrawls.inject:api:3.+")
+            implementation("net.mcbrawls.inject:http:3.+")
+            implementation("net.mcbrawls.inject:jetty:3.+")
+            implementation("net.mcbrawls.inject:javalin:3.+") {
+                isTransitive = false
+            }
+            implementation("io.javalin:javalin:6.7.0")
+
+            // MC libraries
+            compileOnly("io.netty:netty-all:4.2.9.Final")
+            compileOnly("com.mojang:datafixerupper:9.1.20")
         }
     }
 }
 
 tasks.shadowJar {
+    archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     minimize()
 }
