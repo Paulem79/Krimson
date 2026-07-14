@@ -105,7 +105,6 @@ allprojects {
 dependencies {
     // Allow the root project to see and package your subprojects along with their libraries
     implementation(project(":api"))
-    implementation(project(":common"))
 }
 
 subprojects {
@@ -115,29 +114,8 @@ subprojects {
     group = rootProject.group
     version = rootProject.version
 
-    if (project.name != "common" && project.name != "api") {
+    if (project.name == "api") {
         dependencies {
-            implementation(project(":common")) {
-                isTransitive = false
-            }
-        }
-
-        tasks.compileJava {
-            dependsOn(project(":common").tasks.build)
-        }
-
-        // Safely exclude common from platform-specific sub-shadowJars if needed
-        tasks.shadowJar {
-            exclude("**/common/**")
-        }
-    } else {
-        dependencies {
-            if(project.name == "api") {
-                implementation(project(":common")) {
-                    isTransitive = false
-                }
-            }
-
             implementation("com.github.Anon8281:UniversalScheduler:0.+")
             implementation("com.jeff-media:custom-block-data:2.2.5")
 

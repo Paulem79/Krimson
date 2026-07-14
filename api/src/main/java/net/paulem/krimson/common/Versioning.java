@@ -1,4 +1,4 @@
-package net.paulem.krimson.common.compat;
+package net.paulem.krimson.common;
 
 import org.bukkit.Bukkit;
 

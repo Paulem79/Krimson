@@ -4,10 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.codecs.PrimitiveCodec;
-import net.paulem.krimson.common.KrimsonPlugin;
-import net.paulem.krimson.common.compat.stream.input.InputStreamHandler;
-import net.paulem.krimson.common.compat.stream.output.OutputStreamHandler;
-import net.paulem.krimson.compat.CompatAccess;
+import net.paulem.krimson.paper.compat.serialize.PaperItemSerializer;
+import net.paulem.krimson.paper.compat.stream.input.PaperInputStream;
+import net.paulem.krimson.paper.compat.stream.output.PaperOutputStream;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.ByteArrayInputStream;
@@ -29,12 +28,12 @@ public class ItemStackDFUListCodec implements PrimitiveCodec<ItemStack[]> {
                 byte[] decoded = Base64.getDecoder().decode(base64);
 
                 ByteArrayInputStream inputStream = new ByteArrayInputStream(decoded);
-                InputStreamHandler<?> handler = CompatAccess.getHandler(inputStream);
+                PaperInputStream handler = new PaperInputStream(inputStream);
 
                 int length = handler.readInt();
                 if (length == 0) return DataResult.success(null);
 
-                return DataResult.success(CompatAccess.getHandler(KrimsonPlugin.getInstance()).readAndDeserializeList(handler, length));
+                return DataResult.success(PaperItemSerializer.INSTANCE.readAndDeserializeList(handler, length));
             } catch (Exception e) {
                 return DataResult.error(() -> "Failed to decode ItemStack: " + e.getMessage());
             }
@@ -45,12 +44,12 @@ public class ItemStackDFUListCodec implements PrimitiveCodec<ItemStack[]> {
     public <T> T write(final DynamicOps<T> ops, final ItemStack[] value) {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            OutputStreamHandler<?> handler = CompatAccess.getHandler(outputStream);
+            PaperOutputStream handler = new PaperOutputStream(outputStream);
 
             if (value == null) {
                 handler.writeInt(0);
             } else {
-                CompatAccess.getHandler(KrimsonPlugin.getInstance()).serializeAndWrite(value, handler);
+                PaperItemSerializer.INSTANCE.serializeAndWrite(value, handler);
             }
 
             byte[] bytes = handler.toByteArray();
