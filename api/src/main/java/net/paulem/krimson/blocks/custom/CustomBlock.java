@@ -324,7 +324,6 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         if (player != null && player.getGameMode() == GameMode.CREATIVE) return;
 
         // DROP ITEM PART
-        System.out.println(dropIdentifier);
         if (dropIdentifier.equals(NamespacedKeyUtils.none())) return;
 
         Optional<CustomItem> dropItem = Items.REGISTRY.get(dropIdentifier);

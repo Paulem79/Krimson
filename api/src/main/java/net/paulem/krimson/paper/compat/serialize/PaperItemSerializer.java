@@ -23,10 +23,26 @@ public class PaperItemSerializer extends ItemSerializerHandler {
     }
 
     @Override
+    public void serializeAndWrite(ItemStack[] stacks, OutputStreamHandler<?> outputStream) throws Exception {
+        byte[] serialized = ItemStack.serializeItemsAsBytes(stacks);
+
+        outputStream.writeInt(serialized.length);
+        outputStream.write(serialized);
+    }
+
+    @Override
     public ItemStack readAndDeserialize(InputStreamHandler<?> inputStream, int length) throws Exception {
         byte[] itemBytes = new byte[length];
         inputStream.read(itemBytes);
 
         return ItemStack.deserializeBytes(itemBytes);
+    }
+
+    @Override
+    public ItemStack[] readAndDeserializeList(InputStreamHandler<?> inputStream, int length) throws Exception {
+        byte[] itemBytes = new byte[length];
+        inputStream.read(itemBytes);
+
+        return ItemStack.deserializeItemsFromBytes(itemBytes);
     }
 }

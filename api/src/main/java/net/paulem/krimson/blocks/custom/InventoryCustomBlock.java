@@ -19,7 +19,7 @@ import net.paulem.krimson.utils.CustomBlockUtils;
 
 import java.util.UUID;
 
-// FIXME: there are still some difficulties with this approach, especially around parsing/saving it asynchronously which can become an issue if there are a lot of these and they have large contents, but for a basic approach this will be fine https://discord.com/channels/690411863766466590/741875863271899136/1397175434432614472 (saving in files, with pointers in PDC can be better)
+// https://discord.com/channels/690411863766466590/741875863271899136/1397175434432614472 (saving in files, with pointers in PDC can be better)
 public class InventoryCustomBlock extends CustomBlock {
     @Getter
     private final int baseInventorySize;

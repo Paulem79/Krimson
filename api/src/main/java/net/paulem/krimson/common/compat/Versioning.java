@@ -27,14 +27,5 @@ public class Versioning {
         return Integer.parseInt(mcParts[1]) > v || (Integer.parseInt(mcParts[1]) == v && Integer.parseInt(mcParts[2]) > r);
     }
 
-    public static boolean isPaper() {
-        try {
-            Class.forName("com.destroystokyo.paper.ParticleBuilder");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
-    }
-
 
 }

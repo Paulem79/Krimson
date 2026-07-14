@@ -37,33 +37,40 @@ public class ResourcePackHosting implements Listener {
     }
 
     public void aggregate(String version, File zipFile) {
-        if(versionToFileMap.containsKey(version)) {
-            return;
+        if (!versionToFileMap.containsKey(version)) {
+            versionToFileMap.put(version, zipFile);
         }
-
-        versionToFileMap.put(version, zipFile);
-
-        javalin.get("/" + RESOURCE_PACK_PREFIX + version, (ctx ->
-            ctx.result(Files.readAllBytes(zipFile.toPath()))
-        ));
     }
 
     public void start() {
-        javalin = InjectJavalinFactory.create(InjectSpigot.INSTANCE);
-
-        KrimsonPlugin.getInstance().getLogger().info("Javalin initialized");
-
-        javalin.events(eventConfig -> {
-            eventConfig.serverStarted(() -> {
+        javalin = InjectJavalinFactory.create(InjectSpigot.INSTANCE, config -> {
+            // 1. Migration des événements dans le bloc config
+            config.events.serverStarted(() -> {
                 KrimsonPlugin.getInstance().getLogger().info("Javalin started");
                 canPlayersJoin = true;
             });
 
-            eventConfig.serverStartFailed(() -> {
+            config.events.serverStartFailed(() -> {
                 KrimsonPlugin.getInstance().getLogger().info("Javalin failed to start");
                 canPlayersJoin = true;
             });
+
+            // 2. Création d'une route unique paramétrée au lieu de routes dynamiques
+            config.routes.get("/" + RESOURCE_PACK_PREFIX + "{version}", ctx -> {
+                String requestedVersion = ctx.pathParam("version");
+                File packFile = versionToFileMap.get(requestedVersion);
+
+                if (packFile != null && packFile.exists()) {
+                    // Optimisation : Passer un InputStream directement à ctx.result()
+                    // consomme beaucoup moins de RAM que Files.readAllBytes() pour les fichiers ZIP.
+                    ctx.result(new FileInputStream(packFile));
+                } else {
+                    ctx.status(404).result("Resource pack not found");
+                }
+            });
         });
+
+        KrimsonPlugin.getInstance().getLogger().info("Javalin initialized");
 
         javalin.start();
     }

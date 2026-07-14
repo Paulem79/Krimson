@@ -17,21 +17,9 @@ The Rust implementation provides three optimized functions:
 
 #### `parseBlockKey`
 - **Location**: `native/src/lib.rs`
-- **Function**: `Java_ovh_paulem_krimson_utils_NativeUtil_parseBlockKey`
+- **Function**: `Java_net_paulem_krimson_utils_NativeUtil_parseBlockKey`
 - **Performance**: Uses simple string slicing without regex overhead
 - **Format**: `x(\d+)y(-?\d+)z(\d+)` → `[x, y, z]`
-
-#### `compress`
-- **Location**: `native/src/lib.rs`
-- **Function**: `Java_ovh_paulem_krimson_utils_NativeUtil_compress`
-- **Performance**: Native Rust compression using flate2 (2-5x faster than Java)
-- **Use case**: Inventory serialization in `InventoryCustomBlock` and `ZLibCodec`
-
-#### `decompress`
-- **Location**: `native/src/lib.rs`
-- **Function**: `Java_ovh_paulem_krimson_utils_NativeUtil_decompress`
-- **Performance**: Native Rust decompression using flate2 (2-5x faster than Java)
-- **Use case**: Inventory deserialization during chunk loading
 
 #### Building the Native Library
 
@@ -52,8 +40,6 @@ The `NativeUtil` class handles:
 - Native library loading with fallback mechanism
 - JNI method declarations:
   - `parseBlockKey(String key)` - Fast key parsing
-  - `compress(byte[] data)` - High-performance compression
-  - `decompress(byte[] data)` - High-performance decompression
 - Status checking via `isLoaded()` method
 
 **Features:**
@@ -69,14 +55,6 @@ The `getBlockFromKey()` method now:
 2. Uses `NativeUtil.parseBlockKey()` if available (fast path)
 3. Falls back to regex implementation if native library is missing (compatibility)
 
-#### ZLibUtils
-Both `compress()` and `decompress()` methods now:
-1. Check if native library is loaded via `NativeUtil.isLoaded()`
-2. Use native Rust implementation if available (fast path)
-3. Fall back to Java ZLib implementation if native library is missing (compatibility)
-
-This directly addresses the FIXME in `InventoryCustomBlock.java` regarding performance issues with parsing/saving asynchronously when there are many blocks with large contents.
-
 ## Performance Benefits
 
 The Rust implementation provides significant performance improvements:
@@ -87,15 +65,8 @@ The Rust implementation provides significant performance improvements:
 - **Native code speed** - compiled to machine code vs. JVM bytecode
 - **Impact**: Called hundreds of times during chunk loading
 
-### Compression/Decompression
-- **Native flate2 implementation** - 2-5x faster than Java's ZLib
-- **Reduced GC pressure** - minimal object allocations vs. Java's streaming approach
-- **Better CPU efficiency** - optimized Rust algorithms
-- **Impact**: Called for every inventory block during chunk save/load operations
-
 Combined benefits:
 - Dramatically reduces CPU overhead during chunk operations
-- Addresses the FIXME in `InventoryCustomBlock.java`
 - Enables handling of servers with many custom blocks containing large inventories
 - Smoother gameplay with less lag during chunk loading/unloading
 
@@ -103,7 +74,7 @@ Combined benefits:
 
 The implementation maintains full backwards compatibility:
 - **Fallback mechanism**: If the native library isn't available, original Java implementations are used
-- **No breaking changes**: Public APIs remain unchanged (`PersistentDataUtils`, `ZLibUtils`)
+- **No breaking changes**: Public APIs remain unchanged (`PersistentDataUtils`)
 - **Optional optimization**: The plugin works with or without the native library
 - **Graceful degradation**: Failed native operations fall back to Java automatically
 
@@ -127,18 +98,9 @@ Run the included tests to verify parsing behavior:
 cd native && cargo test
 
 # Test Java fallback
-javac -d /tmp/test src/test/java/ovh/paulem/krimson/utils/FallbackParsingTest.java
+javac -d /tmp/test src/test/java/net/paulem/krimson/utils/FallbackParsingTest.java
 java -cp /tmp/test net.paulem.krimson.utils.FallbackParsingTest
 ```
-
-## Files Changed
-
-- `native/Cargo.toml` - Rust project configuration
-- `native/src/lib.rs` - Rust JNI implementation
-- `native/README.md` - Build instructions for native library
-- `src/main/java/ovh/paulem/krimson/utils/NativeUtil.java` - JNI wrapper class
-- `src/main/java/ovh/paulem/krimson/utils/PersistentDataUtils.java` - Updated to use native parsing
-- `src/test/java/ovh/paulem/krimson/utils/FallbackParsingTest.java` - Test for fallback implementation
 
 ## Security Considerations
 

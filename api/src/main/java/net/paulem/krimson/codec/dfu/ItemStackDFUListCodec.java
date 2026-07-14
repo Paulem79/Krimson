@@ -18,12 +18,12 @@ import java.util.Base64;
  * DataFixerUpper-compatible codec for Bukkit ItemStack.
  * This codec serializes ItemStack to a Base64 string representation.
  */
-public class ItemStackDFUCodec implements PrimitiveCodec<ItemStack> {
+public class ItemStackDFUListCodec implements PrimitiveCodec<ItemStack[]> {
 
-    public static final Codec<ItemStack> CODEC = new ItemStackDFUCodec();
+    public static final Codec<ItemStack[]> CODEC = new ItemStackDFUListCodec();
 
     @Override
-    public <T> DataResult<ItemStack> read(final DynamicOps<T> ops, final T input) {
+    public <T> DataResult<ItemStack[]> read(final DynamicOps<T> ops, final T input) {
         return ops.getStringValue(input).flatMap(base64 -> {
             try {
                 byte[] decoded = Base64.getDecoder().decode(base64);
@@ -34,7 +34,7 @@ public class ItemStackDFUCodec implements PrimitiveCodec<ItemStack> {
                 int length = handler.readInt();
                 if (length == 0) return DataResult.success(null);
 
-                return DataResult.success(CompatAccess.getHandler(KrimsonPlugin.getInstance()).readAndDeserialize(handler, length));
+                return DataResult.success(CompatAccess.getHandler(KrimsonPlugin.getInstance()).readAndDeserializeList(handler, length));
             } catch (Exception e) {
                 return DataResult.error(() -> "Failed to decode ItemStack: " + e.getMessage());
             }
@@ -42,7 +42,7 @@ public class ItemStackDFUCodec implements PrimitiveCodec<ItemStack> {
     }
 
     @Override
-    public <T> T write(final DynamicOps<T> ops, final ItemStack value) {
+    public <T> T write(final DynamicOps<T> ops, final ItemStack[] value) {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             OutputStreamHandler<?> handler = CompatAccess.getHandler(outputStream);

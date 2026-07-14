@@ -9,6 +9,9 @@ public abstract class ItemSerializerHandler {
 
     public abstract void serializeAndWrite(ItemStack stack, OutputStreamHandler<?> outputStream) throws Exception;
 
+    public abstract void serializeAndWrite(ItemStack[] stacks, OutputStreamHandler<?> outputStream) throws Exception;
+
     public abstract ItemStack readAndDeserialize(InputStreamHandler<?> inputStream, int length) throws Exception;
 
+    public abstract ItemStack[] readAndDeserializeList(InputStreamHandler<?> inputStream, int length) throws Exception;
 }

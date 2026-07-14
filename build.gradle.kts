@@ -49,8 +49,7 @@ allprojects {
     dependencies {
         implementation("org.apache.commons:commons-lang3:3.20.0")
 
-        if (project.name == "paper") compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-        else compileOnly("org.spigotmc:spigot-api:1.21.11-R0.1-SNAPSHOT")
+        compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
         // Spigot libraries
         compileOnly("com.viaversion:viaversion-api:5.+")
@@ -104,12 +103,10 @@ allprojects {
 }
 
 dependencies {
-    implementation(project(":api")) {
-        isTransitive = false
-    }
+    // Allow the root project to see and package your subprojects along with their libraries
+    implementation(project(":api"))
+    implementation(project(":common"))
 }
-
-var alreadyMappedCommon = false
 
 subprojects {
     apply(plugin = "java")
@@ -129,20 +126,13 @@ subprojects {
             dependsOn(project(":common").tasks.build)
         }
 
-        alreadyMappedCommon = true
-
+        // Safely exclude common from platform-specific sub-shadowJars if needed
         tasks.shadowJar {
-            if (alreadyMappedCommon) exclude("**/common/**")
+            exclude("**/common/**")
         }
     } else {
         dependencies {
             if(project.name == "api") {
-                implementation(project(":paper")) {
-                    isTransitive = false
-                }
-                implementation(project(":spigot")) {
-                    isTransitive = false
-                }
                 implementation(project(":common")) {
                     isTransitive = false
                 }
@@ -160,7 +150,7 @@ subprojects {
             implementation("net.mcbrawls.inject:javalin:3.+") {
                 isTransitive = false
             }
-            implementation("io.javalin:javalin:6.7.0")
+            implementation("io.javalin:javalin:7.+")
 
             // MC libraries
             compileOnly("io.netty:netty-all:4.2.9.Final")
@@ -172,7 +162,6 @@ subprojects {
 tasks.shadowJar {
     archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    minimize()
 }
 
 tasks.compileJava {
