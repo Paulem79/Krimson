@@ -43,7 +43,7 @@ public class CustomBlockProperties extends Properties {
         if (getContainer().has(Keys.DISPLAYED_ITEM_KEY)) {
             this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, getContainer(), PersistentDataType.STRING);
         } else {
-            String encoded = Codecs.ITEM_STACK.encodeStart(JsonOps.INSTANCE, customBlock.getItemDisplayStack())
+            String encoded = Codecs.ITEM_STACK.encodeStart(JsonOps.COMPRESSED, customBlock.getItemDisplayStack())
                     .resultOrPartial(error -> KrimsonPlugin.getInstance().getLogger().severe(error))
                     .orElseThrow(() -> new RuntimeException("Failed to encode Item Display Stack"))
                     .getAsString();

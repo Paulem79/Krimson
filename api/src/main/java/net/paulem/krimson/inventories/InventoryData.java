@@ -39,7 +39,7 @@ public record InventoryData(Inventory inventory, String title) {
     }));
 
     public static byte[] encode(InventoryData data) {
-        DataResult<JsonElement> result = CODEC.encodeStart(JsonOps.INSTANCE, data);
+        DataResult<JsonElement> result = CODEC.encodeStart(JsonOps.COMPRESSED, data);
         JsonElement json = result.resultOrPartial(s -> KrimsonPlugin.getInstance().getLogger().severe(s))
                 .orElseThrow(() -> new RuntimeException("Failed to encode inventory data"));
         String jsonString = json.toString();
@@ -50,7 +50,7 @@ public record InventoryData(Inventory inventory, String title) {
         if (bytes == null) throw new RuntimeException("Decompression failed");
         String jsonString = new String(bytes, StandardCharsets.UTF_8);
         JsonElement json = JsonParser.parseString(jsonString);
-        DataResult<InventoryData> result = CODEC.parse(JsonOps.INSTANCE, json);
+        DataResult<InventoryData> result = CODEC.parse(JsonOps.COMPRESSED, json);
         return result.resultOrPartial(s -> KrimsonPlugin.getInstance().getLogger().severe(s))
                 .orElseThrow(() -> new RuntimeException("Failed to decode inventory data"));
     }
