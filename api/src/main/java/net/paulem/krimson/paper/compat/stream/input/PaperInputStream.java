@@ -17,10 +17,6 @@ public class PaperInputStream {
         return new DataInputStream(inputStream);
     }
 
-    public Object readObject() {
-        throw new RuntimeException("Paper's input stream handler doesn't support reading objects!");
-    }
-
     public int readInt() throws IOException {
         return dataInput.readInt();
     }
@@ -31,9 +27,5 @@ public class PaperInputStream {
 
     public int read(byte[] bytes) throws IOException {
         return dataInput.read(bytes);
-    }
-
-    public void close() {
-
     }
 }

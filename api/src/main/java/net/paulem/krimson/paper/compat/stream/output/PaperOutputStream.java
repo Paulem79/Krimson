@@ -29,14 +29,6 @@ public class PaperOutputStream {
         dataOutput.write(bytes);
     }
 
-    public void close() {
-
-    }
-
-    public void writeObject(Object object) {
-        throw new RuntimeException("Paper's output stream handler doesn't support writing objects!");
-    }
-
     public byte[] toByteArray() {
         return outputStream.toByteArray();
     }
