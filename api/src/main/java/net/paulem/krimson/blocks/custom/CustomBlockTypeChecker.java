@@ -21,7 +21,7 @@ public class CustomBlockTypeChecker {
     public boolean isInventoryBlock() {
         return properties.has(Keys.INVENTORY_SIZE) &&
                 properties.has(Keys.INVENTORY_TITLE) &&
-                properties.has(Keys.INVENTORY_BASE64);
+                properties.has(Keys.INVENTORY_DATA);
     }
 
     public CustomBlock get() {

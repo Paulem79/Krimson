@@ -576,7 +576,7 @@ Properties (abstract)
 | `DISPLAYED_ITEM_KEY` | `displayeditem` | `String` | Display ItemStack (Base64 JSON) |
 | `INVENTORY_SIZE` | `inventorySize` | `int` | Inventory slot count |
 | `INVENTORY_TITLE` | `inventoryTitle` | `String` | GUI title |
-| `INVENTORY_BASE64` | `inventoryBase64` | `byte[]` | Compressed inventory contents |
+| `INVENTORY_DATA` | `inventoryBase64` | `byte[]` | Compressed inventory contents |
 | `EMITTING_LIGHT_LEVEL` | `emittingLightLevel` | `int` | Light level 0–15 |
 
 ---

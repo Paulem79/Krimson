@@ -1,6 +1,7 @@
 package net.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
+import net.paulem.krimson.codec.pdc.InventoryDataType;
 import net.paulem.krimson.common.KrimsonPlugin;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.inventories.InventoryData;
@@ -15,7 +16,7 @@ public class InventoryCustomBlockProperties extends CustomBlockProperties {
     @Getter
     private PropertiesField<String> inventoryTitleField;
     @Getter
-    private PropertiesField<byte[]> inventoryBase64Field;
+    private PropertiesField<InventoryData> inventoryDataField;
     @Getter
     private Inventory inventory;
 
@@ -39,9 +40,9 @@ public class InventoryCustomBlockProperties extends CustomBlockProperties {
             getContainer().set(inventoryTitleField);
         }
 
-        if (getContainer().has(Keys.INVENTORY_BASE64)) {
-            this.inventoryBase64Field = new PropertiesField<>(Keys.INVENTORY_BASE64, getContainer(), PersistentDataType.BYTE_ARRAY);
-            this.inventory = InventoryData.decode(this.inventoryBase64Field.get()).inventory();
+        if (getContainer().has(Keys.INVENTORY_DATA)) {
+            this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, getContainer(), InventoryDataType.INSTANCE);
+            this.inventory = this.inventoryDataField.get().inventory();
         } else {
             // New block creation
             this.inventory = KrimsonPlugin.getInstance().getServer().createInventory(
@@ -50,20 +51,14 @@ public class InventoryCustomBlockProperties extends CustomBlockProperties {
                     this.inventoryTitleField.get()
             );
 
-            // If template had base64 provided (constructor with base64)
-            // But wait, InventoryCustomBlock(block) doesn't set base64 in template usually?
-            // Actually the one with base64 in constructor is for setting initial content?
-            // Let's assume for now we create empty inventory or one from template if logic exists.
-
-            // Re-encoding ensures consistency
-            this.inventoryBase64Field = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(this.inventory, this.inventoryTitleField.get())));
-            getContainer().set(inventoryBase64Field);
+            this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, new InventoryData(this.inventory, this.inventoryTitleField.get()));
+            getContainer().set(inventoryDataField);
         }
     }
 
     public void updateInventory(Inventory inventory) {
         this.inventory = inventory;
-        this.inventoryBase64Field = new PropertiesField<>(Keys.INVENTORY_BASE64, InventoryData.encode(new InventoryData(this.inventory, this.inventoryTitleField.get())));
-        getContainer().set(this.inventoryBase64Field);
+        this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, new InventoryData(this.inventory, this.inventoryTitleField.get()));
+        getContainer().set(this.inventoryDataField);
     }
 }

@@ -11,7 +11,7 @@ public class Keys {
 
     public static final String INVENTORY_SIZE = "inventorySize";
     public static final String INVENTORY_TITLE = "inventoryTitle";
-    public static final String INVENTORY_BASE64 = "inventoryBase64";
+    public static final String INVENTORY_DATA = "inventoryData";
 
     public static final String EMITTING_LIGHT_LEVEL = "emittingLightLevel";
 }

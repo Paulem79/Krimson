@@ -2,6 +2,7 @@ package net.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
 import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.inventories.InventoryData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -35,8 +36,8 @@ public class InventoryCustomBlock extends CustomBlock {
         return getProperties().getInventoryTitleField();
     }
 
-    public PropertiesField<byte[]> getInventoryBase64Field() {
-        return getProperties().getInventoryBase64Field();
+    public PropertiesField<InventoryData> getInventoryDataField() {
+        return getProperties().getInventoryDataField();
     }
 
     public Inventory getInventory() {
@@ -45,9 +46,6 @@ public class InventoryCustomBlock extends CustomBlock {
 
     public InventoryCustomBlock(NamespacedKey key, NamespacedKey dropIdentifier, Material blockInside, int inventorySize, String inventoryTitle, byte[] inventoryBase64) {
         this(key, dropIdentifier, blockInside, inventorySize, inventoryTitle);
-        // Note: inventoryBase64 in constructor is currently not used for instantiation of property directly here
-        // It would require logic in InventoryCustomBlockProperties to accept an optional initial base64
-        // For now adhering to request to migrate system.
     }
 
     public InventoryCustomBlock(NamespacedKey key, NamespacedKey dropIdentifier, Material blockInside, int inventorySize, String inventoryTitle) {
@@ -59,12 +57,6 @@ public class InventoryCustomBlock extends CustomBlock {
 
     public InventoryCustomBlock(Block block) {
         super(block);
-
-        // Fields accessed from properties now
-        // But we need to fill base fields for the "registry" contract if needed,
-        // though usually this constructor creates a LIVE block, which uses properties.
-        // base fields are final so they need to be set.
-        // We can read them from the properties we just loaded in super(block).
 
         this.baseInventorySize = getInventorySizeField().get();
         this.baseInventoryTitle = getInventoryTitleField().get();
@@ -175,11 +167,6 @@ public class InventoryCustomBlock extends CustomBlock {
         InventoryCustomBlock copy = new InventoryCustomBlock(this.getKey(), this.getDropIdentifier(), this.getBlockMaterial(), this.baseInventorySize, this.baseInventoryTitle);
 
         copy.registryReference = false;
-        // copy.setMeta(this.getMeta()); // setMeta is protected in CustomBlock and Lombok generated?
-        // CustomBlock has @Setter on meta? Yes but protected getter.
-        // The previous code had copy.setMeta(this.getMeta()) so it should be fine if available.
-        // Checking CustomBlock: @Setter @Getter(lombok.AccessLevel.PROTECTED) private Consumer<ItemMeta> meta;
-        // The setter is public (default lombok behavior if not specified).
         copy.setMeta(this.getMeta());
 
         return copy;

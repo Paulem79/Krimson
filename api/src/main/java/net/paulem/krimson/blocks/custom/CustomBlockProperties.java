@@ -1,13 +1,12 @@
 package net.paulem.krimson.blocks.custom;
 
-import com.mojang.serialization.JsonOps;
 import lombok.Getter;
-import net.paulem.krimson.codec.Codecs;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.codec.pdc.ItemStackDataType;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.properties.Properties;
 import net.paulem.krimson.properties.PropertiesField;
 import org.bukkit.block.Block;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
 public class CustomBlockProperties extends Properties {
@@ -16,7 +15,7 @@ public class CustomBlockProperties extends Properties {
     @Getter
     private PropertiesField<String> blockMaterialField;
     @Getter
-    private PropertiesField<String> displayedItemField;
+    private PropertiesField<ItemStack> displayedItemField;
 
     public CustomBlockProperties(Block block, CustomBlock customBlock) {
         super(block);
@@ -41,13 +40,10 @@ public class CustomBlockProperties extends Properties {
         }
 
         if (getContainer().has(Keys.DISPLAYED_ITEM_KEY)) {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, getContainer(), PersistentDataType.STRING);
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, getContainer(), ItemStackDataType.INSTANCE);
         } else {
-            String encoded = Codecs.ITEM_STACK.encodeStart(JsonOps.COMPRESSED, customBlock.getItemDisplayStack())
-                    .resultOrPartial(error -> KrimsonPlugin.getInstance().getLogger().severe(error))
-                    .orElseThrow(() -> new RuntimeException("Failed to encode Item Display Stack"))
-                    .getAsString();
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, encoded);
+            ItemStack stack = customBlock.getItemDisplayStack();
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, stack);
             getContainer().set(displayedItemField);
         }
     }

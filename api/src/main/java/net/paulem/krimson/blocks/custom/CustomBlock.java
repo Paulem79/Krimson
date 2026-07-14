@@ -64,7 +64,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         return properties.getBlockMaterialField();
     }
 
-    public PropertiesField<String> getDisplayedItemField() {
+    public PropertiesField<ItemStack> getDisplayedItemField() {
         return properties.getDisplayedItemField();
     }
 
