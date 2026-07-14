@@ -1,4 +1,4 @@
-package net.paulem.krimson.codec.pdc;
+package net.paulem.krimson.pdc;
 
 import net.paulem.krimson.paper.compat.serialize.PaperItemSerializer;
 import net.paulem.krimson.paper.compat.stream.input.PaperInputStream;
@@ -13,9 +13,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 public class ItemStackDataType implements PersistentDataType<byte[], ItemStack> {
-
-    public static final ItemStackDataType INSTANCE = new ItemStackDataType();
-
     @Override
     public @NonNull Class<byte[]> getPrimitiveType() {
         return byte[].class;

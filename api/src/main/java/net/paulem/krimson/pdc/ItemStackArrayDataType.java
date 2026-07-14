@@ -1,4 +1,4 @@
-package net.paulem.krimson.codec.pdc;
+package net.paulem.krimson.pdc;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataAdapterContext;
@@ -12,9 +12,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 public class ItemStackArrayDataType implements PersistentDataType<byte[], ItemStack[]> {
-
-    public static final ItemStackArrayDataType INSTANCE = new ItemStackArrayDataType();
-
     @Override
     public @NonNull Class<byte[]> getPrimitiveType() {
         return byte[].class;

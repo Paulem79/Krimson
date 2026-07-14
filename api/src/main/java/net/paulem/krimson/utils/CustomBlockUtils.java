@@ -19,8 +19,8 @@ public class CustomBlockUtils {
         if (KrimsonAPI.isCustomBlockFromWatcher(block)) {
             CustomBlock customBlock = KrimsonAPI.customBlocks.getBlockAt(block);
             if (customBlock != null) {
-                if (event instanceof BlockBreakEvent) {
-                    customBlock.onPlayerBreak((BlockBreakEvent) event);
+                if (event instanceof BlockBreakEvent blockBreakEvent) {
+                    customBlock.onPlayerBreak(blockBreakEvent);
                 } else {
                     customBlock.onBreak(event, null);
                 }

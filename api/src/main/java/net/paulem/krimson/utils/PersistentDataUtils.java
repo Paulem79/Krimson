@@ -1,5 +1,6 @@
 package net.paulem.krimson.utils;
 
+import net.paulem.krimson.pdc.DataTypes;
 import org.bukkit.Chunk;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
@@ -55,6 +56,10 @@ public class PersistentDataUtils {
         if (constable instanceof byte[]) return (PersistentDataType<P, C>) PersistentDataType.BYTE_ARRAY;
         if (constable instanceof int[]) return (PersistentDataType<P, C>) PersistentDataType.INTEGER_ARRAY;
         if (constable instanceof long[]) return (PersistentDataType<P, C>) PersistentDataType.LONG_ARRAY;
+
+        PersistentDataType<P, C> corresponds = (PersistentDataType<P, C>) DataTypes.corresponds(constable.getClass());
+        if (corresponds != null) return corresponds;
+
         throw new IllegalArgumentException("Unsupported type: " + constable.getClass().getName());
     }
 

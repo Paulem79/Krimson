@@ -1,4 +1,4 @@
-package net.paulem.krimson.codec.pdc;
+package net.paulem.krimson.pdc;
 
 import net.paulem.krimson.blocks.custom.InventoryCustomBlock;
 import net.paulem.krimson.common.KrimsonPlugin;
@@ -18,9 +18,6 @@ import java.io.DataOutputStream;
 import java.util.UUID;
 
 public class InventoryDataType implements PersistentDataType<byte[], InventoryData> {
-
-    public static final InventoryDataType INSTANCE = new InventoryDataType();
-
     @Override
     public Class<byte[]> getPrimitiveType() {
         return byte[].class;

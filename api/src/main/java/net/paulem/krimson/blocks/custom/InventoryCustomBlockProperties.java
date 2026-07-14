@@ -1,7 +1,7 @@
 package net.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
-import net.paulem.krimson.codec.pdc.InventoryDataType;
+import net.paulem.krimson.pdc.DataTypes;
 import net.paulem.krimson.common.KrimsonPlugin;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.inventories.InventoryData;
@@ -41,7 +41,7 @@ public class InventoryCustomBlockProperties extends CustomBlockProperties {
         }
 
         if (getContainer().has(Keys.INVENTORY_DATA)) {
-            this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, getContainer(), InventoryDataType.INSTANCE);
+            this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, getContainer(), DataTypes.INVENTORY_DATA);
             this.inventory = this.inventoryDataField.get().inventory();
         } else {
             // New block creation

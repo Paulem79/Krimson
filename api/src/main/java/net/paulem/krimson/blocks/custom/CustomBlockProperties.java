@@ -1,7 +1,7 @@
 package net.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
-import net.paulem.krimson.codec.pdc.ItemStackDataType;
+import net.paulem.krimson.pdc.DataTypes;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.properties.Properties;
 import net.paulem.krimson.properties.PropertiesField;
@@ -40,7 +40,7 @@ public class CustomBlockProperties extends Properties {
         }
 
         if (getContainer().has(Keys.DISPLAYED_ITEM_KEY)) {
-            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, getContainer(), ItemStackDataType.INSTANCE);
+            this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, getContainer(), DataTypes.ITEM_STACK);
         } else {
             ItemStack stack = customBlock.getItemDisplayStack();
             this.displayedItemField = new PropertiesField<>(Keys.DISPLAYED_ITEM_KEY, stack);

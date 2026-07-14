@@ -310,7 +310,11 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
      * Called when the custom block is broken by a player.
      */
     public void onPlayerBreak(BlockBreakEvent event) {
-        onBreak(event, event.getPlayer());
+        Player player = event.getPlayer();
+        onBreak(event, player);
+
+        // Damage player tool
+        player.damageItemStack(player.getActiveItem(), 1);
     }
 
     /**
