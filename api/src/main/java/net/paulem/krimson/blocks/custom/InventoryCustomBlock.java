@@ -60,6 +60,8 @@ public class InventoryCustomBlock extends CustomBlock {
 
     @Override
     public void onInteract(PlayerInteractEvent event) {
+        super.onInteract(event);
+
         Player player = event.getPlayer();
         Action action = event.getAction();
 
