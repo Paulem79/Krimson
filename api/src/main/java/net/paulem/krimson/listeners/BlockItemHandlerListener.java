@@ -1,6 +1,6 @@
 package net.paulem.krimson.listeners;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
@@ -19,9 +19,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
-import net.paulem.krimson.KrimsonAPI;
 import net.paulem.krimson.blocks.custom.InventoryCustomBlock;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.items.CustomBlockItem;
@@ -97,7 +95,8 @@ public class BlockItemHandlerListener implements Listener {
         ItemMeta meta = item.getItemMeta();
 
         PersistentDataContainer pdc = meta.getPersistentDataContainer();
-        @Nullable String identifier = pdc.get(new NamespacedKey(KrimsonPlugin.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING);
+
+        @Nullable String identifier = pdc.get(Keys.IDENTIFIER.key(), Keys.IDENTIFIER.type());
 
         if (identifier == null) {
             return;
@@ -154,9 +153,9 @@ public class BlockItemHandlerListener implements Listener {
             if (item == null || item.getItemMeta() == null || !item.getItemMeta().hasItemModel()) return false;
 
             ItemMeta meta = item.getItemMeta();
-
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
-            @Nullable String identifier = pdc.get(new NamespacedKey(KrimsonPlugin.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING);
+
+            @Nullable String identifier = pdc.get(Keys.IDENTIFIER.key(), Keys.IDENTIFIER.type());
 
             if (identifier == null) {
                 return false;

@@ -3,7 +3,7 @@ package net.paulem.krimson.blocks.custom;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.Setter;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.utils.*;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -21,7 +21,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
@@ -31,7 +30,6 @@ import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.items.CustomItem;
 import net.paulem.krimson.items.Items;
 import net.paulem.krimson.properties.PDCWrapper;
-import net.paulem.krimson.properties.PropertiesField;
 import net.paulem.krimson.registry.RegistryKey;
 
 import java.util.Optional;
@@ -44,6 +42,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     @Getter
     protected boolean registryReference; // This is used to check if this instance is a registry instance, so that we need to clone it before using it
 
+    @Getter
     private final NamespacedKey key;
     @Getter
     protected final NamespacedKey dropIdentifier;
@@ -55,18 +54,6 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     protected Block block;
     @Getter
     protected CustomBlockProperties properties;
-
-    public PropertiesField<String> getDropIdentifierField() {
-        return properties.getDropIdentifierField();
-    }
-
-    public PropertiesField<String> getBlockMaterialField() {
-        return properties.getBlockMaterialField();
-    }
-
-    public PropertiesField<ItemStack> getDisplayedItemField() {
-        return properties.getDisplayedItemField();
-    }
 
     /**
      * Create a custom block with the given item
@@ -84,20 +71,13 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
      * Retrieve a custom block from the item display
      */
     public CustomBlock(Block block) {
-        // Thanks to java not having before super statements (but available in java 22+), we have to do this... horrible thing
         this(
-                // Get the key from the block's persistent data container
-                NamespacedKey.fromString(new PDCWrapper(block).get(Keys.IDENTIFIER_KEY, PersistentDataType.STRING).orElseThrow()),
-                // Get drop item
-                NamespacedKey.fromString(new PDCWrapper(block).get(Keys.DROP_IDENTIFIER_KEY, PersistentDataType.STRING).orElseThrow()),
-                // Get block material
-                Material.valueOf(new PDCWrapper(block).get(Keys.BLOCK_INSIDE_KEY, PersistentDataType.STRING).orElseThrow())
+                NamespacedKey.fromString(new PDCWrapper(block).get(Keys.IDENTIFIER).orElseThrow()),
+                NamespacedKey.fromString(new PDCWrapper(block).get(Keys.DROP_IDENTIFIER).orElseThrow()),
+                Material.valueOf(new PDCWrapper(block).get(Keys.BLOCK_INSIDE).orElseThrow())
         );
-
-        this.registryReference = false; // This is not a registry reference, so we can use it directly
-
+        this.registryReference = false;
         spawnDisplay(block.getLocation());
-
         setDisplayAndProperties(block);
     }
 
@@ -225,7 +205,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         }
 
         setDisplayAndProperties(block);
-        properties.getContainer().set(Keys.CUSTOM_BLOCK_KEY, (byte) 1);
+        properties.getContainer().set(Keys.CUSTOM_BLOCK, (byte) 1);
         KrimsonAPI.customBlocks.registerBlock(this);
     }
 
@@ -277,10 +257,10 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         ItemMeta stackItemMeta = stack.getItemMeta();
         if (stackItemMeta != null) {
             PersistentDataContainer pdc = stackItemMeta.getPersistentDataContainer();
-            pdc.set(new NamespacedKey(KrimsonPlugin.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING, key.toString());
+            // Utilisation directe des propriétés du record DataKey pour le PDC natif de Bukkit
+            pdc.set(Keys.IDENTIFIER.key(), Keys.IDENTIFIER.type(), key.toString());
 
             if(this.meta != null) this.meta.accept(stackItemMeta);
-
             stack.setItemMeta(stackItemMeta);
         }
 
@@ -368,10 +348,5 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         }
 
         KrimsonAPI.customBlocks.removeBlock(this);
-    }
-
-    @Override
-    public NamespacedKey getKey() {
-        return key;
     }
 }

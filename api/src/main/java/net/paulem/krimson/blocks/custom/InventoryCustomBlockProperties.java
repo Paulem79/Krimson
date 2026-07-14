@@ -1,23 +1,17 @@
 package net.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
-import net.paulem.krimson.pdc.DataTypes;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.inventories.InventoryData;
-import net.paulem.krimson.properties.PropertiesField;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.persistence.PersistentDataType;
 
+@Getter
 public class InventoryCustomBlockProperties extends CustomBlockProperties {
-    @Getter
-    private PropertiesField<Integer> inventorySizeField;
-    @Getter
-    private PropertiesField<String> inventoryTitleField;
-    @Getter
-    private PropertiesField<InventoryData> inventoryDataField;
-    @Getter
+    private int inventorySize;
+    private String inventoryTitle;
+    private InventoryData inventoryData;
     private Inventory inventory;
 
     public InventoryCustomBlockProperties(Block block, InventoryCustomBlock customBlock) {
@@ -26,39 +20,29 @@ public class InventoryCustomBlockProperties extends CustomBlockProperties {
     }
 
     private void load(InventoryCustomBlock customBlock) {
-        if (getContainer().has(Keys.INVENTORY_SIZE)) {
-            this.inventorySizeField = new PropertiesField<>(Keys.INVENTORY_SIZE, getContainer(), PersistentDataType.INTEGER);
-        } else {
-            this.inventorySizeField = new PropertiesField<>(Keys.INVENTORY_SIZE, customBlock.getBaseInventorySize());
-            getContainer().set(inventorySizeField);
-        }
+        this.inventorySize = getContainer().getOrDefault(Keys.INVENTORY_SIZE, customBlock.getBaseInventorySize());
+        getContainer().set(Keys.INVENTORY_SIZE, this.inventorySize);
 
-        if (getContainer().has(Keys.INVENTORY_TITLE)) {
-            this.inventoryTitleField = new PropertiesField<>(Keys.INVENTORY_TITLE, getContainer(), PersistentDataType.STRING);
-        } else {
-            this.inventoryTitleField = new PropertiesField<>(Keys.INVENTORY_TITLE, customBlock.getBaseInventoryTitle());
-            getContainer().set(inventoryTitleField);
-        }
+        this.inventoryTitle = getContainer().getOrDefault(Keys.INVENTORY_TITLE, customBlock.getBaseInventoryTitle());
+        getContainer().set(Keys.INVENTORY_TITLE, this.inventoryTitle);
 
         if (getContainer().has(Keys.INVENTORY_DATA)) {
-            this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, getContainer(), DataTypes.INVENTORY_DATA);
-            this.inventory = this.inventoryDataField.get().inventory();
+            this.inventoryData = getContainer().get(Keys.INVENTORY_DATA).orElseThrow();
+            this.inventory = this.inventoryData.inventory();
         } else {
-            // New block creation
             this.inventory = KrimsonPlugin.getInstance().getServer().createInventory(
                     new InventoryCustomBlock.InventoryCustomBlockHolder(customBlock),
-                    this.inventorySizeField.get(),
-                    this.inventoryTitleField.get()
+                    this.inventorySize,
+                    this.inventoryTitle
             );
-
-            this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, new InventoryData(this.inventory, this.inventoryTitleField.get()));
-            getContainer().set(inventoryDataField);
+            this.inventoryData = new InventoryData(this.inventory, this.inventoryTitle);
+            getContainer().set(Keys.INVENTORY_DATA, this.inventoryData);
         }
     }
 
     public void updateInventory(Inventory inventory) {
         this.inventory = inventory;
-        this.inventoryDataField = new PropertiesField<>(Keys.INVENTORY_DATA, new InventoryData(this.inventory, this.inventoryTitleField.get()));
-        getContainer().set(this.inventoryDataField);
+        this.inventoryData = new InventoryData(this.inventory, this.inventoryTitle);
+        getContainer().set(Keys.INVENTORY_DATA, this.inventoryData);
     }
 }

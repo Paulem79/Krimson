@@ -1,6 +1,6 @@
 package net.paulem.krimson.listeners;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
@@ -11,8 +11,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
-import org.jetbrains.annotations.Nullable;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.items.CustomBlockItem;
 import net.paulem.krimson.items.Items;
@@ -28,10 +26,10 @@ public class MigrationListener implements Listener {
             ItemMeta meta = item.getItemMeta();
 
             PersistentDataContainer pdc = meta.getPersistentDataContainer();
-            @Nullable String identifier = pdc.get(new NamespacedKey(KrimsonPlugin.getInstance(), Keys.IDENTIFIER_KEY), PersistentDataType.STRING);
+            String identifier = pdc.get(Keys.IDENTIFIER.key(), Keys.IDENTIFIER.type());
 
             if (identifier == null) {
-                continue;
+                return;
             }
 
             NamespacedKey key = NamespacedKey.fromString(identifier);

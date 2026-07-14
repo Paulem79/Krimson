@@ -1,10 +1,9 @@
 package net.paulem.krimson.utils;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import net.paulem.krimson.KrimsonAPI;
 
 public class ItemUtils {
     public static ItemStack getWithItemModel(ItemStack item, NamespacedKey modelPath) {

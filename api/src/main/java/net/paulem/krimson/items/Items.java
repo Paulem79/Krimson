@@ -1,12 +1,11 @@
 package net.paulem.krimson.items;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.apache.commons.lang3.function.TriConsumer;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import net.paulem.krimson.blocks.Blocks;
 import net.paulem.krimson.blocks.custom.CustomBlock;
 import net.paulem.krimson.registry.NewFrozenRegistry;
 

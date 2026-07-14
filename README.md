@@ -95,7 +95,7 @@ Your main plugin class must extend `KrimsonPlugin<T>` (where `T` is your own plu
 package my.plugin;
 
 import net.paulem.krimson.KrimsonAPI;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 
 public class MyPlugin extends KrimsonPlugin<MyPlugin> {
     private KrimsonAPI<MyPlugin> api;
@@ -181,7 +181,7 @@ public class RubyItem extends CustomItem {
 
 ```java
 import net.paulem.krimson.items.Items;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.NamespacedKey;
 
 public static final RubyItem RUBY = Items.registerItem(
@@ -779,7 +779,7 @@ Here's a full working example of a plugin with a custom block that has an invent
 package my.plugin;
 
 import net.paulem.krimson.KrimsonAPI;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 
 public class MyPlugin extends KrimsonPlugin<MyPlugin> {
     private KrimsonAPI<MyPlugin> api;
@@ -816,7 +816,7 @@ package my.plugin.blocks;
 
 import net.paulem.krimson.blocks.Blocks;
 import net.paulem.krimson.blocks.custom.InventoryCustomBlock;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 
 public class PluginBlocks {
 
@@ -974,13 +974,6 @@ See [RUST_JNI_INTEGRATION.md](./RUST_JNI_INTEGRATION.md) for detailed documentat
 | `ItemSerializerHandler` | Abstract ItemStack serializer |
 | `InputStreamHandler` | Abstract input stream reader |
 | `OutputStreamHandler` | Abstract output stream writer |
-
-### Compatibility (net.paulem.krimson.common.compat)
-
-| Class | Description |
-|-------|-------------|
-| `Versioning` | Server version detection |
-| `CompatAccess` | Platform-specific handler selection |
 
 ---
 

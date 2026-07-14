@@ -1,6 +1,6 @@
 package net.paulem.krimson.paper.compat.serialize;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.paper.compat.stream.input.PaperInputStream;
 import net.paulem.krimson.paper.compat.stream.output.PaperOutputStream;
 import org.bukkit.inventory.ItemStack;

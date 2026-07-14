@@ -1,7 +1,6 @@
 package net.paulem.krimson;
 
 import com.jeff_media.customblockdata.CustomBlockData;
-import net.paulem.krimson.common.KrimsonPlugin;
 import net.paulem.krimson.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -12,10 +11,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.plugin.PluginManager;
-import net.paulem.krimson.blocks.Blocks;
 import net.paulem.krimson.commands.CommandKrimson;
 import net.paulem.krimson.constants.Keys;
-import net.paulem.krimson.items.Items;
 import net.paulem.krimson.properties.PDCWrapper;
 import net.paulem.krimson.regions.CustomBlockTracker;
 import net.paulem.krimson.resourcepack.ResourcePackHosting;
@@ -41,10 +38,11 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
 
     public static boolean isCustomBlock(Block block) {
         PDCWrapper properties = new PDCWrapper(block);
-        return properties.has(Keys.CUSTOM_BLOCK_KEY) &&
-                properties.has(Keys.IDENTIFIER_KEY) &&
-                properties.has(Keys.BLOCK_INSIDE_KEY) &&
-                properties.has(Keys.DISPLAYED_ITEM_KEY) && !block.getType().isAir();
+        return properties.has(Keys.CUSTOM_BLOCK) &&
+                properties.has(Keys.IDENTIFIER) &&
+                properties.has(Keys.BLOCK_INSIDE) &&
+                properties.has(Keys.DISPLAYED_ITEM) &&
+                !block.getType().isAir();
     }
 
     private final KrimsonPlugin<T> plugin;

@@ -2,12 +2,16 @@ package net.paulem.krimsontest.blocks;
 
 import net.paulem.krimson.blocks.Blocks;
 import net.paulem.krimson.blocks.custom.InventoryCustomBlock;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.Material;
 
 import java.util.List;
 
 public class PluginBlocks {
+    private PluginBlocks() {
+        /* This utility class should not be instantiated */
+    }
+
     public static final InventoryCustomBlock TEST = Blocks.register(
             "test_block",
             meta -> {

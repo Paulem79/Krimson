@@ -1,7 +1,7 @@
 package net.paulem.krimson.regions;
 
 import lombok.Getter;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;

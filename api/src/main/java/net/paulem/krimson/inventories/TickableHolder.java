@@ -1,11 +1,10 @@
 package net.paulem.krimson.inventories;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
-import net.paulem.krimson.KrimsonAPI;
 
 public abstract class TickableHolder implements InventoryHolder {
     private @Nullable BukkitTask tickTask = null;

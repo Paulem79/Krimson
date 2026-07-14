@@ -1,7 +1,7 @@
 package net.paulem.krimsontest;
 
 import net.paulem.krimson.KrimsonAPI;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimsontest.blocks.PluginBlocks;
 import net.paulem.krimsontest.items.PluginItems;
 

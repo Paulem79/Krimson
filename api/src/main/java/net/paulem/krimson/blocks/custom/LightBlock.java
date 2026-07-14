@@ -7,17 +7,12 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Light;
-import net.paulem.krimson.properties.PropertiesField;
 
 public class LightBlock extends CustomBlock {
     @Getter
     private final int baseEmittingLightLevel;
     @Getter
     private Block lightBlock;
-
-    public PropertiesField<Integer> getEmittingLightLevelField() {
-        return getProperties().getEmittingLightLevelField();
-    }
 
     public LightBlock(NamespacedKey key, NamespacedKey dropIdentifier, int emittingLightLevel) {
         super(key, dropIdentifier, Material.SLIME_BLOCK);
@@ -28,7 +23,8 @@ public class LightBlock extends CustomBlock {
     public LightBlock(Block block) {
         super(block);
 
-        this.baseEmittingLightLevel = getEmittingLightLevelField().get();
+        this.baseEmittingLightLevel = getProperties().getEmittingLightLevel();
+        this.lightBlock = block.getRelative(BlockFace.UP);
     }
 
     @Override
@@ -54,7 +50,10 @@ public class LightBlock extends CustomBlock {
         // Spawn the light
         lightBlock.setType(Material.LIGHT);
         Light light = (Light) lightBlock.getBlockData();
-        light.setLevel(getEmittingLightLevelField().get());
+
+        // Accès direct et propre à la donnée
+        light.setLevel(getProperties().getEmittingLightLevel());
+
         lightBlock.setBlockData(light);
         lightBlock.getState().update();
     }
@@ -66,10 +65,20 @@ public class LightBlock extends CustomBlock {
         if (block.getType() != this.blockMaterial) {
             Block aboveBlock = block.getRelative(BlockFace.UP);
 
-            if (aboveBlock.getType() == lightBlock.getType()) {
+            // Vérification de sécurité pour éviter le NullPointerException potentiel si lightBlock n'est pas instancié
+            if (lightBlock != null && aboveBlock.getType() == lightBlock.getType()) {
                 aboveBlock.setType(Material.AIR);
             }
         }
     }
 
+    @Override
+    public CustomBlock copyOf() {
+        LightBlock copy = new LightBlock(this.getKey(), this.getDropIdentifier(), this.baseEmittingLightLevel);
+
+        copy.registryReference = false;
+        copy.setMeta(this.getMeta());
+
+        return copy;
+    }
 }

@@ -5,7 +5,7 @@ import io.javalin.Javalin;
 import lombok.Getter;
 import net.mcbrawls.inject.javalin.InjectJavalinFactory;
 import net.mcbrawls.inject.spigot.InjectSpigot;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.resourcepack.creator.ResourcePackKt;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.*;
 

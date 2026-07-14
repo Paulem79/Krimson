@@ -1,7 +1,7 @@
 package net.paulem.krimson.pdc;
 
 import net.paulem.krimson.blocks.custom.InventoryCustomBlock;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.inventories.InventoryData;
 import net.paulem.krimson.paper.compat.serialize.PaperItemSerializer;
 import net.paulem.krimson.paper.compat.stream.input.PaperInputStream;

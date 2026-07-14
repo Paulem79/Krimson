@@ -2,67 +2,34 @@ package net.paulem.krimson.properties;
 
 import com.jeff_media.customblockdata.CustomBlockData;
 import lombok.Getter;
-import net.paulem.krimson.common.KrimsonPlugin;
-import org.bukkit.NamespacedKey;
+import lombok.RequiredArgsConstructor;
 import org.bukkit.block.Block;
-import org.bukkit.persistence.PersistentDataType;
-import org.jetbrains.annotations.NotNull;
-import net.paulem.krimson.KrimsonAPI;
-import net.paulem.krimson.utils.PersistentDataUtils;
+import net.paulem.krimson.KrimsonPlugin;
 
 import java.util.Optional;
 
+@RequiredArgsConstructor
 public final class PDCWrapper {
     @Getter
     private final CustomBlockData container;
 
-    public PDCWrapper(@NotNull Block block) {
+    public PDCWrapper(Block block) {
         this(new CustomBlockData(block, KrimsonPlugin.getInstance()));
     }
 
-    public PDCWrapper(CustomBlockData container) {
-        this.container = container;
+    public <T, Z> Optional<Z> get(DataKey<T, Z> key) {
+        return Optional.ofNullable(container.get(key.key(), key.type()));
     }
 
-    public <P, C> Optional<C> get(PropertiesField<C> field) {
-        return get(field.getFieldName(), PersistentDataUtils.getCorrespondType(field.get()));
+    public <T, Z> Z getOrDefault(DataKey<T, Z> key, Z defaultValue) {
+        return container.getOrDefault(key.key(), key.type(), defaultValue);
     }
 
-    public <P, C> Optional<C> get(String key, PersistentDataType<P, C> dataType) {
-        return Optional.ofNullable(
-                getContainer().get(
-                        new NamespacedKey(KrimsonPlugin.getInstance(), key),
-                        dataType
-                )
-        );
+    public boolean has(DataKey<?, ?> key) {
+        return container.has(key.key(), key.type());
     }
 
-    public boolean has(PropertiesField<?> field) {
-        return has(field.getFieldName());
-    }
-
-    public boolean has(String key) {
-        return getContainer().has(
-                new NamespacedKey(KrimsonPlugin.getInstance(), key)
-        );
-    }
-
-    public <P, C> void set(PropertiesField<C> field) {
-        set(field.getFieldName(), field.get());
-    }
-
-    public <P, C> void set(String key, C value) {
-        getContainer().set(
-                new NamespacedKey(KrimsonPlugin.getInstance(), key),
-                PersistentDataUtils.getCorrespondType(value),
-                value
-        );
-    }
-
-    @Override
-    public String toString() {
-        return "PropertiesStore{" +
-                "container=" + container +
-                '}';
+    public <T, Z> void set(DataKey<T, Z> key, Z value) {
+        container.set(key.key(), key.type(), value);
     }
 }

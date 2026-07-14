@@ -1,8 +1,7 @@
 package net.paulem.krimson.blocks.custom;
 
 import lombok.Getter;
-import net.paulem.krimson.common.KrimsonPlugin;
-import net.paulem.krimson.inventories.InventoryData;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -15,7 +14,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.jetbrains.annotations.NotNull;
 import net.paulem.krimson.inventories.InventoryDiff;
-import net.paulem.krimson.properties.PropertiesField;
 import net.paulem.krimson.utils.CustomBlockUtils;
 
 import java.util.UUID;
@@ -27,18 +25,6 @@ public class InventoryCustomBlock extends CustomBlock {
     @Getter
     private final String baseInventoryTitle;
     private final InventoryDiff inventoryDiff = new InventoryDiff();
-
-    public PropertiesField<Integer> getInventorySizeField() {
-        return getProperties().getInventorySizeField();
-    }
-
-    public PropertiesField<String> getInventoryTitleField() {
-        return getProperties().getInventoryTitleField();
-    }
-
-    public PropertiesField<InventoryData> getInventoryDataField() {
-        return getProperties().getInventoryDataField();
-    }
 
     public Inventory getInventory() {
         return getProperties().getInventory();
@@ -58,8 +44,8 @@ public class InventoryCustomBlock extends CustomBlock {
     public InventoryCustomBlock(Block block) {
         super(block);
 
-        this.baseInventorySize = getInventorySizeField().get();
-        this.baseInventoryTitle = getInventoryTitleField().get();
+        this.baseInventorySize = getProperties().getInventorySize();
+        this.baseInventoryTitle = getProperties().getInventoryTitle();
     }
 
     @Override
@@ -70,12 +56,6 @@ public class InventoryCustomBlock extends CustomBlock {
     @Override
     protected CustomBlockProperties createProperties(Block block) {
         return new InventoryCustomBlockProperties(block, this);
-    }
-
-    @Override
-    public void spawn(Location blockLoc) {
-        super.spawn(blockLoc);
-        // Properties and inventory creation is now handled in InventoryCustomBlockProperties
     }
 
     @Override

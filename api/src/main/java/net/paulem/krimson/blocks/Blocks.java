@@ -1,10 +1,9 @@
 package net.paulem.krimson.blocks;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Nullable;
-import net.paulem.krimson.KrimsonAPI;
 import net.paulem.krimson.blocks.custom.CustomBlock;
 import net.paulem.krimson.registry.NewFrozenRegistry;
 

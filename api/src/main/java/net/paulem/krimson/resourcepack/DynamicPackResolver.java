@@ -1,6 +1,6 @@
 package net.paulem.krimson.resourcepack;
 
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 import net.radstevee.packed.core.pack.PackFormat;
 import java.lang.reflect.Field;
 import java.util.TreeMap;

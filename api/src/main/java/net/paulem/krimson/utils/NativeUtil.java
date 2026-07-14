@@ -2,7 +2,7 @@ package net.paulem.krimson.utils;
 
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
-import net.paulem.krimson.common.KrimsonPlugin;
+import net.paulem.krimson.KrimsonPlugin;
 
 import java.io.File;
 import java.io.IOException;

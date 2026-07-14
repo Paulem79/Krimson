@@ -1,4 +1,4 @@
-package net.paulem.krimson.common;
+package net.paulem.krimson;
 
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
