@@ -84,32 +84,62 @@ public class PersistentDataUtils {
     }
 
     /**
-     * Gets the block represented by the given {@link NamespacedKey} in the given {@link Chunk}<br>
-     * From CustomBlockData by mfnalex
+     * Gets the block represented by the given {@link NamespacedKey} in the given {@link Chunk}
      */
     @Nullable
     public static Block getBlockFromKey(final NamespacedKey key, final Chunk chunk) {
-        final int x, y, z;
-        
-        // Try using native implementation first for better performance
-        if (NativeUtil.isLoaded()) {
-            final int[] coords = NativeUtil.parseBlockKey(key.getKey());
-            if (coords == null || coords.length != 3) return null;
-            x = coords[0];
-            y = coords[1];
-            z = coords[2];
-        } else {
-            // Fallback to regex-based parsing
-            final Matcher matcher = KEY_REGEX.matcher(key.getKey());
-            if (!matcher.matches()) return null;
-            x = Integer.parseInt(matcher.group(1));
-            y = Integer.parseInt(matcher.group(2));
-            z = Integer.parseInt(matcher.group(3));
-        }
-        
-        if ((x < CHUNK_MIN_XZ || x > CHUNK_MAX_XZ) || (z < CHUNK_MIN_XZ || z > CHUNK_MAX_XZ) || (y < getWorldMinHeight(chunk.getWorld()) || y > chunk.getWorld().getMaxHeight() - 1))
+        final int[] coords = parseBlockKeyFast(key.getKey());
+        if (coords == null) return null;
+
+        final int x = coords[0];
+        final int y = coords[1];
+        final int z = coords[2];
+
+        if ((x < CHUNK_MIN_XZ || x > CHUNK_MAX_XZ)
+                || (z < CHUNK_MIN_XZ || z > CHUNK_MAX_XZ)
+                || (y < getWorldMinHeight(chunk.getWorld()) || y > chunk.getWorld().getMaxHeight() - 1)) {
             return null;
+        }
         return chunk.getBlock(x, y, z);
+    }
+
+    /**
+     * High-performance, zero-allocation parser for "x{num}y{num}z{num}" format.
+     * Replaces regex
+     */
+    private static int @Nullable [] parseBlockKeyFast(String key) {
+        if (key == null || key.isEmpty() || key.charAt(0) != 'x') return null;
+
+        int yPos = -1;
+        int zPos = -1;
+
+        for (int i = 1; i < key.length(); i++) {
+            char c = key.charAt(i);
+            if (c == 'y' && yPos == -1) {
+                yPos = i;
+            } else if (c == 'z' && yPos != -1) {
+                zPos = i;
+                break;
+            }
+        }
+
+        if (yPos == -1 || zPos == -1) return null;
+
+        try {
+            // Guard against negative X or Z which your format prohibits
+            if (key.charAt(1) == '-' || key.charAt(zPos + 1) == '-') {
+                return null;
+            }
+
+            // Zero-allocation character sequence parsing
+            int x = Integer.parseInt(key, 1, yPos, 10);
+            int y = Integer.parseInt(key, yPos + 1, zPos, 10);
+            int z = Integer.parseInt(key, zPos + 1, key.length(), 10);
+
+            return new int[]{x, y, z};
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     /**

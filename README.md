@@ -953,7 +953,6 @@ See [RUST_JNI_INTEGRATION.md](./RUST_JNI_INTEGRATION.md) for detailed documentat
 | `ItemUtils` | `net.paulem.krimson.utils` | Item model helpers |
 | `NamespacedKeyUtils` | `net.paulem.krimson.utils` | Key comparison utilities |
 | `PersistentDataUtils` | `net.paulem.krimson.utils` | PDC scanning utilities |
-| `NativeUtil` | `net.paulem.krimson.utils` | Rust JNI bridge |
 | `ZLibUtils` | `net.paulem.krimson.utils` | Compression/decompression |
 
 ### Listeners

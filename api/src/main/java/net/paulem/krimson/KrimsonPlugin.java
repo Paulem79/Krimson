@@ -5,7 +5,6 @@ import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskSchedule
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import lombok.Getter;
-import net.paulem.krimson.utils.NativeUtil;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,8 +35,6 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
         configuration = getConfig();
 
         scheduler = UniversalScheduler.getScheduler(this);
-
-        NativeUtil.init();
 
         // TODO : Optional ViaVersion support
         viaAPI = Via.getAPI();
