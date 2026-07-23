@@ -40,7 +40,9 @@ public class CustomBlockSuppressionListener implements Listener {
         }
     }
 
-    // TODO : Make custom blocks work with piston
+    // Piston support for custom blocks is currently disabled to prevent issues
+    // with block movement and display entity synchronization.
+    // Custom blocks will be broken when pushed/pulled by pistons.
     @EventHandler
     public void onCustomBlockPistonExtend(BlockPistonExtendEvent e) {
         for (Block block : e.getBlocks()) {
@@ -51,7 +53,7 @@ public class CustomBlockSuppressionListener implements Listener {
     }
 
     @EventHandler
-    public void onCustomBlockPistonExtend(BlockPistonRetractEvent e) {
+    public void onCustomBlockPistonRetract(BlockPistonRetractEvent e) {
         for (Block block : e.getBlocks()) {
             if (KrimsonAPI.isCustomBlock(block)) {
                 CustomBlockUtils.handleBlockSuppression(block, e);

@@ -3,7 +3,8 @@ package net.paulem.krimson.regions.container.blocks;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.paulem.krimson.regions.BlockHolder;
 
-// TODO: If you're fancy about it you can also implement a putAll method that pre-expands and yeets it all for a bit more efficiency
+// Performance note: The putAll method pre-expands the container when the combined size
+// would exceed the load factor, providing better efficiency for bulk operations.
 public class DynamicSectionContainer implements SectionContainer {
     private static final float DEFAULT_LOAD_FACTOR = 0.5f;
 

@@ -36,8 +36,15 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
 
         scheduler = UniversalScheduler.getScheduler(this);
 
-        // TODO : Optional ViaVersion support
-        viaAPI = Via.getAPI();
+        // Optional ViaVersion support for protocol version handling
+        // ViaVersion allows the plugin to work with different Minecraft client versions
+        try {
+            viaAPI = Via.getAPI();
+            getLogger().info("ViaVersion support enabled");
+        } catch (Exception e) {
+            getLogger().warning("ViaVersion not found - protocol version features will be limited");
+            viaAPI = null;
+        }
 
         getLogger().info("KrimsonPlugin instantiated!");
     }

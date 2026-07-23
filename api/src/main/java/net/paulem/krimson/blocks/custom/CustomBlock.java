@@ -232,7 +232,12 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     public final void tickLight() {
         Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
-        // TODO : if you want more accurate per-face lighting, spawn 6 block displays, one for each face, and use the scale transform to flatten them so they're 2d planes; and then do the light get's per-face and apply them to that face only https://discord.com/channels/690411863766466590/741875863271899136/1396952975494217933
+        // For advanced per-face lighting, consider implementing a multi-display approach:
+        // 1. Create 6 flat block displays (one for each face)
+        // 2. Use scale transform to flatten them into 2D planes
+        // 3. Calculate light levels per face and apply to corresponding display
+        // Reference: https://discord.com/channels/690411863766466590/741875863271899136/1396952975494217933
+        // Current implementation uses simplified lighting for performance.
         if (KrimsonPlugin.getConfiguration().getBoolean("preciseLightning", true)) {
             // Precise lightning: check the light level of the block in all cartesian directions
             byte skyLight = BlockUtils.computeLight(Block::getLightFromSky, block);
@@ -240,7 +245,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
 
             linkedDisplay.setBrightness(new Display.Brightness(blockLight, skyLight));
         } else {
-            // Normal lightning : check the light level of the block above the item
+            // Normal lightning: check the light level of the block above the item
             Block up = block.getRelative(BlockFace.UP);
             linkedDisplay.setBrightness(new Display.Brightness(up.getLightFromBlocks(), up.getLightFromSky()));
         }

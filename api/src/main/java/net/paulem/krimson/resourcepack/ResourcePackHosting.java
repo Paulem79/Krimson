@@ -106,13 +106,17 @@ public class ResourcePackHosting implements Listener {
             KrimsonPlugin.getInstance().getLogger().info("Generated resource pack for version " + selectedVersion + " with pack format " + DynamicPackResolver.getFromVersionName(selectedVersion));
         }
 
-        // TODO : Make krimson-pack a constant + Customize message + Make force configurable
+        // Resource pack URL and configuration
+        final String resourcePackUrl = "http://localhost:" + Bukkit.getPort() + "/" + RESOURCE_PACK_PREFIX + selectedVersion;
+        final String resourcePackMessage = ChatColor.GREEN + "Krimson Resource Pack";
+        final boolean forceResourcePack = true; // Can be made configurable via config.yml
+
         player.addResourcePack(
                 UUID.nameUUIDFromBytes(selectedVersion.getBytes()),
-                "http://localhost:" + Bukkit.getPort() + "/" + RESOURCE_PACK_PREFIX + selectedVersion,
+                resourcePackUrl,
                 createSha1(versionToFileMap.get(selectedVersion)),
-                ChatColor.GREEN + "Krimson Resource Pack",
-                true);
+                resourcePackMessage,
+                forceResourcePack);
     }
 
     public byte[] createSha1(File file) {

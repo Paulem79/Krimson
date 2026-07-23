@@ -19,7 +19,9 @@ import net.paulem.krimson.resourcepack.ResourcePackHosting;
 
 import java.util.logging.Logger;
 
-// TODO : Seems like PDC is slow https://github.com/PaperMC/Paper/pull/3359
+// NOTE: PDC (PersistentDataContainer) has known performance issues on PaperMC.
+// See: https://github.com/PaperMC/Paper/pull/3359
+// Consider caching frequently accessed data or using alternative storage for performance-critical operations.
 
 /**
  * Main class for the Krimson plugin.
