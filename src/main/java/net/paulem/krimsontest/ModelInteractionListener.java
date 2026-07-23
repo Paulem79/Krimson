@@ -45,7 +45,7 @@ public class ModelInteractionListener implements Listener {
         if (modelKeyStr == null || instanceId == null) return;
 
         BlockDisplayModel model = Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
-        model.playAnimation(display.getWorld(), instanceId);
+        model.playAnimationLoop(display.getWorld(), instanceId);
 
         player.playSound(player.getLocation(), PluginSounds.TEST_SOUND.getSoundKey(), 1.0f, 1.0f);
     }

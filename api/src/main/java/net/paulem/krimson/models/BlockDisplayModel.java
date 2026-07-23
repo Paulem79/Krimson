@@ -314,6 +314,53 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
     }
 
+    public void playAnimationLoop(World world, String instanceId) {
+        if (!animated || keyframes.isEmpty()) return;
+
+        Map<String, Display> entityMap = new HashMap<>();
+        for (Entity entity : world.getEntities()) {
+            if (entity instanceof Display display) {
+                String id = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
+                String partTag = display.getPersistentDataContainer().get(PART_KEY, PersistentDataType.STRING);
+                if (instanceId.equals(id) && partTag != null) {
+                    entityMap.put(partTag, display);
+                }
+            }
+        }
+
+        if (entityMap.isEmpty()) return;
+
+        int maxTick = Collections.max(keyframes.keySet());
+
+        new BukkitRunnable() {
+            int currentTick = 0;
+
+            @Override
+            public void run() {
+                List<AnimationFrame> frames = keyframes.get(currentTick);
+                if (frames != null) {
+                    for (AnimationFrame frame : frames) {
+                        Display display = entityMap.get(frame.partTag());
+                        if (display != null && display.isValid()) {
+                            display.setInterpolationDelay(0);
+                            display.setInterpolationDuration(frame.duration());
+                            display.setTransformationMatrix(frame.transformation());
+
+                            if (display instanceof BlockDisplay bd && frame.blockData() != null) {
+                                bd.setBlock(frame.blockData());
+                            }
+                        }
+                    }
+                }
+
+                currentTick++;
+                if (currentTick > maxTick) {
+                    currentTick = 0;
+                }
+            }
+        }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
+    }
+
     // --- UTILS PARSING ---
 
     private void parseOriginOffset(String command) {
