@@ -1,0 +1,47 @@
+[versions]
+java = "21"
+minecraft = "1.21.4"
+paper = "1.21.4-R0.1-SNAPSHOT"
+
+# Plugins
+kotlin = "2.1.0"
+shadow = "9.6.1"
+runPaper = "3.0.2"
+paperweightPlugin = "2.0.0-beta.21"
+
+# Libraries
+commonsLang3 = "3.20.0"
+viaversion = "5.+"
+annotations = "26.0.2-1"
+lombok = "1.18.42"
+
+universalScheduler = "0.+"
+customBlockData = "2.2.5"
+packedCore = "1.1.4"
+mcbrawlsInject = "3.+"
+javalin = "7.+"
+
+[libraries]
+paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
+
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
+viaversion-api = { module = "com.viaversion:viaversion-api", version.ref = "viaversion" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+
+universal-scheduler = { module = "com.github.Anon8281:UniversalScheduler", version.ref = "universalScheduler" }
+custom-block-data = { module = "com.jeff-media:custom-block-data", version.ref = "customBlockData" }
+packed-core = { module = "net.radstevee.packed:packed-core", version.ref = "packedCore" }
+
+mcbrawls-inject-spigot = { module = "net.mcbrawls.inject:spigot", version.ref = "mcbrawlsInject" }
+mcbrawls-inject-api = { module = "net.mcbrawls.inject:api", version.ref = "mcbrawlsInject" }
+mcbrawls-inject-http = { module = "net.mcbrawls.inject:http", version.ref = "mcbrawlsInject" }
+mcbrawls-inject-jetty = { module = "net.mcbrawls.inject:jetty", version.ref = "mcbrawlsInject" }
+mcbrawls-inject-javalin = { module = "net.mcbrawls.inject:javalin", version.ref = "mcbrawlsInject" }
+javalin = { module = "io.javalin:javalin", version.ref = "javalin" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+run-paper = { id = "xyz.jpenilla.run-paper", version.ref = "runPaper" }
+paperweight-userdev = { id = "io.papermc.paperweight.userdev", version.ref = "paperweightPlugin" }

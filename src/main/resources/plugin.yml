@@ -1,6 +1,6 @@
 name: Krimson
 version: ${version}
-main: net.paulem.krimson.Krimson
+main: net.paulem.krimsontest.TestPlugin
 api-version: '1.19'
 load: STARTUP
 authors: [ Paulem ]
