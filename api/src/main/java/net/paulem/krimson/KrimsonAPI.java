@@ -59,6 +59,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
 
         plugin.initItems();
         plugin.initBlocks();
+        plugin.initModels();
 
         // Events
         PluginManager pluginManager = Bukkit.getPluginManager();

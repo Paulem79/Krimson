@@ -1,26 +1,23 @@
 plugins {
     `java-library`
-    kotlin("jvm") version "2.+"
-
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.run.paper)
     id("idea")
-
-    id("com.gradleup.shadow")
-
-    id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
 group = "net.paulem"
 version = "1.0"
 
-val targetJavaVersion = 21
+val targetJavaVersion = libs.versions.java.get().toInt()
 
 allprojects {
-    plugins.apply("java")
-    plugins.apply("org.jetbrains.kotlin.jvm")
-    plugins.apply("com.gradleup.shadow")
-
     repositories {
         mavenCentral()
+        maven {
+            name = "papermc"
+            url = uri("https://repo.papermc.io/repository/maven-public/")
+        }
         maven {
             name = "spigotmc-repo"
             url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
@@ -31,133 +28,68 @@ allprojects {
         }
         maven { url = uri("https://jitpack.io") }
         maven {
-            name = "papermc"
-            url = uri("https://repo.papermc.io/repository/maven-public/")
-        }
-
-        maven {
             name = "radRepoPublic"
             url = uri("https://maven.rad.vg/public")
         }
         maven("https://maven.mcbrawls.net/releases/")
         maven("https://repo.viaversion.com")
-        maven {
-            url = uri("https://libraries.minecraft.net/")
-        }
-    }
-
-    dependencies {
-        implementation("org.apache.commons:commons-lang3:3.20.0")
-
-        compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-
-        // Spigot libraries
-        compileOnly("com.viaversion:viaversion-api:5.+")
-
-        compileOnly("org.jetbrains:annotations:26.0.2-1")
-
-        compileOnly("org.projectlombok:lombok:1.18.42")
-        annotationProcessor("org.projectlombok:lombok:1.18.42")
-    }
-
-    //artifacts.archives(tasks.shadowJar)
-    tasks.shadowJar {
-        //archiveClassifier.set("")
-        exclude("META-INF/**")
-
-        relocate("com.github.Anon8281.universalScheduler", "net.paulem.krimson.libs.universalScheduler")
-        relocate("com.jeff_media.customblockdata", "net.paulem.krimson.libs.customblockdata")
-    }
-
-    tasks.build {
-        dependsOn(tasks.shadowJar)
-    }
-
-    java {
-        sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
-        targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
-        if (JavaVersion.current() < JavaVersion.toVersion(targetJavaVersion)) {
-            toolchain {
-                languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
-            }
-        }
-    }
-
-    tasks.withType<JavaCompile>().configureEach {
-        options.encoding = "UTF-8"
-
-        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible) {
-            options.release.set(targetJavaVersion)
-        }
-    }
-
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-        }
-    }
-
-    tasks.withType<Test>().configureEach {
-        failOnNoDiscoveredTests = false
+        maven { url = uri("https://libraries.minecraft.net/") }
     }
 }
 
 dependencies {
-    // Allow the root project to see and package your subprojects along with their libraries
     implementation(project(":api"))
+    compileOnly(libs.paper.api)
+
+    implementation(libs.commons.lang3)
+
+    compileOnly(libs.viaversion.api)
+    compileOnly(libs.jetbrains.annotations)
+
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
 }
 
-subprojects {
-    apply(plugin = "java")
-    apply(plugin = "com.gradleup.shadow")
+java {
+    sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
+    targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+    }
+}
 
-    group = rootProject.group
-    version = rootProject.version
+tasks.withType<JavaCompile>().configureEach {
+    options.encoding = "UTF-8"
+    options.release.set(targetJavaVersion)
+}
 
-    if (project.name == "api") {
-        dependencies {
-            implementation("com.github.Anon8281:UniversalScheduler:0.+")
-            implementation("com.jeff-media:custom-block-data:2.2.5")
-
-            implementation("net.radstevee.packed:packed-core:1.1.4")
-
-            implementation("net.mcbrawls.inject:spigot:3.+")
-            implementation("net.mcbrawls.inject:api:3.+")
-            implementation("net.mcbrawls.inject:http:3.+")
-            implementation("net.mcbrawls.inject:jetty:3.+")
-            implementation("net.mcbrawls.inject:javalin:3.+") {
-                isTransitive = false
-            }
-            implementation("io.javalin:javalin:7.+")
-
-            // MC libraries
-            compileOnly("io.netty:netty-all:4.2.9.Final")
-            compileOnly("com.mojang:datafixerupper:9.1.20")
-        }
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
     }
 }
 
 tasks.shadowJar {
     archiveClassifier.set("")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+
+    relocate("com.github.Anon8281.universalScheduler", "net.paulem.krimson.libs.universalScheduler")
+    relocate("com.jeff_media.customblockdata", "net.paulem.krimson.libs.customblockdata")
 }
 
-tasks.compileJava {
-    subprojects.forEach {
-        dependsOn(it.tasks.build)
-    }
+tasks.build {
+    dependsOn(tasks.shadowJar)
 }
 
-tasks {
-    runServer {
-        minecraftVersion("1.21.4")
-    }
+tasks.runServer {
+    minecraftVersion(libs.versions.minecraft.get())
 }
 
 tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
     javaLauncher = javaToolchains.launcherFor {
         vendor = JvmVendorSpec.JETBRAINS
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
     jvmArgs("-XX:+AllowEnhancedClassRedefinition")
 }
