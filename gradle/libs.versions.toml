@@ -13,7 +13,7 @@ paperweightPlugin = "2.0.0-beta.21"
 commonsLang3 = "3.20.0"
 viaversion = "5.+"
 annotations = "26.0.2-1"
-lombok = "1.18.42"
+lombok = "1.18.46"
 
 universalScheduler = "0.+"
 customBlockData = "2.2.5"
