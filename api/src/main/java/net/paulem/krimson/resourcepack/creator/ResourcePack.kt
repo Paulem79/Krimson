@@ -8,6 +8,7 @@ import net.radstevee.packed.core.pack.ResourcePack
 import net.radstevee.packed.core.pack.ResourcePackBuilder.Companion.resourcePack
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.Items
+import net.paulem.krimson.sounds.Sounds
 import java.io.File
 
 fun createBlockModel(
@@ -47,6 +48,16 @@ fun main(dataFolder: File, packFormat: Int): File {
         val blockItem: CustomBlockItem = Items.REGISTRY.getOrThrow(namespacedKey) as CustomBlockItem
         val modelPath = blockItem.customBlock.itemDisplayStack.itemMeta!!.itemModel ?: continue
         createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
+    }
+
+    // Register sounds from the Krimson API registry
+    val soundList = pack.addSounds("krimson") {
+        for (namespacedKey in Sounds.REGISTRY.keys()) {
+            val sound = Sounds.REGISTRY.getOrThrow(namespacedKey)
+            add(Key(sound.key.namespace, sound.key.key)) {
+                // The packed library will resolve assets/krimson/sounds/<key>.ogg from classpath
+            }
+        }
     }
 
     pack.save(deleteOld = true)

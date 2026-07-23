@@ -47,4 +47,6 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
     public abstract void initItems();
 
     public abstract void initModels();
+
+    public abstract void initSounds();
 }

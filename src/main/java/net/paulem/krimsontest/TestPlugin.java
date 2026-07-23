@@ -5,6 +5,7 @@ import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimsontest.blocks.PluginBlocks;
 import net.paulem.krimsontest.items.PluginItems;
 import net.paulem.krimsontest.models.PluginModels;
+import net.paulem.krimsontest.sounds.PluginSounds;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -44,6 +45,11 @@ public class TestPlugin extends KrimsonPlugin<TestPlugin> implements Listener {
     @Override
     public void initModels() {
         PluginModels.init();
+    }
+
+    @Override
+    public void initSounds() {
+        PluginSounds.init();
     }
 
     @EventHandler

@@ -2,6 +2,7 @@ package net.paulem.krimsontest;
 
 import net.paulem.krimson.models.BlockDisplayModel;
 import net.paulem.krimson.models.Models;
+import net.paulem.krimsontest.sounds.PluginSounds;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Display;
@@ -45,6 +46,8 @@ public class ModelInteractionListener implements Listener {
 
         BlockDisplayModel model = Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
         model.playAnimation(display.getWorld(), instanceId);
+
+        player.playSound(player.getLocation(), PluginSounds.TEST_SOUND.getSoundKey(), 1.0f, 1.0f);
     }
 
     // CLIC GAUCHE = SUPPRIMER LE MODÈLE
