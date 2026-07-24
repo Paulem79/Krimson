@@ -9,6 +9,10 @@ import net.radstevee.packed.core.pack.ResourcePackBuilder.Companion.resourcePack
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.Items
 import net.paulem.krimson.sounds.Sounds
+import net.paulem.krimson.ui.UIRegistry
+import net.paulem.krimson.ui.bossbar.CustomBossBarUI
+import net.paulem.krimson.ui.actionbar.CustomActionBarUI
+import net.paulem.krimson.ui.title.CustomTitleUI
 import java.io.File
 
 fun createBlockModel(
@@ -59,6 +63,10 @@ fun main(dataFolder: File, packFormat: Int): File {
             }
         }
     }
+
+    // UI textures are automatically handled by the asset resolution strategy
+    // when they exist in the resources at: assets/namespace/textures/gui/{key}.png
+    // No explicit texture addition is needed - packed copies them automatically
 
     pack.save(deleteOld = true)
 

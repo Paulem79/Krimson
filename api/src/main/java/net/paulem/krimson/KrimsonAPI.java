@@ -16,6 +16,7 @@ import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.properties.PDCWrapper;
 import net.paulem.krimson.regions.CustomBlockTracker;
 import net.paulem.krimson.resourcepack.ResourcePackHosting;
+import org.bukkit.command.CommandExecutor;
 
 import java.util.logging.Logger;
 
@@ -63,6 +64,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         plugin.initBlocks();
         plugin.initModels();
         plugin.initSounds();
+        plugin.initUIs();
 
         // Events
         PluginManager pluginManager = Bukkit.getPluginManager();
@@ -80,6 +82,22 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
             CommandKrimson krimsonCommandInstance = new CommandKrimson();
             krimsonCommand.setExecutor(krimsonCommandInstance);
             krimsonCommand.setTabCompleter(krimsonCommandInstance);
+
+            // Register UI command if it exists
+            try {
+                PluginCommand uiCommand = plugin.getCommand("ui");
+                if (uiCommand != null) {
+                    Class<?> uiCommandClass = Class.forName("net.paulem.krimsontest.commands.UICommand");
+                    Object uiCommandInstance = uiCommandClass.getDeclaredConstructor().newInstance();
+                    uiCommand.setExecutor((CommandExecutor) uiCommandInstance);
+                }
+            } catch (ClassNotFoundException e) {
+                // UI command class not found - this is expected if the test plugin isn't using it
+                getLogger().fine("UI command class not found - skipping UI command registration");
+            } catch (Exception e) {
+                getLogger().warning("Failed to register UI command: " + e.getMessage());
+            }
+
             getLogger().info("Registered commands!");
         }
 
