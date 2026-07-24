@@ -47,8 +47,6 @@ public class ModelInteractionListener implements Listener {
         BlockDisplayModel model = Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
 
         model.playAnimationLoop(display.getWorld(), instanceId);
-
-        player.playSound(player.getLocation(), PluginSounds.TEST_SOUND.getSoundKey(), 1.0f, 1.0f);
     }
 
     // CLIC GAUCHE = SUPPRIMER LE MODÈLE
@@ -71,15 +69,8 @@ public class ModelInteractionListener implements Listener {
 
         event.setCancelled(true);
 
-        // Supprime toutes les entités partageant le même instance_id
-        for (Entity entity : display.getWorld().getEntities()) {
-            if (entity instanceof Display d) {
-                String otherInstanceId = d.getPersistentDataContainer().get(BlockDisplayModel.INSTANCE_KEY, PersistentDataType.STRING);
-                if (instanceId.equals(otherInstanceId)) {
-                    d.remove();
-                }
-            }
-        }
+        // Use the new method to remove model instance and stop animations/sounds
+        BlockDisplayModel.removeModelInstance(display.getWorld(), instanceId);
     }
 
     /**

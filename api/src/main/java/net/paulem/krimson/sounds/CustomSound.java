@@ -1,7 +1,9 @@
 package net.paulem.krimson.sounds;
 
+import lombok.Getter;
 import net.paulem.krimson.registry.RegistryKey;
 import org.bukkit.NamespacedKey;
+import org.bukkit.SoundCategory;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -14,18 +16,38 @@ import org.jetbrains.annotations.NotNull;
  * included in the generated resource pack.</p>
  */
 public class CustomSound implements RegistryKey<NamespacedKey> {
-
+    @Getter
     private final NamespacedKey key;
-    private final String soundCategory;
+    /**
+     * -- GETTER --
+     *  Gets the Minecraft sound category (record, master, music, weather, blocks, etc.).
+     */
+    @Getter
+    private final SoundCategory soundCategory;
+    /**
+     * -- GETTER --
+     *  Whether this sound should be streamed (true for long audio like music).
+     */
+    @Getter
     private final boolean stream;
+    /**
+     * -- GETTER --
+     *  Gets the default volume (0.0–1.0).
+     */
+    @Getter
     private final float volume;
+    /**
+     * -- GETTER --
+     *  Gets the default pitch (0.5–2.0).
+     */
+    @Getter
     private final float pitch;
 
     public CustomSound(NamespacedKey key) {
-        this(key, "record", true, 1.0f, 1.0f);
+        this(key, SoundCategory.RECORDS, true, 1.0f, 1.0f);
     }
 
-    public CustomSound(NamespacedKey key, String soundCategory, boolean stream, float volume, float pitch) {
+    public CustomSound(NamespacedKey key, SoundCategory soundCategory, boolean stream, float volume, float pitch) {
         this.key = key;
         this.soundCategory = soundCategory;
         this.stream = stream;
@@ -49,38 +71,5 @@ public class CustomSound implements RegistryKey<NamespacedKey> {
      */
     public String getSoundPath() {
         return key.getNamespace() + ":sounds/" + key.getKey();
-    }
-
-    /**
-     * Gets the Minecraft sound category (record, master, music, weather, blocks, etc.).
-     */
-    public String getSoundCategory() {
-        return soundCategory;
-    }
-
-    /**
-     * Whether this sound should be streamed (true for long audio like music).
-     */
-    public boolean isStream() {
-        return stream;
-    }
-
-    /**
-     * Gets the default volume (0.0–1.0).
-     */
-    public float getVolume() {
-        return volume;
-    }
-
-    /**
-     * Gets the default pitch (0.5–2.0).
-     */
-    public float getPitch() {
-        return pitch;
-    }
-
-    @Override
-    public @NotNull NamespacedKey getKey() {
-        return key;
     }
 }

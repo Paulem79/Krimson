@@ -23,6 +23,7 @@ import org.bukkit.entity.ItemDisplay.ItemDisplayTransform;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -46,6 +47,9 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
     @Getter
     private final Map<String, SoundAnimation> sounds = new HashMap<>();
+
+    // Track active animation tasks by instanceId
+    private static final Map<String, BukkitTask> activeAnimationTasks = new HashMap<>();
 
     @Getter
     private final Vector3f originOffset = new Vector3f(0, 0, 0);
@@ -80,7 +84,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
             // 2) Parser les animations
             if (!base.has("datapack")) {
-                KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Clé 'datapack' manquante pour le modèle " + key);
+                KrimsonPlugin.getInstance().getLogger().warning("Clé 'datapack' manquante pour le modèle " + key);
                 return;
             }
 
@@ -340,7 +344,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
         // Check if the requested animation exists
         if (!animations.containsKey(animationName)) {
-            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
+            KrimsonPlugin.getInstance().getLogger().warning("Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
             return;
         }
 
@@ -362,13 +366,17 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
         int maxTick = Collections.max(keyframes.keySet());
 
-        new BukkitRunnable() {
+        // Cancel any existing animation for this instance
+        cancelActiveAnimation(instanceId);
+
+        BukkitTask task = new BukkitRunnable() {
             int currentTick = 0;
 
             @Override
             public void run() {
                 if (currentTick > maxTick) {
                     cancel();
+                    activeAnimationTasks.remove(instanceId);
                     return;
                 }
 
@@ -404,6 +412,8 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
                 currentTick++;
             }
         }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
+
+        activeAnimationTasks.put(instanceId, task);
     }
 
     public void playAnimationLoop(World world, String instanceId, String animationName) {
@@ -411,7 +421,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
         // Check if the requested animation exists
         if (!animations.containsKey(animationName)) {
-            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
+            KrimsonPlugin.getInstance().getLogger().warning("Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
             return;
         }
 
@@ -433,7 +443,10 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
         int maxTick = Collections.max(keyframes.keySet());
 
-        new BukkitRunnable() {
+        // Cancel any existing animation for this instance
+        cancelActiveAnimation(instanceId);
+
+        BukkitTask task = new BukkitRunnable() {
             int currentTick = 0;
 
             @Override
@@ -473,6 +486,8 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
                 }
             }
         }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
+
+        activeAnimationTasks.put(instanceId, task);
     }
 
     private void playSound(World world, Location location, String soundCommand) {
@@ -481,7 +496,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         // Parse the sound command format: "playsound <sound> <source> <player> <x> <y> <z> <volume> <pitch>"
         String[] parts = soundCommand.split("\\s+");
         if (parts.length < 8) {
-            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Invalid sound command format: " + soundCommand);
+            KrimsonPlugin.getInstance().getLogger().warning("Invalid sound command format: " + soundCommand);
             return;
         }
 
@@ -503,10 +518,10 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
             // Play sound for all players (simplified - in real implementation you'd parse playerSelector)
             for (org.bukkit.entity.Player player : world.getPlayers()) {
-                player.playSound(new org.bukkit.Location(world, absX, absY, absZ), soundName, org.bukkit.SoundCategory.valueOf(source.toUpperCase()), volume, pitch);
+                player.playSound(new org.bukkit.Location(world, absX, absY, absZ), soundName, org.bukkit.SoundCategory.RECORDS, volume, pitch);
             }
         } catch (Exception e) {
-            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Error playing sound: " + e.getMessage());
+            KrimsonPlugin.getInstance().getLogger().warning("Error playing sound: " + e.getMessage());
         }
     }
 
@@ -521,6 +536,36 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         if (!animated || animations.isEmpty()) return;
 
         playAnimationLoop(world, instanceId, animations.keySet().stream().findFirst().orElseThrow());
+    }
+
+    /**
+     * Cancel any active animation task for the given instance
+     */
+    public static void cancelActiveAnimation(String instanceId) {
+        BukkitTask task = activeAnimationTasks.get(instanceId);
+        if (task != null) {
+            task.cancel();
+            activeAnimationTasks.remove(instanceId);
+        }
+    }
+
+    /**
+     * Remove all display entities associated with a model instance
+     * and cancel any active animations and sounds
+     */
+    public static void removeModelInstance(World world, String instanceId) {
+        // Cancel any active animations for this instance
+        cancelActiveAnimation(instanceId);
+
+        // Remove all entities sharing the same instance_id
+        for (Entity entity : world.getEntities()) {
+            if (entity instanceof Display display) {
+                String otherInstanceId = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
+                if (instanceId.equals(otherInstanceId)) {
+                    display.remove();
+                }
+            }
+        }
     }
 
     // --- UTILS PARSING ---

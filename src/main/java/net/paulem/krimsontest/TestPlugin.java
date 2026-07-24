@@ -54,6 +54,8 @@ public class TestPlugin extends KrimsonPlugin<TestPlugin> implements Listener {
 
     @EventHandler
     public void onPlayerSneak(PlayerToggleSneakEvent event) {
+        if(!event.isSneaking()) return;
+
         getLogger().info("Sneak!");
         Location location = event.getPlayer().getLocation();
         location.setPitch(0);
