@@ -5,7 +5,6 @@ import net.paulem.krimson.registry.RegistryKey;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Base class representing a custom UI element in the Krimson API.

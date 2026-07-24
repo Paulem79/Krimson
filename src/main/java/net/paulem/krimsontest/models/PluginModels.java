@@ -25,7 +25,7 @@ public class PluginModels {
     );
 
     public static void init() {
-        KrimsonPlugin.getInstance().getLogger().info("Registering items & models...");
+        KrimsonPlugin.getInstance().getLogger().info("Registering models...");
         Models.REGISTRY.freeze();
     }
 }
