@@ -31,7 +31,7 @@ public class UICommand implements CommandExecutor {
 
         if (type.equals("font")) {
             if (action.equals("show")) {
-                PluginUIs.FONT_MANA_BAR.displayBossBar(player, 0.75f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
+                PluginUIs.FONT_MANA_BAR.displayActionBar(player, 0.75f, BossBar.Color.WHITE, BossBar.Overlay.PROGRESS);
                 sender.sendMessage("Showing font-based mana bar!");
             } else if (action.equals("hide")) {
                 PluginUIs.FONT_MANA_BAR.hide(player);

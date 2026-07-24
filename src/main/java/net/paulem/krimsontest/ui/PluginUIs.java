@@ -22,10 +22,10 @@ public class PluginUIs {
                             key,
                             "krimson:mana_font",  // Custom font key
                             "",                  // Unicode private use character for background
-                            "Mana",                // Text to display
+                            "",                // Text to display
                             100,                   // Width of background texture
                             18,                    // Height of background texture
-                            -80                     // Ascent (vertical positioning)
+                            0                     // Ascent (vertical positioning)
                     )
             );
 

@@ -100,6 +100,16 @@ public class CustomFontUI extends CustomUI {
         player.showBossBar(this.bossBar);
     }
 
+    public void displayActionBar(Player player, float v, BossBar.Color color, BossBar.Overlay overlay) {
+        // Use Adventure API for proper component handling
+        Component component = Component.text()
+                .append(Component.text(backgroundCharacter).font(Key.key(fontKey)))
+                .append(Component.text(contentText).font(Key.key("default")))
+                .build();
+
+        player.sendActionBar(component);
+    }
+
     @Override
     public void hide(Player player) {
         player.resetTitle();
