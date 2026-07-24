@@ -372,6 +372,19 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
                     return;
                 }
 
+                // Play sounds for this tick
+                if (sounds.containsKey(animationName)) {
+                    SoundAnimation soundAnim = sounds.get(animationName);
+                    if (soundAnim.soundFrames().containsKey(currentTick)) {
+                        SoundFrame soundFrame = soundAnim.soundFrames().get(currentTick);
+                        // Find location from any display entity
+                        if (!entityMap.isEmpty()) {
+                            Display firstDisplay = entityMap.values().iterator().next();
+                            playSound(firstDisplay.getWorld(), firstDisplay.getLocation(), soundFrame.soundCommand());
+                        }
+                    }
+                }
+
                 List<AnimationFrame> frames = keyframes.get(currentTick);
                 if (frames != null) {
                     for (AnimationFrame frame : frames) {
@@ -425,6 +438,19 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
             @Override
             public void run() {
+                // Play sounds for this tick
+                if (sounds.containsKey(animationName)) {
+                    SoundAnimation soundAnim = sounds.get(animationName);
+                    if (soundAnim.soundFrames().containsKey(currentTick)) {
+                        SoundFrame soundFrame = soundAnim.soundFrames().get(currentTick);
+                        // Find location from any display entity
+                        if (!entityMap.isEmpty()) {
+                            Display firstDisplay = entityMap.values().iterator().next();
+                            playSound(firstDisplay.getWorld(), firstDisplay.getLocation(), soundFrame.soundCommand());
+                        }
+                    }
+                }
+
                 List<AnimationFrame> frames = keyframes.get(currentTick);
                 if (frames != null) {
                     for (AnimationFrame frame : frames) {
