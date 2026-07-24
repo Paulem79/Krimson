@@ -113,9 +113,34 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
                 animations.put(animName, keyframes);
             }
+
+            parseSoundKeyframes(datapack);
         } catch (Exception e) {
             KrimsonPlugin.getInstance().getLogger().severe("Erreur parsing JSON pour " + key + ": " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    private void parseSoundKeyframes(JsonObject datapack) {
+        if (!datapack.has("sound_keyframes")) return;
+
+        JsonObject soundKeyframes = datapack.getAsJsonObject("sound_keyframes");
+
+        // Parse all sound animation children (default, etc.)
+        for (Map.Entry<String, JsonElement> soundEntry : soundKeyframes.entrySet()) {
+            String animName = soundEntry.getKey();
+            JsonObject soundFrames = soundEntry.getValue().getAsJsonObject();
+
+            Map<Integer, SoundFrame> frames = new TreeMap<>();
+
+            for (Map.Entry<String, JsonElement> frameEntry : soundFrames.entrySet()) {
+                int tick = Integer.parseInt(frameEntry.getKey());
+                String soundCommand = frameEntry.getValue().getAsString();
+                frames.put(tick, new SoundFrame(tick, soundCommand));
+            }
+
+            // We'll set duration and step ticks later from meta
+            sounds.put(animName, new SoundAnimation(animName, frames, 0, 0));
         }
     }
 
