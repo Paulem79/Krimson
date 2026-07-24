@@ -45,6 +45,9 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
     private final Map<String, Map<Integer, List<AnimationFrame>>> animations = new HashMap<>();
 
     @Getter
+    private final Map<String, SoundAnimation> sounds = new HashMap<>();
+
+    @Getter
     private final Vector3f originOffset = new Vector3f(0, 0, 0);
 
     @Getter
@@ -533,4 +536,17 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
             return new DisplayPart(type, transformation, blockData, itemStack, ItemDisplayTransform.NONE);
         }
     }
+
+    // Sound data structures
+    public record SoundFrame(
+            int tick,
+            String soundCommand
+    ) {}
+
+    public record SoundAnimation(
+            String name,
+            Map<Integer, SoundFrame> soundFrames,
+            int durationTicks,
+            int stepTicks
+    ) {}
 }
