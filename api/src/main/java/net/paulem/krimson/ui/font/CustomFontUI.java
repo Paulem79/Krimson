@@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.paulem.krimson.ui.CustomUI;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -17,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
  * This allows creating custom GUIs by defining overly large characters that render
  * as background textures, which can be positioned using negative space characters.
  */
+@ApiStatus.Experimental
 public class CustomFontUI extends CustomUI {
     @Getter
     private final String fontKey;

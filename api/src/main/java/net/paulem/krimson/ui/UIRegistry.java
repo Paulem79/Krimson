@@ -3,6 +3,7 @@ package net.paulem.krimson.ui;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.registry.NewFrozenRegistry;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Function;
 
@@ -18,6 +19,7 @@ import java.util.function.Function;
  * public static final CustomBossBarUI MY_BOSSBAR = UIRegistry.registerUI("my_bossbar", CustomBossBarUI::new);
  * }</pre>
  */
+@ApiStatus.Experimental
 public class UIRegistry {
     public static final NewFrozenRegistry<CustomUI, NamespacedKey> REGISTRY = new NewFrozenRegistry<>();
 

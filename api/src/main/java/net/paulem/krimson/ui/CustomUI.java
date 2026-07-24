@@ -4,12 +4,14 @@ import lombok.Getter;
 import net.paulem.krimson.registry.RegistryKey;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Base class representing a custom UI element in the Krimson API.
  * Can be displayed as a bossbar, action bar, or title.
  */
+@ApiStatus.Experimental
 public abstract class CustomUI implements RegistryKey<NamespacedKey> {
     @Getter
     private final NamespacedKey key;
