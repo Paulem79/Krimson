@@ -1,18 +1,16 @@
 package net.paulem.krimson.resourcepack.creator
 
+import net.paulem.krimson.items.CustomBlockItem
+import net.paulem.krimson.items.Items
+import net.paulem.krimson.sounds.Sounds
+import net.paulem.krimson.ui.UIRegistry
+import net.paulem.krimson.ui.font.CustomFontUI
 import net.radstevee.packed.core.asset.impl.ResourceAssetResolutionStrategy
 import net.radstevee.packed.core.item.definition.BasicItem
 import net.radstevee.packed.core.item.definition.ItemDefinition
 import net.radstevee.packed.core.key.Key
 import net.radstevee.packed.core.pack.ResourcePack
 import net.radstevee.packed.core.pack.ResourcePackBuilder.Companion.resourcePack
-import net.paulem.krimson.items.CustomBlockItem
-import net.paulem.krimson.items.Items
-import net.paulem.krimson.sounds.Sounds
-import net.paulem.krimson.ui.UIRegistry
-import net.paulem.krimson.ui.bossbar.CustomBossBarUI
-import net.paulem.krimson.ui.actionbar.CustomActionBarUI
-import net.paulem.krimson.ui.title.CustomTitleUI
 import java.io.File
 
 fun createBlockModel(
@@ -64,10 +62,29 @@ fun main(dataFolder: File, packFormat: Int): File {
         }
     }
 
-    // UI textures are automatically handled by the asset resolution strategy
-    // when they exist in the resources at: assets/namespace/textures/gui/{key}.png
-    // No explicit texture addition is needed - packed copies them automatically
+    // Generate custom font definitions for font-based UIs
+    for (namespacedKey in UIRegistry.REGISTRY.keys()) {
+        val ui = UIRegistry.REGISTRY.getOrThrow(namespacedKey)
+        if (ui is CustomFontUI) {
+            // Add the font definition
+            // Font Key must match CustomFontUI.fontKey, which is e.g. "krimson:mana_font"
+            val fontKeyComponents = ui.fontKey.split(":")
+            val namespace = fontKeyComponents[0]
+            val value = fontKeyComponents[1]
 
+            pack.addFont {
+                key = Key(namespace, value)
+                bitmap {
+                    key = Key(ui.key.namespace, "gui/" + ui.key.key + ".png")
+                    height = ui.height.toDouble()
+                    ascent = ui.ascent.toDouble()
+                    chars = listOf(ui.backgroundCharacter)
+                }
+            }
+        }
+    }
+
+    // Save the resource pack - this triggers hook execution and file saves
     pack.save(deleteOld = true)
 
     pack.createZip(zipFile)

@@ -69,6 +69,7 @@ public abstract class CustomUI implements RegistryKey<NamespacedKey> {
     public enum UIType {
         BOSSBAR,
         ACTIONBAR,
-        TITLE
+        TITLE,
+        FONT
     }
 }

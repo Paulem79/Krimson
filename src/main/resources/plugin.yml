@@ -14,3 +14,6 @@ commands:
   krimson:
     description: General Krimson command
     usage: /krimson
+  ui:
+    description: Test UI elements
+    usage: /ui <type> [action]

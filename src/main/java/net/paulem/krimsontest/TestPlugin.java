@@ -8,11 +8,8 @@ import net.paulem.krimsontest.models.PluginModels;
 import net.paulem.krimsontest.sounds.PluginSounds;
 import net.paulem.krimsontest.ui.PluginUIs;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 
 public class TestPlugin extends KrimsonPlugin<TestPlugin> implements Listener {
@@ -69,27 +66,5 @@ public class TestPlugin extends KrimsonPlugin<TestPlugin> implements Listener {
         Location location = event.getPlayer().getLocation();
         location.setPitch(0);
         PluginModels.READING.spawn(location);
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        PluginUIs.MANA_BAR.display(player);
-        updateManaBar(player);
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        PluginUIs.MANA_BAR.hide(event.getPlayer());
-    }
-
-    public void updateManaBar(Player player) {
-        // Get player's mana (from your mana system)
-        int currentMana = 20;
-        int maxMana = 30;
-
-        // Update the mana bar
-        PluginUIs.MANA_BAR.setProgress((double) currentMana / maxMana);
-        PluginUIs.MANA_BAR.updateText(String.format("✎ %d/%d Mana", currentMana, maxMana));
     }
 }

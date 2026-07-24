@@ -2,11 +2,6 @@ package net.paulem.krimsontest.ui;
 
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.ui.UIRegistry;
-import net.paulem.krimson.ui.bossbar.CustomBossBarUI;
-import net.paulem.krimson.ui.actionbar.CustomActionBarUI;
-import net.paulem.krimson.ui.title.CustomTitleUI;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
 
 /**
  * Test plugin UIs — mirrors the pattern of
@@ -20,17 +15,19 @@ public class PluginUIs {
         /* This utility class should not be instantiated */
     }
 
-    public static final CustomBossBarUI MANA_BAR = UIRegistry.registerUI("mana_bar", key ->
-            new CustomBossBarUI(
-                    key,
-                    "Mana: 100/100",  // Initial text
-                    BarColor.BLUE,     // Blue color for mana
-                    BarStyle.SEGMENTED_10,  // 10 segments
-                    true,              // Use negative space font
-                    "krimson:spaces",  // Negative space font key
-                    true               // Enable custom texture
+    // Font-based mana bar using large background texture (Nova-style approach)
+    public static final net.paulem.krimson.ui.font.CustomFontUI FONT_MANA_BAR =
+        UIRegistry.registerUI("font_mana_bar", key ->
+            new net.paulem.krimson.ui.font.CustomFontUI(
+                key,
+                "krimson:mana_font",  // Custom font key
+                "",                  // Unicode private use character for background
+                "Mana",                // Text to display
+                100,                   // Width of background texture
+                18,                    // Height of background texture
+                -80                     // Ascent (vertical positioning)
             )
-    );
+        );
 
     public static void init() {
         KrimsonPlugin.getInstance().getLogger().info("Registering UIs...");
