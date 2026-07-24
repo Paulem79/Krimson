@@ -8,6 +8,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.registry.RegistryKey;
+import net.paulem.krimson.utils.JsonLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -41,7 +42,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
     private final Map<String, DisplayPart> parts = new LinkedHashMap<>();
 
     @Getter
-    private final Map<Integer, List<AnimationFrame>> keyframes = new TreeMap<>();
+    private final Map<String, Map<Integer, List<AnimationFrame>>> animations = new HashMap<>();
 
     @Getter
     private final Vector3f originOffset = new Vector3f(0, 0, 0);
@@ -57,9 +58,10 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
     }
 
     // Constructeur JSON (Modèle + Animation)
-    public BlockDisplayModel(NamespacedKey key, JsonObject json) {
+    public BlockDisplayModel(NamespacedKey key) {
         this.key = key;
         this.animated = true;
+        JsonObject json = JsonLoader.loadJson("assets/" + key.getNamespace() + "/models/" + key.getKey() + ".json");
         parseJson(json);
     }
 
@@ -83,23 +85,30 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
             if (!datapack.has("anim_keyframes")) return;
 
             JsonObject animKeyframes = datapack.getAsJsonObject("anim_keyframes");
-            if (!animKeyframes.has("default")) return;
 
-            JsonObject defaultFrames = animKeyframes.getAsJsonObject("default");
+            // Parse all animation children (default, open, etc.)
+            for (Map.Entry<String, JsonElement> animEntry : animKeyframes.entrySet()) {
+                String animName = animEntry.getKey();
+                JsonObject animFrames = animEntry.getValue().getAsJsonObject();
 
-            for (Map.Entry<String, JsonElement> entry : defaultFrames.entrySet()) {
-                int tick = Integer.parseInt(entry.getKey());
-                JsonArray commands = entry.getValue().getAsJsonArray();
+                Map<Integer, List<AnimationFrame>> keyframes = new TreeMap<>();
 
-                List<AnimationFrame> frames = new ArrayList<>();
-                for (JsonElement cmdElem : commands) {
-                    String cmd = cmdElem.getAsString();
-                    AnimationFrame frame = parseCommandFrame(cmd);
-                    if (frame != null) {
-                        frames.add(frame);
+                for (Map.Entry<String, JsonElement> frameEntry : animFrames.entrySet()) {
+                    int tick = Integer.parseInt(frameEntry.getKey());
+                    JsonArray commands = frameEntry.getValue().getAsJsonArray();
+
+                    List<AnimationFrame> frames = new ArrayList<>();
+                    for (JsonElement cmdElem : commands) {
+                        String cmd = cmdElem.getAsString();
+                        AnimationFrame frame = parseCommandFrame(cmd);
+                        if (frame != null) {
+                            frames.add(frame);
+                        }
                     }
+                    keyframes.put(tick, frames);
                 }
-                keyframes.put(tick, frames);
+
+                animations.put(animName, keyframes);
             }
         } catch (Exception e) {
             KrimsonPlugin.getInstance().getLogger().severe("Erreur parsing JSON pour " + key + ": " + e.getMessage());
@@ -265,8 +274,21 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
     // --- ANIMATION ENGINE ---
 
-    public void playAnimation(World world, String instanceId) {
-        if (!animated || keyframes.isEmpty()) return;
+    public Set<String> getAvailableAnimations() {
+        return animations.keySet();
+    }
+
+    public void playAnimation(World world, String instanceId, String animationName) {
+        if (!animated || animations.isEmpty()) return;
+
+        // Check if the requested animation exists
+        if (!animations.containsKey(animationName)) {
+            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
+            return;
+        }
+
+        Map<Integer, List<AnimationFrame>> keyframes = animations.get(animationName);
+        if (keyframes.isEmpty()) return;
 
         Map<String, Display> entityMap = new HashMap<>();
         for (Entity entity : world.getEntities()) {
@@ -314,8 +336,17 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
     }
 
-    public void playAnimationLoop(World world, String instanceId) {
-        if (!animated || keyframes.isEmpty()) return;
+    public void playAnimationLoop(World world, String instanceId, String animationName) {
+        if (!animated || animations.isEmpty()) return;
+
+        // Check if the requested animation exists
+        if (!animations.containsKey(animationName)) {
+            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
+            return;
+        }
+
+        Map<Integer, List<AnimationFrame>> keyframes = animations.get(animationName);
+        if (keyframes.isEmpty()) return;
 
         Map<String, Display> entityMap = new HashMap<>();
         for (Entity entity : world.getEntities()) {
@@ -359,6 +390,19 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
                 }
             }
         }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
+    }
+
+    // Get the first animation available and play it
+    public void playAnimation(World world, String instanceId) {
+        if (!animated || animations.isEmpty()) return;
+
+        playAnimation(world, instanceId, animations.keySet().stream().findFirst().orElseThrow());
+    }
+
+    public void playAnimationLoop(World world, String instanceId) {
+        if (!animated || animations.isEmpty()) return;
+
+        playAnimationLoop(world, instanceId, animations.keySet().stream().findFirst().orElseThrow());
     }
 
     // --- UTILS PARSING ---

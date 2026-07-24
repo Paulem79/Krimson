@@ -89,6 +89,7 @@ public class ResourcePackHosting implements Listener {
         }
 
         Player player = event.getPlayer();
+        // TODO: Make viaversion optional here
         ProtocolVersion version = KrimsonPlugin.getViaAPI().getPlayerProtocolVersion(player);
         Set<String> includedVersions = version.getIncludedVersions();
 

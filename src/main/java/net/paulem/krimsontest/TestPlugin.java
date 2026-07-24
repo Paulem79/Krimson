@@ -57,6 +57,6 @@ public class TestPlugin extends KrimsonPlugin<TestPlugin> implements Listener {
         getLogger().info("Sneak!");
         Location location = event.getPlayer().getLocation();
         location.setPitch(0);
-        PluginModels.ANIMATED_MODEL.spawn(location);
+        PluginModels.READING.spawn(location);
     }
 }
