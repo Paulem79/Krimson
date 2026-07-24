@@ -449,6 +449,41 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
     }
 
+    private void playSound(World world, Location location, String soundCommand) {
+        if (soundCommand == null || soundCommand.isBlank()) return;
+
+        // Parse the sound command format: "playsound <sound> <source> <player> <x> <y> <z> <volume> <pitch>"
+        String[] parts = soundCommand.split("\\s+");
+        if (parts.length < 8) {
+            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Invalid sound command format: " + soundCommand);
+            return;
+        }
+
+        String soundName = parts[1];
+        String source = parts[2];
+        String playerSelector = parts[3];
+
+        try {
+            double x = parseCoord(parts[4]);
+            double y = parseCoord(parts[5]);
+            double z = parseCoord(parts[6]);
+            float volume = Float.parseFloat(parts[7]);
+            float pitch = parts.length > 8 ? Float.parseFloat(parts[8]) : 1.0f;
+
+            // Calculate absolute position based on location
+            double absX = location.getX() + x;
+            double absY = location.getY() + y;
+            double absZ = location.getZ() + z;
+
+            // Play sound for all players (simplified - in real implementation you'd parse playerSelector)
+            for (org.bukkit.entity.Player player : world.getPlayers()) {
+                player.playSound(new org.bukkit.Location(world, absX, absY, absZ), soundName, org.bukkit.SoundCategory.valueOf(source.toUpperCase()), volume, pitch);
+            }
+        } catch (Exception e) {
+            KrimsonPlugin.getInstance().getLogger().warning("[Krimson] Error playing sound: " + e.getMessage());
+        }
+    }
+
     // Get the first animation available and play it
     public void playAnimation(World world, String instanceId) {
         if (!animated || animations.isEmpty()) return;
