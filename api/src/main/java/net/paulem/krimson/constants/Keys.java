@@ -24,4 +24,8 @@ public final class Keys {
 
     // Light
     public static final DataKey<Integer, Integer> EMITTING_LIGHT_LEVEL = new DataKey<>("emitting_light_level", PersistentDataType.INTEGER);
+
+    // Entities
+    public static final DataKey<String, String> MODEL_KEY = new DataKey<>("model_key", PersistentDataType.STRING);
+    public static final DataKey<String, String> ENTITY_TYPE = new DataKey<>("entity_type", PersistentDataType.STRING);
 }

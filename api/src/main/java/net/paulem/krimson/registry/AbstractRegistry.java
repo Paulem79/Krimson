@@ -275,4 +275,9 @@ public abstract class AbstractRegistry<T extends RegistryKey<K>, K> implements R
     public Set<K> keys() {
         return registry.keySet();
     }
+
+    @Override
+    public boolean containsKey(K modelKey) {
+        return registry.containsKey(modelKey);
+    }
 }

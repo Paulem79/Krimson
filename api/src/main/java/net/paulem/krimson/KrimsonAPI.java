@@ -1,6 +1,7 @@
 package net.paulem.krimson;
 
 import com.jeff_media.customblockdata.CustomBlockData;
+import net.paulem.krimson.entities.CustomEntityTracker;
 import net.paulem.krimson.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -30,6 +31,7 @@ import java.util.logging.Logger;
 public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
     public static ResourcePackHosting packHosting;
     public static CustomBlockTracker customBlocks;
+    public static CustomEntityTracker customEntities;
 
     /**
      * Checks if the given block is a custom block.
@@ -57,12 +59,14 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         getLogger().info("Hello from Krimson API!");
 
         customBlocks = new CustomBlockTracker();
+        customEntities = new CustomEntityTracker();
         getLogger().info("Scheduled ticking!");
 
         plugin.initItems();
         plugin.initBlocks();
         plugin.initModels();
         plugin.initSounds();
+        plugin.initEntities();
 
         // Events
         PluginManager pluginManager = Bukkit.getPluginManager();
@@ -92,6 +96,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
 
     public void stop() {
         packHosting.stop();
+        customEntities.stop();
 
         getLogger().info("Goodbye from Krimson API!");
     }

@@ -307,4 +307,6 @@ public interface Registry<T extends RegistryKey<K>, K> {
      * @since 1.0.0-SNAPSHOT
      */
     Set<K> keys();
+
+    boolean containsKey(K modelKey);
 }

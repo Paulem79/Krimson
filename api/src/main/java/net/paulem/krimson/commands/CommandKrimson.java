@@ -8,6 +8,8 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import net.paulem.krimson.KrimsonAPI;
+import net.paulem.krimson.entities.Entities;
+import net.paulem.krimson.entities.custom.CustomEntity;
 import net.paulem.krimson.items.CustomBlockItem;
 import net.paulem.krimson.items.CustomItem;
 import net.paulem.krimson.items.Items;
@@ -31,6 +33,24 @@ public class CommandKrimson implements TabExecutor {
         }
 
         return customItem;
+    }
+
+    @Nullable
+    public static CustomEntity getEntity(CommandSender sender, String[] args) {
+        String entityKey = args[1];
+        NamespacedKey key = NamespacedKey.fromString(entityKey);
+        if (key == null) {
+            sender.sendMessage("§cClé d'entité invalide: " + entityKey);
+            return null;
+        }
+        CustomEntity customEntity = Entities.REGISTRY.getOrNull(key);
+
+        if (customEntity == null) {
+            sender.sendMessage("§cEntité non trouvée: " + entityKey);
+            return null;
+        }
+
+        return customEntity;
     }
 
     @Override
@@ -100,6 +120,24 @@ public class CommandKrimson implements TabExecutor {
                                 " - Total: " + KrimsonAPI.customBlocks.getLastTickedCount().values().stream().mapToInt(Integer::intValue).sum() + "\n");
                 case "chunk" ->
                         sender.sendMessage(player.getLocation().getChunk().getPersistentDataContainer().getKeys().toString());
+                case "spawn" -> {
+                    if (args.length < 2) {
+                        sender.sendMessage("§cUsage: /krimson spawn <entity>");
+                        return true;
+                    }
+
+                    CustomEntity entity = getEntity(sender, args);
+
+                    if (entity == null) {
+                        return true; // Entity not found, error message already sent
+                    }
+
+                    // Spawn the entity at the player's location
+                    entity.copyOf().spawn(player.getLocation());
+                    sender.sendMessage("§aEntité spawnée: " + entity.getKey());
+                }
+                case "entities" ->
+                        sender.sendMessage("Il y a " + KrimsonAPI.customEntities.getAllEntities().size() + " entités custom chargées.");
                 default -> sender.sendMessage("§cSous-commande inconnue: " + subCommand);
             }
             return true;
@@ -110,9 +148,12 @@ public class CommandKrimson implements TabExecutor {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 2) {
-            return Items.REGISTRY.keys().parallelStream().map(NamespacedKey::toString).toList();
-        } else {
-            return List.of("give", "fill", "count", "chunk");
+            if (args[0].equalsIgnoreCase("give") || args[0].equalsIgnoreCase("fill")) {
+                return Items.REGISTRY.keys().parallelStream().map(NamespacedKey::toString).toList();
+            } else if (args[0].equalsIgnoreCase("spawn")) {
+                return Entities.REGISTRY.keys().parallelStream().map(NamespacedKey::toString).toList();
+            }
         }
+        return List.of("give", "fill", "count", "chunk", "spawn", "entities");
     }
 }

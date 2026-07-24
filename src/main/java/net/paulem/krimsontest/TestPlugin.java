@@ -3,6 +3,7 @@ package net.paulem.krimsontest;
 import net.paulem.krimson.KrimsonAPI;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimsontest.blocks.PluginBlocks;
+import net.paulem.krimsontest.entities.PluginEntities;
 import net.paulem.krimsontest.items.PluginItems;
 import net.paulem.krimsontest.models.PluginModels;
 import net.paulem.krimsontest.sounds.PluginSounds;
@@ -50,6 +51,11 @@ public class TestPlugin extends KrimsonPlugin<TestPlugin> implements Listener {
     @Override
     public void initSounds() {
         PluginSounds.init();
+    }
+
+    @Override
+    public void initEntities() {
+        PluginEntities.init();
     }
 
     @EventHandler

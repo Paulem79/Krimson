@@ -1,6 +1,7 @@
 package net.paulem.krimson.blocks.custom;
 
 import com.google.common.base.Preconditions;
+import com.jeff_media.customblockdata.CustomBlockData;
 import lombok.Getter;
 import lombok.Setter;
 import net.paulem.krimson.KrimsonPlugin;
@@ -345,9 +346,9 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
 
         block.setType(Material.AIR);
 
-        getProperties().getContainer().getContainer().clear();
+        getProperties().getContainer().clear();
 
-        Block pdcBlock = getProperties().getContainer().getContainer().getBlock();
+        Block pdcBlock = ((CustomBlockData) getProperties().getContainer().getContainer()).getBlock();
         if (pdcBlock != null) {
             pdcBlock.getChunk().getPersistentDataContainer().remove(PersistentDataUtils.getKey(KrimsonPlugin.getInstance(), pdcBlock));
         }
