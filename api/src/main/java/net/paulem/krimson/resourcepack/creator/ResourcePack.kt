@@ -3,7 +3,7 @@ package net.paulem.krimson.resourcepack.creator
 import com.google.gson.GsonBuilder
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.Items
-import net.paulem.krimson.models.blockbench.old.BBModelAssets
+import net.paulem.krimson.models.blockbench.model.BlockbenchModelAssets
 import net.paulem.krimson.sounds.Sounds
 import net.paulem.krimson.ui.UIRegistry
 import net.paulem.krimson.ui.font.CustomFontUI
@@ -59,7 +59,7 @@ fun mergeBasePack(targetDir: File) {
 }
 
 fun addBBModelAssets(outputDir: File, modelKey: String) {
-    val assets = BBModelAssets.REGISTRY[modelKey] ?: return
+    val assets = BlockbenchModelAssets.REGISTRY[modelKey] ?: return
 
     val texturesDir = File(outputDir, "assets/krimson/textures/block")
     texturesDir.mkdirs()
@@ -163,7 +163,7 @@ fun main(dataFolder: File, packFormat: Int): File {
     mergeBasePack(tmpDir)
 
     // 2. Génération des assets BBModel après save() pour éviter qu'ils ne soient supprimés
-    for (modelKey in BBModelAssets.REGISTRY.keys) {
+    for (modelKey in BlockbenchModelAssets.REGISTRY.keys) {
         addBBModelAssets(tmpDir, modelKey)
     }
 

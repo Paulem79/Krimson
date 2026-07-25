@@ -38,6 +38,18 @@ public final class RigManifest {
         return parts.size();
     }
 
+    /**
+     * Builds a manifest directly from already-computed parts — how the manifest is
+     * produced now that it's generated from the {@code .bbmodel} at runtime instead of
+     * being read from a {@code rig.json} written by an offline tool.
+     */
+    public static RigManifest of(List<RigPart> parts) throws IOException {
+        if (parts.isEmpty()) {
+            throw new IOException("no rig parts were baked from the model");
+        }
+        return new RigManifest(new ArrayList<>(parts));
+    }
+
     public static RigManifest load(InputStream input) throws IOException {
         try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();

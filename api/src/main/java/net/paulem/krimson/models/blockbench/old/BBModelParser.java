@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.paulem.krimson.models.BDEngineModel;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 /**
  * Parse un fichier .bbmodel brut (export Blockbench natif, PAS le JSON exporté
- * par le plugin BDEngine que {@link net.paulem.krimson.models.BlockDisplayModel}
+ * par le plugin BDEngine que {@link BDEngineModel}
  * consommait jusqu'ici).
  * <p>
  * Hypothèses faites sur le format (vérifiées sur l'extrait fourni) :
