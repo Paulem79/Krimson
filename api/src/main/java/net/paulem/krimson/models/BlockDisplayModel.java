@@ -7,7 +7,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.paulem.krimson.KrimsonPlugin;
-import net.paulem.krimson.registry.RegistryKey;
 import net.paulem.krimson.utils.JsonLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -31,7 +30,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
+public class BlockDisplayModel implements Model<Display> {
     public static final NamespacedKey INSTANCE_KEY = new NamespacedKey("krimson", "model_instance_id");
     public static final NamespacedKey MODEL_KEY = new NamespacedKey("krimson", "model_key");
     public static final NamespacedKey PART_KEY = new NamespacedKey("krimson", "model_part_tag");

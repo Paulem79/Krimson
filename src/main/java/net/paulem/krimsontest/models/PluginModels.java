@@ -1,6 +1,7 @@
 package net.paulem.krimsontest.models;
 
 import net.paulem.krimson.KrimsonPlugin;
+import net.paulem.krimson.models.BbModel;
 import net.paulem.krimson.models.BlockDisplayModel;
 import net.paulem.krimson.models.Models;
 
@@ -22,6 +23,10 @@ public class PluginModels {
 
     public static final BlockDisplayModel READING = Models.registerModel("reading",
             BlockDisplayModel::new
+    );
+
+    public static final BbModel THE_WORLD = Models.registerModel("the_world",
+            BbModel::new
     );
 
     public static void init() {

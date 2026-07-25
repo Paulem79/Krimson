@@ -1,6 +1,7 @@
 package net.paulem.krimsontest;
 
 import net.paulem.krimson.models.BlockDisplayModel;
+import net.paulem.krimson.models.Model;
 import net.paulem.krimson.models.Models;
 import net.paulem.krimsontest.sounds.PluginSounds;
 import org.bukkit.Location;
@@ -44,9 +45,9 @@ public class ModelInteractionListener implements Listener {
 
         if (modelKeyStr == null || instanceId == null) return;
 
-        BlockDisplayModel model = Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
+        Model<?> model = Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
 
-        model.playAnimationLoop(display.getWorld(), instanceId);
+        model.playAnimation(display.getWorld(), instanceId, "default");
     }
 
     // CLIC GAUCHE = SUPPRIMER LE MODÈLE
