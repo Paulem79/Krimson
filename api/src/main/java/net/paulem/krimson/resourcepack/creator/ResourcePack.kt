@@ -1,7 +1,9 @@
 package net.paulem.krimson.resourcepack.creator
 
+import com.google.gson.GsonBuilder
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.Items
+import net.paulem.krimson.models.bbmodel.BBModelAssets
 import net.paulem.krimson.sounds.Sounds
 import net.paulem.krimson.ui.UIRegistry
 import net.paulem.krimson.ui.font.CustomFontUI
@@ -12,6 +14,36 @@ import net.radstevee.packed.core.key.Key
 import net.radstevee.packed.core.pack.ResourcePack
 import net.radstevee.packed.core.pack.ResourcePackBuilder.Companion.resourcePack
 import java.io.File
+
+private val prettyGson = GsonBuilder().setPrettyPrinting().create()
+
+/**
+ * Écrit dans le dossier de sortie du pack :
+ * - assets/krimson/textures/<baseName>.png
+ * - assets/krimson/items/<modelKeySuffix>.json  (un par bone)
+ *
+ * À appeler dans main() de ce fichier, juste avant `pack.save(deleteOld = true)`,
+ * pour chaque modèle bbmodel enregistré :
+ *
+ *     for ((modelKey, _) in BBModelAssets.REGISTRY) {
+ *         addBBModelAssets(tmpDir, modelKey)
+ *     }
+ */
+fun addBBModelAssets(outputDir: File, modelKey: String) {
+    val assets = BBModelAssets.REGISTRY[modelKey] ?: return
+
+    val texturesDir = File(outputDir, "assets/krimson/textures")
+    texturesDir.mkdirs()
+    for ((textureName, pngBytes) in assets.textures) {
+        File(texturesDir, "$textureName.png").writeBytes(pngBytes)
+    }
+
+    val itemsDir = File(outputDir, "assets/krimson/items")
+    itemsDir.mkdirs()
+    for ((modelKeySuffix, itemModelJson) in assets.itemModels) {
+        File(itemsDir, "$modelKeySuffix.json").writeText(prettyGson.toJson(itemModelJson))
+    }
+}
 
 fun createBlockModel(
     pack: ResourcePack,
@@ -83,6 +115,11 @@ fun main(dataFolder: File, packFormat: Int): File {
             }
         }
     }
+
+    for (modelKey in BBModelAssets.REGISTRY.keys) {
+        addBBModelAssets(tmpDir, modelKey)
+    }
+
 
     // Save the resource pack - this triggers hook execution and file saves
     pack.save(deleteOld = true)

@@ -26,6 +26,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import net.paulem.krimson.models.bbmodel.*;
+import java.io.File;
+import java.util.stream.Collectors;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -71,6 +74,76 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         JsonObject json = JsonLoader.loadJson("assets/" + key.getNamespace() + "/models/" + key.getKey() + ".json");
         parseJson(json);
     }
+
+    // Constructeur .bbmodel brut (parsing + bake direct, sans passer par BDEngine)
+    public BlockDisplayModel(NamespacedKey key, File bbmodelFile) {
+        this.key = key;
+        this.animated = true;
+
+        try {
+            BBModelParser.ParsedBBModel parsed = BBModelParser.parse(bbmodelFile);
+            String baseName = key.getKey();
+
+            // --- 1. Bind pose : une DisplayPart (ITEM) par bone avec géométrie ---
+            List<BBModelBaker.BakedPart> bakedParts = BBModelBaker.bakeBindPose(parsed, baseName);
+
+            BBModelAssets.ModelAssets assets = new BBModelAssets.ModelAssets();
+            // une seule texture supportée en V1 (index 0) ; si le bbmodel en a
+            // plusieurs, la 1ère est utilisée pour toutes les faces - à étendre si besoin
+            if (!parsed.textures.isEmpty()) {
+                assets.textures.put(baseName, parsed.textures.get(0).pngBytes);
+            }
+
+            for (BBModelBaker.BakedPart part : bakedParts) {
+                assets.itemModels.put(part.modelKeySuffix, part.itemModelJson);
+
+                NamespacedKey itemModelKey = new NamespacedKey(key.getNamespace(), "items/" + part.modelKeySuffix);
+                ItemStack displayItem = BBModelBaker.buildDisplayItem(itemModelKey);
+
+                DisplayPart displayPart = new DisplayPart(
+                        DisplayType.ITEM,
+                        part.bindTransform,
+                        null,
+                        displayItem,
+                        ItemDisplayTransform.NONE
+                );
+                parts.put(part.tag, displayPart);
+            }
+
+            BBModelAssets.register(key.toString(), assets);
+
+            // --- 2. Animations : converties au format Map<String, Map<Integer, List<AnimationFrame>>> existant ---
+            Map<String, Map<Integer, List<BBModelBaker.BakedFrame>>> baked = BBModelBaker.bakeAnimations(parsed);
+            for (Map.Entry<String, Map<Integer, List<BBModelBaker.BakedFrame>>> animEntry : baked.entrySet()) {
+                Map<Integer, List<AnimationFrame>> ticks = new TreeMap<>();
+                for (Map.Entry<Integer, List<BBModelBaker.BakedFrame>> tickEntry : animEntry.getValue().entrySet()) {
+                    List<AnimationFrame> frames = tickEntry.getValue().stream()
+                            .map(f -> new AnimationFrame(f.boneTag(), DisplayType.ITEM, f.transformation(), 1, null, null))
+                            .collect(Collectors.toList());
+                    ticks.put(tickEntry.getKey(), frames);
+                }
+                animations.put(animEntry.getKey(), ticks);
+            }
+
+            KrimsonPlugin.getInstance().getLogger().info(
+                    "Modèle bbmodel '" + key + "' chargé : " + bakedParts.size() + " bones, "
+                            + animations.size() + " animation(s).");
+        } catch (Exception e) {
+            KrimsonPlugin.getInstance().getLogger().severe("Erreur chargement bbmodel " + key + " : " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+// ============================================================================
+// NOTE sur AnimationFrame.duration = 1 :
+// Le player d'animation existant (playAnimation/playAnimationLoop) avance
+// tick par tick et applique interpolation_duration = frame.duration() à
+// chaque tick. Comme le bake ci-dessus resample DÉJÀ à 20 samples/seconde
+// (une frame par tick), duration=1 donne une interpolation fluide sans à-coups.
+// Si tu veux économiser des paquets réseau (moins de setTransformationMatrix),
+// tu peux sous-échantillonner (ex: 1 keyframe/2 ticks avec duration=2) — dis-le
+// moi si tu veux que j'ajoute une option de "simplification" des keyframes.
+// ============================================================================
 
     // --- PARSING JSON ---
 
