@@ -1,4 +1,4 @@
-package net.paulem.krimson.models.bbmodel;
+package net.paulem.krimson.models.blockbench.old;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

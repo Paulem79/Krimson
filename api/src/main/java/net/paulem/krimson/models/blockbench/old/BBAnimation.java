@@ -1,4 +1,4 @@
-package net.paulem.krimson.models.bbmodel;
+package net.paulem.krimson.models.blockbench.old;
 
 import java.util.ArrayList;
 import java.util.Collections;

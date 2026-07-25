@@ -1,6 +1,7 @@
 package net.paulem.krimson;
 
 import com.jeff_media.customblockdata.CustomBlockData;
+import net.paulem.krimson.commands.StandCommand;
 import net.paulem.krimson.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -82,6 +83,11 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
             CommandKrimson krimsonCommandInstance = new CommandKrimson();
             krimsonCommand.setExecutor(krimsonCommandInstance);
             krimsonCommand.setTabCompleter(krimsonCommandInstance);
+
+            PluginCommand standCommand = plugin.getCommand("stand");
+            StandCommand standCommandInstance = new StandCommand(plugin);
+            standCommand.setExecutor(standCommandInstance);
+            standCommand.setTabCompleter(standCommandInstance);
 
             // Register UI command if it exists
             try {

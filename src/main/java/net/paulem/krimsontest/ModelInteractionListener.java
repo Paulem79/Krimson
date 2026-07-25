@@ -44,7 +44,7 @@ public class ModelInteractionListener implements Listener {
 
         if (modelKeyStr == null || instanceId == null) return;
 
-        BlockDisplayModel model = Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
+        BlockDisplayModel model = (BlockDisplayModel) Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
 
         model.playAnimationLoop(display.getWorld(), instanceId);
     }

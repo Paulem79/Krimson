@@ -3,7 +3,7 @@ package net.paulem.krimson.resourcepack.creator
 import com.google.gson.GsonBuilder
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.Items
-import net.paulem.krimson.models.bbmodel.BBModelAssets
+import net.paulem.krimson.models.blockbench.old.BBModelAssets
 import net.paulem.krimson.sounds.Sounds
 import net.paulem.krimson.ui.UIRegistry
 import net.paulem.krimson.ui.font.CustomFontUI
@@ -14,35 +14,53 @@ import net.radstevee.packed.core.key.Key
 import net.radstevee.packed.core.pack.ResourcePack
 import net.radstevee.packed.core.pack.ResourcePackBuilder.Companion.resourcePack
 import java.io.File
+import java.io.InputStream
+import java.util.zip.ZipInputStream
 
 private val prettyGson = GsonBuilder().setPrettyPrinting().create()
 
 /**
- * Écrit dans le dossier de sortie du pack, format resource-pack 46+ (MC 1.21.4+,
- * système "Client Item" à 2 niveaux introduit par le rework item_model) :
- *
- * - assets/krimson/textures/<baseName>.png
- * - assets/krimson/models/item/<modelKeySuffix>.json   -> géométrie brute
- *   (parent/textures/elements), ce qu'on générait déjà avant.
- * - assets/krimson/items/<modelKeySuffix>.json         -> définition "Client Item",
- *   c'est CE fichier que le composant item_model de l'ItemStack référence. Il ne
- *   doit PAS contenir la géométrie directement : Minecraft s'attend à y trouver
- *   un objet "model" typé (ex: {"model":{"type":"minecraft:model","model":"..."}}),
- *   sinon erreur au chargement : "No key model in MapLike[...]".
- *
- * Avant ce fix, on écrivait la géométrie brute directement sous assets/krimson/items/,
- * ce qui produisait exactement cette erreur et empêchait le pack de charger les
- * modèles (donc les textures ne s'appliquaient jamais, l'item restait en fallback).
- *
- * À appeler dans main() de ce fichier, juste APRES `pack.save(deleteOld = true)`
- * et avant `pack.createZip(zipFile)` (pour ne pas se faire effacer par le save()).
+ * Extrait et fusionne le contenu de `resources/pack.zip` dans le dossier cible (`tmpDir`).
+ * Cherche d'abord dans les ressources du JAR (/pack.zip ou /resources/pack.zip), puis sur le disque.
  */
+fun mergeBasePack(targetDir: File) {
+    val stream: InputStream = object {}.javaClass.getResourceAsStream("/pack.zip")
+        ?: object {}.javaClass.getResourceAsStream("/resources/pack.zip")
+        ?: File("resources/pack.zip").takeIf { it.exists() }?.inputStream()
+        ?: return
+
+    ZipInputStream(stream).use { zip ->
+        var entry = zip.nextEntry
+        while (entry != null) {
+            val targetFile = File(targetDir, entry.name)
+
+            // Sécurité contre la vulnérabilité Zip Slip
+            if (!targetFile.canonicalPath.startsWith(targetDir.canonicalPath + File.separator)) {
+                zip.closeEntry()
+                entry = zip.nextEntry
+                continue
+            }
+
+            if (entry.isDirectory) {
+                targetFile.mkdirs()
+            } else {
+                targetFile.parentFile.mkdirs()
+                // N'écrase pas un fichier si le runtime l'a déjà généré (priorité au dynamique)
+                if (!targetFile.exists()) {
+                    targetFile.outputStream().use { output ->
+                        zip.copyTo(output)
+                    }
+                }
+            }
+            zip.closeEntry()
+            entry = zip.nextEntry
+        }
+    }
+}
+
 fun addBBModelAssets(outputDir: File, modelKey: String) {
     val assets = BBModelAssets.REGISTRY[modelKey] ?: return
 
-    // "block/" requis pour que l'atlas des blocs stitch ces textures (cf.
-    // référence "krimson:block/<key>" générée dans BBModelBaker) — même
-    // convention que le reste du pack (createBlockModel / test_block).
     val texturesDir = File(outputDir, "assets/krimson/textures/block")
     texturesDir.mkdirs()
     for ((textureName, pngBytes) in assets.textures) {
@@ -55,11 +73,8 @@ fun addBBModelAssets(outputDir: File, modelKey: String) {
     definitionsDir.mkdirs()
 
     for ((modelKeySuffix, itemModelJson) in assets.itemModels) {
-        // 1) la géométrie réelle (parent/textures/elements), inchangée
         File(geometryDir, "$modelKeySuffix.json").writeText(prettyGson.toJson(itemModelJson))
 
-        // 2) le "Client Item" qui pointe dessus - c'est CETTE clé que
-        //    ItemMeta#setItemModel(NamespacedKey("krimson", modelKeySuffix)) résout
         val definition = """
             {
               "model": {
@@ -125,8 +140,6 @@ fun main(dataFolder: File, packFormat: Int): File {
     for (namespacedKey in UIRegistry.REGISTRY.keys()) {
         val ui = UIRegistry.REGISTRY.getOrThrow(namespacedKey)
         if (ui is CustomFontUI) {
-            // Add the font definition
-            // Font Key must match CustomFontUI.fontKey, which is e.g. "krimson:mana_font"
             val fontKeyComponents = ui.fontKey.split(":")
             val namespace = fontKeyComponents[0]
             val value = fontKeyComponents[1]
@@ -143,15 +156,18 @@ fun main(dataFolder: File, packFormat: Int): File {
         }
     }
 
-    // Save the resource pack - this triggers hook execution and file saves (clears tmpDir first!)
+    // Save the resource pack - writes dynamic files to tmpDir (clears tmpDir first!)
     pack.save(deleteOld = true)
 
-    // Génération des assets BBModel après save() pour éviter qu'ils ne soient supprimés
+    // 1. Extrait et fusionne le pack de base (resources/pack.zip)
+    mergeBasePack(tmpDir)
+
+    // 2. Génération des assets BBModel après save() pour éviter qu'ils ne soient supprimés
     for (modelKey in BBModelAssets.REGISTRY.keys) {
         addBBModelAssets(tmpDir, modelKey)
     }
 
-    // Création du ZIP contenant tout ce qui a été écrit dans tmpDir
+    // Création du ZIP final contenant la fusion des deux packs
     pack.createZip(zipFile)
     tmpDir.deleteRecursively()
 

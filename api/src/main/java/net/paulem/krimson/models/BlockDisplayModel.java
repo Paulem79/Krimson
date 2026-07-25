@@ -7,6 +7,10 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.paulem.krimson.KrimsonPlugin;
+import net.paulem.krimson.models.blockbench.old.BBAnimation;
+import net.paulem.krimson.models.blockbench.old.BBModelAssets;
+import net.paulem.krimson.models.blockbench.old.BBModelBaker;
+import net.paulem.krimson.models.blockbench.old.BBModelParser;
 import net.paulem.krimson.registry.RegistryKey;
 import net.paulem.krimson.utils.JsonLoader;
 import org.bukkit.Bukkit;
@@ -25,7 +29,7 @@ import org.bukkit.persistence.PersistentDataType;
 import com.github.Anon8281.universalScheduler.scheduling.tasks.MyScheduledTask;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import net.paulem.krimson.models.bbmodel.*;
+
 import java.io.File;
 import java.util.stream.Collectors;
 
@@ -33,7 +37,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
+public class BlockDisplayModel implements Model {
     public static final NamespacedKey INSTANCE_KEY = new NamespacedKey("krimson", "model_instance_id");
     public static final NamespacedKey MODEL_KEY = new NamespacedKey("krimson", "model_key");
     public static final NamespacedKey PART_KEY = new NamespacedKey("krimson", "model_part_tag");

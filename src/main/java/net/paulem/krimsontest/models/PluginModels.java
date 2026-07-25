@@ -3,6 +3,7 @@ package net.paulem.krimsontest.models;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.models.BlockDisplayModel;
 import net.paulem.krimson.models.Models;
+import net.paulem.krimson.models.blockbench.BlockbenchDisplayModel;
 
 import java.nio.file.Path;
 
@@ -26,8 +27,8 @@ public class PluginModels {
             BlockDisplayModel::new
     );
 
-    public static final BlockDisplayModel THE_WORLD = Models.registerModel("the_world",
-            identifier -> new BlockDisplayModel(identifier, Path.of("/home/paulem/Documents/Krimson/src/main/resources/assets/krimson/models/the_world.bbmodel").toFile())
+    public static final BlockbenchDisplayModel THE_WORLD = Models.registerModel("the_world",
+            BlockbenchDisplayModel::new
     );
 
     public static void init() {
