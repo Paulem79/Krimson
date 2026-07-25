@@ -2,7 +2,14 @@
 
 A library for creating custom blocks in a Spigot/Paper-based Minecraft server environment.
 
-Krimson enables you to create **custom blocks** with unique appearances, behaviors, inventories, and light emission — all without requiring a client-side mod. It leverages `ItemDisplay` entities to render block visuals and `PersistentDataContainer` (PDC) to store block data persistently.
+Future library to add UI, custom blocks, custom models + animations + sounds with BDEngine, sounds and more !
+
+The goal of this API is to be fully extendable and customizable to your usage, and always free !
+Any contribution is welcome, especially on the custom blocks side, where implementing custom blocks using noteblocks can be something good (implies recreating the noteblock system to make it works, ig by retaining the noteblocks informations when used and changed in the PDC to custom handle it)
+
+## Showcases
+![Screenshot of the custom block, BDEngine and custom UI](assets/block-bdengine-ui.png)
+![Screenshot of blockbench loader, almost finished](assets/blockbench-almost-finished.png)
 
 ---
 

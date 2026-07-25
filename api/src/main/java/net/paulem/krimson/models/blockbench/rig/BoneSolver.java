@@ -62,14 +62,19 @@ public final class BoneSolver {
                 bone.origin[1] + pose[AnimationPlayer.POS + 1],
                 bone.origin[2] + pose[AnimationPlayer.POS + 2]);
 
+        float rotX = bone.rotation[0] + pose[AnimationPlayer.ROT];
         float rotY = bone.rotation[1] + pose[AnimationPlayer.ROT + 1];
+        float rotZ = bone.rotation[2] + pose[AnimationPlayer.ROT + 2];
 
         rotY += model.parent.getRotYAdderFunction().apply(bone);
 
-        rotateZyx(out,
-                bone.rotation[0] + pose[AnimationPlayer.ROT],
-                rotY,
-                bone.rotation[2] + pose[AnimationPlayer.ROT + 2]);
+        // Use coordinate system conversion for most bones, but not for arms and legs
+        boolean useConversion = !isArmOrLeg(bone.name);
+        if (useConversion) {
+            rotateZyxWithConversion(out, rotX, rotY, rotZ);
+        } else {
+            rotateZyx(out, rotX, rotY, rotZ);
+        }
 
         float sx = pose[AnimationPlayer.SCALE];
         float sy = pose[AnimationPlayer.SCALE + 1];
@@ -88,16 +93,45 @@ public final class BoneSolver {
         return world.get(boneName);
     }
 
+    private static boolean isArmOrLeg(String boneName) {
+        String lowerName = boneName.toLowerCase();
+        return lowerName.contains("left_arm") ||
+               lowerName.contains("right_arm") ||
+               lowerName.contains("left_leg") ||
+               lowerName.contains("right_leg") ||
+               lowerName.contains("upper_left_arm") ||
+               lowerName.contains("upper_right_arm") ||
+               lowerName.contains("lower_left_arm") ||
+               lowerName.contains("lower_right_arm") ||
+               lowerName.contains("upper_left_leg") ||
+               lowerName.contains("upper_right_leg") ||
+               lowerName.contains("lower_left_leg") ||
+               lowerName.contains("lower_right_leg");
+    }
+
     /** Applies Z, then Y, then X, in degrees. */
     public static void rotateZyx(Matrix4f matrix, float degX, float degY, float degZ) {
         if (degZ != 0.0F) {
             matrix.rotateZ((float) Math.toRadians(degZ));
         }
         if (degY != 0.0F) {
-            matrix.rotateY((float) Math.toRadians(-degY)); // Note l'inversion du signe (-degY)
+            matrix.rotateY((float) Math.toRadians(degY));
         }
         if (degX != 0.0F) {
-            matrix.rotateX((float) Math.toRadians(-degX)); // Note l'inversion du signe (-degX)
+            matrix.rotateX((float) Math.toRadians(degX));
+        }
+    }
+
+    /** Applies Z, then Y, then X, in degrees, with coordinate system conversion. */
+    public static void rotateZyxWithConversion(Matrix4f matrix, float degX, float degY, float degZ) {
+        if (degZ != 0.0F) {
+            matrix.rotateZ((float) Math.toRadians(degZ));
+        }
+        if (degY != 0.0F) {
+            matrix.rotateY((float) Math.toRadians(-degY));
+        }
+        if (degX != 0.0F) {
+            matrix.rotateX((float) Math.toRadians(-degX));
         }
     }
 }
