@@ -52,6 +52,13 @@ public final class BBModelBaker {
     }
 
     public static List<BakedPart> bakeBindPose(BBModelParser.ParsedBBModel model, String modelBaseName) {
+        // Une clé de texture stable et sans collision par INDEX de texture du
+        // bbmodel (indépendamment de son nom d'origine, ex: "the_world.png" ->
+        // "the_world_tex0"), utilisée à la fois pour nommer le fichier PNG écrit
+        // par le resource pack et pour la référence "krimson:<clé>" dans le model json.
+        List<String> textureKeys = new ArrayList<>();
+        for (int i = 0; i < model.textures.size(); i++) textureKeys.add(modelBaseName + "_tex" + i);
+
         List<BakedPart> parts = new ArrayList<>();
         model.forEachBone(bone -> {
             if (!bone.hasGeometry()) return; // bone purement structurel (pas de géométrie propre) -> pas d'entité
@@ -59,7 +66,7 @@ public final class BBModelBaker {
             BakedPart part = new BakedPart();
             part.tag = bone.tag();
             part.modelKeySuffix = modelBaseName + "_" + part.tag;
-            part.itemModelJson = generateItemModelJson(bone, model.textureWidth, model.textureHeight, modelBaseName);
+            part.itemModelJson = generateItemModelJson(bone, model.textureWidth, model.textureHeight, textureKeys);
 
             Vector3f worldPivotBlocks = new Vector3f(bone.pivot).div(16f);
             part.bindTransform = new Matrix4f().translate(worldPivotBlocks);
@@ -74,24 +81,31 @@ public final class BBModelBaker {
      * contenant tous les éléments propres à ce bone, exprimés RELATIVEMENT au
      * pivot du bone (pivot = origine du modèle), pour que la rotation appliquée
      * par l'entity transform tourne bien autour du bon point.
+     * <p>
+     * Multi-texture : chaque texture du bbmodel devient une variable "tex&lt;i&gt;"
+     * dans le bloc "textures", et chaque face référence "#tex&lt;i&gt;" selon son
+     * {@link BBElement.Face#textureIndex} d'origine (0 = 1ère texture, etc.).
      */
-    public static JsonObject generateItemModelJson(BBBone bone, int texW, int texH, String textureRef) {
+    public static JsonObject generateItemModelJson(BBBone bone, int texW, int texH, List<String> textureKeys) {
         JsonObject root = new JsonObject();
         root.addProperty("parent", "minecraft:item/generated"); // ignoré dès qu'"elements" est présent, gardé pour fallback GUI
+
         JsonObject textures = new JsonObject();
-        textures.addProperty("particle", "krimson:" + textureRef);
-        textures.addProperty("texture", "krimson:" + textureRef);
+        for (int i = 0; i < textureKeys.size(); i++) {
+            textures.addProperty("tex" + i, "krimson:" + textureKeys.get(i));
+        }
+        if (!textureKeys.isEmpty()) textures.addProperty("particle", "krimson:" + textureKeys.get(0));
         root.add("textures", textures);
 
         JsonArray elements = new JsonArray();
         for (BBElement el : bone.ownElements) {
-            elements.add(elementToJson(el, bone.pivot, texW, texH));
+            elements.add(elementToJson(el, bone.pivot, texW, texH, textureKeys.size()));
         }
         root.add("elements", elements);
         return root;
     }
 
-    private static JsonObject elementToJson(BBElement el, Vector3f bonePivot, int texW, int texH) {
+    private static JsonObject elementToJson(BBElement el, Vector3f bonePivot, int texW, int texH, int textureCount) {
         JsonObject o = new JsonObject();
 
         Vector3f from = new Vector3f(el.from).sub(bonePivot);
@@ -124,7 +138,8 @@ public final class BBModelBaker {
             uv.add(f.uvPixels[2] * 16f / texW);
             uv.add(f.uvPixels[3] * 16f / texH);
             fo.add("uv", uv);
-            fo.addProperty("texture", "#texture");
+            int idx = Math.max(0, Math.min(textureCount - 1, f.textureIndex));
+            fo.addProperty("texture", "#tex" + idx);
             faces.add(entry.getKey(), fo);
         }
         o.add("faces", faces);
@@ -215,6 +230,13 @@ public final class BBModelBaker {
         Vector3f localRotDeg = animator != null ? sampleVec3(animator.channel("rotation"), t) : new Vector3f();
         localRotDeg.add(bone.bindRotation);
 
+        // Canal "scale" : contrairement à position/rotation, la valeur par défaut
+        // en absence de keyframe est (1,1,1) et non (0,0,0) — sinon le bone
+        // disparaît (scale nul) dès qu'il n'a pas de canal scale animé.
+        Vector3f localScale = animator != null && !animator.channel("scale").isEmpty()
+                ? sampleVec3(animator.channel("scale"), t)
+                : new Vector3f(1f, 1f, 1f);
+
         Vector3f pivotRelToParentBlocks = bone.parent != null
                 ? new Vector3f(bone.pivot).sub(bone.parent.pivot).div(16f)
                 : new Vector3f(bone.pivot).div(16f);
@@ -228,7 +250,7 @@ public final class BBModelBaker {
         Quaternionf worldRot = new Quaternionf(parentWorldRot).mul(localRot);
 
         if (bone.hasGeometry()) {
-            Matrix4f transform = new Matrix4f().translate(worldPosBlocks).rotate(worldRot);
+            Matrix4f transform = new Matrix4f().translate(worldPosBlocks).rotate(worldRot).scale(localScale);
             out.add(new BakedFrame(bone.tag(), transform));
         }
 

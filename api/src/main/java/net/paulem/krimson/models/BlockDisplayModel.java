@@ -88,10 +88,14 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
             List<BBModelBaker.BakedPart> bakedParts = BBModelBaker.bakeBindPose(parsed, baseName);
 
             BBModelAssets.ModelAssets assets = new BBModelAssets.ModelAssets();
-            // une seule texture supportée en V1 (index 0) ; si le bbmodel en a
-            // plusieurs, la 1ère est utilisée pour toutes les faces - à étendre si besoin
-            if (!parsed.textures.isEmpty()) {
-                assets.textures.put(baseName, parsed.textures.get(0).pngBytes);
+            // Une entrée par texture du bbmodel, avec la clé "<baseName>_tex<i>"
+            // (même convention que dans BBModelBaker.bakeBindPose) : même si une
+            // texture n'est référencée par aucune face (cas fréquent avec des
+            // calques "pasted" temporaires laissés dans Blockbench), on l'écrit
+            // quand même — inoffensif, et évite un décalage d'index texture<->fichier.
+            for (int i = 0; i < parsed.textures.size(); i++) {
+                byte[] png = parsed.textures.get(i).pngBytes;
+                if (png != null) assets.textures.put(baseName + "_tex" + i, png);
             }
 
             for (BBModelBaker.BakedPart part : bakedParts) {

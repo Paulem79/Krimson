@@ -54,12 +54,18 @@ public final class BBModelParser {
         List<TextureEntry> textures = parseTextures(root);
         result.textures = textures;
 
+        // Métadonnées des groupes (name/origin/rotation) : PAS dans les noeuds
+        // outliner eux-mêmes (qui ne contiennent que uuid/isOpen/children dans
+        // la plupart des exports réels), mais dans le tableau "groups[]" à part,
+        // indexé par uuid. On construit cette table AVANT de marcher l'outliner.
+        Map<String, GroupMeta> groupMetaByUuid = parseGroupsMeta(root);
+
         // outliner -> arbre de bones
         List<BBBone> roots = new ArrayList<>();
         Map<String, BBBone> bonesByUuid = new HashMap<>();
         if (root.has("outliner")) {
             for (JsonElement child : root.getAsJsonArray("outliner")) {
-                BBBone bone = parseOutlinerNode(child, null, elementsByUuid, bonesByUuid);
+                BBBone bone = parseOutlinerNode(child, null, elementsByUuid, bonesByUuid, groupMetaByUuid);
                 if (bone != null) roots.add(bone);
             }
         }
@@ -174,11 +180,45 @@ public final class BBModelParser {
         return list;
     }
 
+    // ---------- groups[] (métadonnées des bones, séparées de l'outliner) ----------
+
+    private static class GroupMeta {
+        String name = "bone";
+        final org.joml.Vector3f origin = new org.joml.Vector3f();
+        final org.joml.Vector3f rotation = new org.joml.Vector3f();
+    }
+
+    /**
+     * Certains exports .bbmodel dupliquent name/origin/rotation directement
+     * dans les noeuds "outliner" (cas de l'extrait de doc fourni initialement).
+     * D'autres (ex: format "modded_entity", cas réel observé) ne le font PAS :
+     * seul "groups[]" contient ces infos, indexé par uuid. On supporte les 2 en
+     * construisant systématiquement cette table depuis "groups[]" quand elle
+     * existe ; parseOutlinerNode utilisera en priorité les champs inline s'ils
+     * sont présents, sinon retombera sur cette table.
+     */
+    private static Map<String, GroupMeta> parseGroupsMeta(JsonObject root) {
+        Map<String, GroupMeta> map = new HashMap<>();
+        if (!root.has("groups")) return map;
+        for (JsonElement el : root.getAsJsonArray("groups")) {
+            JsonObject o = el.getAsJsonObject();
+            String uuid = getString(o, "uuid", null);
+            if (uuid == null) continue;
+            GroupMeta meta = new GroupMeta();
+            meta.name = getString(o, "name", "bone");
+            if (o.has("origin")) readVec3Array(o.get("origin"), meta.origin);
+            if (o.has("rotation")) readVec3Array(o.get("rotation"), meta.rotation);
+            map.put(uuid, meta);
+        }
+        return map;
+    }
+
     // ---------- outliner -> bones ----------
 
     private static BBBone parseOutlinerNode(JsonElement node, BBBone parent,
                                             Map<String, BBElement> elementsByUuid,
-                                            Map<String, BBBone> bonesByUuid) {
+                                            Map<String, BBBone> bonesByUuid,
+                                            Map<String, GroupMeta> groupMetaByUuid) {
         if (node.isJsonPrimitive()) {
             // Feuille = uuid d'un élément, rattaché directement au parent courant.
             String elementUuid = node.getAsString();
@@ -189,19 +229,31 @@ public final class BBModelParser {
 
         JsonObject o = node.getAsJsonObject();
         String uuid = getString(o, "uuid", java.util.UUID.randomUUID().toString());
-        String name = getString(o, "name", "bone");
+        GroupMeta meta = groupMetaByUuid.get(uuid);
+
+        String name = o.has("name") ? getString(o, "name", "bone") : (meta != null ? meta.name : "bone");
 
         BBBone bone = new BBBone(uuid, name);
         bone.parent = parent;
-        if (o.has("origin")) readVec3Array(o.get("origin"), bone.pivot);
-        if (o.has("rotation")) readVec3Array(o.get("rotation"), bone.bindRotation);
+
+        if (o.has("origin")) {
+            readVec3Array(o.get("origin"), bone.pivot);
+        } else if (meta != null) {
+            bone.pivot.set(meta.origin);
+        }
+
+        if (o.has("rotation")) {
+            readVec3Array(o.get("rotation"), bone.bindRotation);
+        } else if (meta != null) {
+            bone.bindRotation.set(meta.rotation);
+        }
 
         bonesByUuid.put(uuid, bone);
         if (parent != null) parent.children.add(bone);
 
         if (o.has("children")) {
             for (JsonElement child : o.getAsJsonArray("children")) {
-                parseOutlinerNode(child, bone, elementsByUuid, bonesByUuid);
+                parseOutlinerNode(child, bone, elementsByUuid, bonesByUuid, groupMetaByUuid);
             }
         }
         return bone;
