@@ -27,7 +27,7 @@ public class PluginModels {
 
     public static final BlockbenchDisplayModel THE_WORLD = Models.registerModel("the_world",
             identifier -> new BlockbenchDisplayModel(identifier, bone -> {
-                // Compensation de 180° si c'est le groupe head principal, bug à régler
+                // Compensation de 180° si c'est le groupe body principal
                 if ("body".equalsIgnoreCase(bone.name)) {
                     return 180.0F;
                 }
