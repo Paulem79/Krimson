@@ -15,18 +15,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Parses the skeleton, geometry, textures and animations out of a {@code .bbmodel}.
- *
- * <p>Cube geometry and embedded textures are kept (unlike a skeleton-only parse) so the
- * model can be baked into a resource pack — and generate its own {@code rig.json} — at
- * runtime, with no external tool and no resource pack the client needs beforehand; see
- * {@code BbModelBaker}. Gson ships inside the server already, so this has no dependencies
- * beyond the Paper API.
- *
- * <p>Every keyframe value in this model is a plain number. A model authored with Molang
- * expressions in its keyframes would need an evaluator in {@link #axis}.
- */
 public final class BbModelLoader {
     private BbModelLoader() {
     }
@@ -57,8 +45,12 @@ public final class BbModelLoader {
         Map<String, JsonObject> groups = new HashMap<>();
         if (root.has("groups")) {
             for (JsonElement element : root.getAsJsonArray("groups")) {
-                JsonObject group = element.getAsJsonObject();
-                groups.put(group.get("uuid").getAsString(), group);
+                if (element.isJsonObject()) {
+                    JsonObject group = element.getAsJsonObject();
+                    if (group.has("uuid")) {
+                        groups.put(group.get("uuid").getAsString(), group);
+                    }
+                }
             }
         }
 
@@ -67,17 +59,19 @@ public final class BbModelLoader {
             for (JsonElement element : root.getAsJsonArray("elements")) {
                 JsonObject json = element.getAsJsonObject();
                 if (json.has("type") && !"cube".equals(json.get("type").getAsString())) {
-                    continue; // meshes are not supported, only cuboids.
+                    continue; // meshes non supportés
                 }
-                elementsByUuid.put(json.get("uuid").getAsString(), json);
+                if (json.has("uuid")) {
+                    elementsByUuid.put(json.get("uuid").getAsString(), json);
+                }
             }
         }
 
         if (root.has("outliner")) {
             for (JsonElement element : root.getAsJsonArray("outliner")) {
-                if (element.isJsonObject()) {
-                    model.roots.add(buildBone(element.getAsJsonObject(), groups,
-                            elementsByUuid, textureIndexByUuid, model));
+                BbBone bone = buildBoneFromNode(element, groups, elementsByUuid, textureIndexByUuid, model);
+                if (bone != null) {
+                    model.roots.add(bone);
                 }
             }
         }
@@ -103,6 +97,14 @@ public final class BbModelLoader {
                 }
             }
             model.textures.add(new BbModel.BbTexture(name, pngBytes));
+
+            if (json.has("uv_width")) {
+                model.textureWidth = json.get("uv_width").getAsInt();
+            }
+            if (json.has("uv_height")) {
+                model.textureHeight = json.get("uv_height").getAsInt();
+            }
+
             if (json.has("uuid")) {
                 textureIndexByUuid.put(json.get("uuid").getAsString(), index);
             }
@@ -110,33 +112,86 @@ public final class BbModelLoader {
         }
     }
 
-    private static BbBone buildBone(JsonObject node, Map<String, JsonObject> groups,
-                                    Map<String, JsonObject> elementsByUuid,
-                                    Map<String, Integer> textureIndexByUuid,
-                                    BbModel model) {
-        String uuid = node.get("uuid").getAsString();
-        JsonObject group = groups.get(uuid);
-        String name = group != null && group.has("name")
-                ? group.get("name").getAsString()
-                : uuid;
+    private static BbBone buildBoneFromNode(JsonElement element,
+                                            Map<String, JsonObject> groups,
+                                            Map<String, JsonObject> elementsByUuid,
+                                            Map<String, Integer> textureIndexByUuid,
+                                            BbModel model) {
+        if (element.isJsonPrimitive()) {
+            String uuid = element.getAsString();
+            JsonObject groupJson = groups.get(uuid);
+            if (groupJson != null) {
+                return parseBoneObject(groupJson, null, groups, elementsByUuid, textureIndexByUuid, model);
+            }
+            return null;
+        } else if (element.isJsonObject()) {
+            JsonObject json = element.getAsJsonObject();
+            String uuid = json.has("uuid") ? json.get("uuid").getAsString() : null;
+            JsonObject groupJson = uuid != null ? groups.get(uuid) : null;
+            return parseBoneObject(json, groupJson, groups, elementsByUuid, textureIndexByUuid, model);
+        }
+        return null;
+    }
+
+    private static BbBone parseBoneObject(JsonObject node, JsonObject groupOverride,
+                                          Map<String, JsonObject> groups,
+                                          Map<String, JsonObject> elementsByUuid,
+                                          Map<String, Integer> textureIndexByUuid,
+                                          BbModel model) {
+        String uuid = node.has("uuid") ? node.get("uuid").getAsString()
+                : (groupOverride != null && groupOverride.has("uuid") ? groupOverride.get("uuid").getAsString() : "");
+
+        String name = null;
+        if (groupOverride != null && groupOverride.has("name")) {
+            name = groupOverride.get("name").getAsString();
+        } else if (node.has("name")) {
+            name = node.get("name").getAsString();
+        } else {
+            name = uuid;
+        }
 
         BbBone bone = new BbBone(name);
-        if (group != null) {
-            readVec3(group, "origin", bone.origin);
-            readVec3(group, "rotation", bone.rotation);
+
+        JsonObject primary = groupOverride != null ? groupOverride : node;
+        readVec3(primary, "origin", bone.origin);
+        readVec3(primary, "rotation", bone.rotation);
+
+        if (groupOverride != null) {
+            if (!groupOverride.has("origin") && node.has("origin")) {
+                readVec3(node, "origin", bone.origin);
+            }
+            if (!groupOverride.has("rotation") && node.has("rotation")) {
+                readVec3(node, "rotation", bone.rotation);
+            }
         }
+
         model.bones.put(name, bone);
 
-        if (node.has("children")) {
-            for (JsonElement child : node.getAsJsonArray("children")) {
+        JsonArray children = node.has("children") ? node.getAsJsonArray("children")
+                : (groupOverride != null && groupOverride.has("children") ? groupOverride.getAsJsonArray("children") : null);
+
+        if (children != null) {
+            for (JsonElement child : children) {
                 if (child.isJsonObject()) {
-                    bone.children.add(buildBone(child.getAsJsonObject(), groups,
-                            elementsByUuid, textureIndexByUuid, model));
+                    BbBone childBone = buildBoneFromNode(child, groups, elementsByUuid, textureIndexByUuid, model);
+                    if (childBone != null) {
+                        bone.children.add(childBone);
+                    }
                 } else if (child.isJsonPrimitive()) {
-                    // Bare-string children are cube uuids, attached to this bone.
-                    JsonObject cubeJson = elementsByUuid.get(child.getAsString());
+                    String childId = child.getAsString();
+                    // 1. Est-ce un cube ?
+                    JsonObject cubeJson = elementsByUuid.get(childId);
                     if (cubeJson != null) {
                         bone.cubes.add(buildCube(cubeJson, textureIndexByUuid));
+                    } else {
+                        // 2. Est-ce un sous-groupe référencé par son UUID ?
+                        JsonObject childGroupJson = groups.get(childId);
+                        if (childGroupJson != null) {
+                            BbBone childBone = parseBoneObject(childGroupJson, null, groups, elementsByUuid, textureIndexByUuid, model);
+                            if (childBone != null) {
+                                bone.children.add(childBone);
+                            }
+                        }
                     }
                 }
             }
@@ -170,6 +225,9 @@ public final class BbModelLoader {
                         };
                     }
                 }
+                if (faceJson.has("rotation")) {
+                    face.rotation = faceJson.get("rotation").getAsInt();
+                }
                 face.textureIndex = resolveTextureIndex(faceJson, textureIndexByUuid);
                 cube.faces.put(entry.getKey(), face);
             }
@@ -177,22 +235,26 @@ public final class BbModelLoader {
         return cube;
     }
 
-    /**
-     * A face's {@code texture} field is either a numeric index (older, box_uv exports)
-     * or the uuid of an entry in {@code textures[]} (newer, per-face exports).
-     */
     private static int resolveTextureIndex(JsonObject faceJson, Map<String, Integer> textureIndexByUuid) {
         if (!faceJson.has("texture") || faceJson.get("texture").isJsonNull()) {
             return -1;
         }
         JsonElement texture = faceJson.get("texture");
-        if (texture.isJsonPrimitive() && texture.getAsJsonPrimitive().isNumber()) {
-            return texture.getAsInt();
-        }
-        if (texture.isJsonPrimitive() && texture.getAsJsonPrimitive().isString()) {
-            Integer index = textureIndexByUuid.get(texture.getAsString());
-            if (index != null) {
-                return index;
+        if (texture.isJsonPrimitive()) {
+            var prim = texture.getAsJsonPrimitive();
+            if (prim.isNumber()) {
+                return prim.getAsInt();
+            }
+            if (prim.isString()) {
+                String str = prim.getAsString();
+                Integer index = textureIndexByUuid.get(str);
+                if (index != null) {
+                    return index;
+                }
+                try {
+                    return Integer.parseInt(str);
+                } catch (NumberFormatException ignored) {
+                }
             }
         }
         return -1;
@@ -260,7 +322,6 @@ public final class BbModelLoader {
         };
     }
 
-    /** Keyframe axes are strings in .bbmodel, often with trailing newlines. */
     private static float axis(JsonObject point, String key) {
         JsonElement value = point.get(key);
         if (value == null || value.isJsonNull()) {

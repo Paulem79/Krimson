@@ -2,6 +2,7 @@ package net.paulem.krimson.models.blockbench.model;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import net.paulem.krimson.models.blockbench.rig.RigPart;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -174,8 +175,10 @@ public final class BbModelBaker {
 
     private static void bounds(BbCube cube, float[] outLow, float[] outHigh) {
         for (int axis = 0; axis < 3; axis++) {
-            outLow[axis] = cube.from[axis] - cube.inflate;
-            outHigh[axis] = cube.to[axis] + cube.inflate;
+            float min = Math.min(cube.from[axis], cube.to[axis]);
+            float max = Math.max(cube.from[axis], cube.to[axis]);
+            outLow[axis] = min - cube.inflate;
+            outHigh[axis] = max + cube.inflate;
         }
     }
 
@@ -209,10 +212,13 @@ public final class BbModelBaker {
             uv.add(round(face.uvPixels[3] * 16.0F / model.textureHeight));
             faceJson.add("uv", uv);
             faceJson.addProperty("texture", "#tex" + index);
+            if (face.rotation != 0) {
+                faceJson.addProperty("rotation", face.rotation);
+            }
             faces.add(faceName, faceJson);
         }
         if (faces.size() == 0) {
-            return null; // fully untextured cube: nothing to render.
+            return null;
         }
 
         JsonObject elementJson = new JsonObject();

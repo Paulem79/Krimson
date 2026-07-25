@@ -30,5 +30,7 @@ public final class BbCube {
         public float[] uvPixels;
         /** Index into the owning {@link BbModel#textures} list, or -1 if unset/hidden. */
         public int textureIndex = -1;
+        /** Face rotation in degrees (0, 90, 180, 270). */
+        public int rotation = 0;
     }
 }

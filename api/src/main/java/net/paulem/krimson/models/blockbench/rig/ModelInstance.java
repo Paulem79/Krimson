@@ -216,6 +216,7 @@ public final class ModelInstance {
         if (bone == null) {
             return HIDDEN;
         }
+
         scratch.set(bone);
         if (part.hasRotation()) {
             scratch.translate(part.pivot[0], part.pivot[1], part.pivot[2]);
@@ -227,8 +228,6 @@ public final class ModelInstance {
         center.set(part.center[0], part.center[1], part.center[2]);
         scratch.transformPosition(center);
 
-        // Copying keeps the linear part (rotation + scale) and overwriting the
-        // translation column supplies M * center / 16.
         Matrix4f out = new Matrix4f(scratch);
         out.setTranslation(center.x / 16.0F + originOffset.x,
                 center.y / 16.0F + originOffset.y,

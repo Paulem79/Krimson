@@ -61,10 +61,20 @@ public final class BoneSolver {
         out.translate(bone.origin[0] + pose[AnimationPlayer.POS],
                 bone.origin[1] + pose[AnimationPlayer.POS + 1],
                 bone.origin[2] + pose[AnimationPlayer.POS + 2]);
+
+        float rotY = bone.rotation[1] + pose[AnimationPlayer.ROT + 1];
+
+        // TODO : directly in model constructor, not hardcoded here
+        // Compensation de 180° si c'est le groupe head principal
+        if ("head".equalsIgnoreCase(bone.name)) {
+            rotY += 180.0F;
+        }
+
         rotateZyx(out,
                 bone.rotation[0] + pose[AnimationPlayer.ROT],
-                bone.rotation[1] + pose[AnimationPlayer.ROT + 1],
+                rotY,
                 bone.rotation[2] + pose[AnimationPlayer.ROT + 2]);
+
         float sx = pose[AnimationPlayer.SCALE];
         float sy = pose[AnimationPlayer.SCALE + 1];
         float sz = pose[AnimationPlayer.SCALE + 2];
@@ -88,10 +98,10 @@ public final class BoneSolver {
             matrix.rotateZ((float) Math.toRadians(degZ));
         }
         if (degY != 0.0F) {
-            matrix.rotateY((float) Math.toRadians(degY));
+            matrix.rotateY((float) Math.toRadians(-degY)); // Note l'inversion du signe (-degY)
         }
         if (degX != 0.0F) {
-            matrix.rotateX((float) Math.toRadians(degX));
+            matrix.rotateX((float) Math.toRadians(-degX)); // Note l'inversion du signe (-degX)
         }
     }
 }
