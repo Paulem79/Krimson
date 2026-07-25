@@ -22,8 +22,7 @@ import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.ItemDisplay.ItemDisplayTransform;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
+import com.github.Anon8281.universalScheduler.scheduling.tasks.MyScheduledTask;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import net.paulem.krimson.models.bbmodel.*;
@@ -48,11 +47,41 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
     @Getter
     private final Map<String, Map<Integer, List<AnimationFrame>>> animations = new HashMap<>();
 
+    /**
+     * Mode de bouclage par animation, tel que déclaré dans le .bbmodel. Absent
+     * pour les modèles legacy (BDEngine / commande vanilla), qui conservent alors
+     * l'ancien comportement : {@link #playAnimation} se fige sur la dernière frame.
+     */
+    @Getter
+    private final Map<String, BBAnimation.LoopMode> animationLoopModes = new HashMap<>();
+
+    /**
+     * Tags de parts masquées par défaut que chaque animation doit faire apparaître
+     * (bras "BAM", jambes de barrage...). cf. BBModelBaker.revealedPartTags.
+     */
+    @Getter
+    private final Map<String, Set<String>> animationRevealedParts = new HashMap<>();
+
     @Getter
     private final Map<String, SoundAnimation> sounds = new HashMap<>();
 
     // Track active animation tasks by instanceId
-    private static final Map<String, BukkitTask> activeAnimationTasks = new HashMap<>();
+    private static final Map<String, MyScheduledTask> activeAnimationTasks = new HashMap<>();
+
+    /**
+     * Durée d'interpolation appliquée à chaque frame. Le bake produit une frame
+     * par tick, donc 1 tick d'interpolation suffit à lisser le mouvement côté
+     * client sans décaler la pose.
+     */
+    private static final int FRAME_INTERPOLATION_TICKS = 1;
+
+    /**
+     * Transformation "parquée" des parts invisibles : une échelle nulle est le
+     * seul moyen de masquer une display entity sans la détruire, ce qui évite un
+     * cycle spawn/despawn (et les paquets qui vont avec) à chaque animation qui
+     * révèle ou masque des bones.
+     */
+    private static final Matrix4f HIDDEN_TRANSFORM = new Matrix4f().scale(0f);
 
     @Getter
     private final Vector3f originOffset = new Vector3f(0, 0, 0);
@@ -113,7 +142,8 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
                         part.bindTransform,
                         null,
                         displayItem,
-                        ItemDisplayTransform.NONE
+                        ItemDisplayTransform.NONE,
+                        part.visibleByDefault
                 );
                 parts.put(part.tag, displayPart);
             }
@@ -121,20 +151,27 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
             BBModelAssets.register(key.toString(), assets);
 
             // --- 2. Animations : converties au format Map<String, Map<Integer, List<AnimationFrame>>> existant ---
-            Map<String, Map<Integer, List<BBModelBaker.BakedFrame>>> baked = BBModelBaker.bakeAnimations(parsed);
-            for (Map.Entry<String, Map<Integer, List<BBModelBaker.BakedFrame>>> animEntry : baked.entrySet()) {
+            Map<String, BBModelBaker.BakedAnimation> baked = BBModelBaker.bakeAnimations(parsed);
+            for (Map.Entry<String, BBModelBaker.BakedAnimation> animEntry : baked.entrySet()) {
+                BBModelBaker.BakedAnimation bakedAnimation = animEntry.getValue();
+
                 Map<Integer, List<AnimationFrame>> ticks = new TreeMap<>();
-                for (Map.Entry<Integer, List<BBModelBaker.BakedFrame>> tickEntry : animEntry.getValue().entrySet()) {
+                for (Map.Entry<Integer, List<BBModelBaker.BakedFrame>> tickEntry : bakedAnimation.ticks().entrySet()) {
                     List<AnimationFrame> frames = tickEntry.getValue().stream()
-                            .map(f -> new AnimationFrame(f.boneTag(), DisplayType.ITEM, f.transformation(), 1, null, null))
+                            .map(f -> new AnimationFrame(f.boneTag(), DisplayType.ITEM, f.transformation(),
+                                    FRAME_INTERPOLATION_TICKS, null, null))
                             .collect(Collectors.toList());
                     ticks.put(tickEntry.getKey(), frames);
                 }
                 animations.put(animEntry.getKey(), ticks);
+                animationLoopModes.put(animEntry.getKey(), bakedAnimation.loopMode());
+                animationRevealedParts.put(animEntry.getKey(), bakedAnimation.revealedPartTags());
             }
 
+            long hiddenParts = bakedParts.stream().filter(part -> !part.visibleByDefault).count();
             KrimsonPlugin.getInstance().getLogger().info(
-                    "Modèle bbmodel '" + key + "' chargé : " + bakedParts.size() + " bones, "
+                    "Modèle bbmodel '" + key + "' chargé : " + bakedParts.size() + " bones ("
+                            + hiddenParts + " masqué(s) par défaut), "
                             + animations.size() + " animation(s).");
         } catch (Exception e) {
             KrimsonPlugin.getInstance().getLogger().severe("Erreur chargement bbmodel " + key + " : " + e.getMessage());
@@ -143,14 +180,13 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
     }
 
 // ============================================================================
-// NOTE sur AnimationFrame.duration = 1 :
-// Le player d'animation existant (playAnimation/playAnimationLoop) avance
-// tick par tick et applique interpolation_duration = frame.duration() à
-// chaque tick. Comme le bake ci-dessus resample DÉJÀ à 20 samples/seconde
-// (une frame par tick), duration=1 donne une interpolation fluide sans à-coups.
-// Si tu veux économiser des paquets réseau (moins de setTransformationMatrix),
-// tu peux sous-échantillonner (ex: 1 keyframe/2 ticks avec duration=2) — dis-le
-// moi si tu veux que j'ajoute une option de "simplification" des keyframes.
+// NOTE sur AnimationFrame.duration :
+// Le player avance tick par tick et applique interpolation_duration =
+// frame.duration() à chaque tick. Le bake produit une frame par tick, donc
+// FRAME_INTERPOLATION_TICKS = 1 donne une interpolation fluide sans décalage.
+// Pour économiser des paquets, sous-échantillonner le bake (1 frame / N ticks)
+// ET passer la même valeur N ici : les deux doivent rester cohérents, sinon la
+// pose interpolée est en retard ou en avance sur la timeline.
 // ============================================================================
 
     // --- PARSING JSON ---
@@ -388,17 +424,24 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         String instanceId = UUID.randomUUID().toString();
 
         parts.forEach((tag, part) -> {
+            // Les parts masquées par défaut sont spawnées quand même, mais à
+            // échelle nulle : elles doivent exister pour qu'une animation puisse
+            // les révéler sans spawn/despawn en cours de route.
+            Matrix4f initialTransform = part.visibleByDefault() ? part.transformation() : HIDDEN_TRANSFORM;
+
             Display display = null;
             if (part.type() == DisplayType.BLOCK) {
                 display = spawnLoc.getWorld().spawn(spawnLoc, BlockDisplay.class, d -> {
                     d.setBlock(part.blockData() != null ? part.blockData() : Bukkit.createBlockData(Material.STONE));
-                    d.setTransformationMatrix(part.transformation());
+                    applyDisplayDefaults(d);
+                    d.setTransformationMatrix(new Matrix4f(initialTransform));
                 });
             } else if (part.type() == DisplayType.ITEM) {
                 display = spawnLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, d -> {
                     d.setItemStack(part.itemStack() != null ? part.itemStack() : new ItemStack(Material.AIR));
                     d.setItemDisplayTransform(part.itemTransform() != null ? part.itemTransform() : ItemDisplayTransform.NONE);
-                    d.setTransformationMatrix(part.transformation());
+                    applyDisplayDefaults(d);
+                    d.setTransformationMatrix(new Matrix4f(initialTransform));
                 });
             }
 
@@ -414,161 +457,222 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         return spawnedDisplays;
     }
 
+    /**
+     * Propriétés d'affichage communes à toutes les parts (Paper 1.21.4).
+     * <p>
+     * {@code Billboard.FIXED} est explicite : toute autre valeur ferait pivoter
+     * les parts vers la caméra de chaque joueur, ce qui détruit un rig dont
+     * l'orientation est portée par la matrice. L'interpolation est armée dès le
+     * spawn pour que la première frame d'animation soit déjà lissée.
+     */
+    private static void applyDisplayDefaults(Display display) {
+        display.setPersistent(false);
+        display.setBillboard(Display.Billboard.FIXED);
+        display.setInterpolationDelay(0);
+        display.setInterpolationDuration(FRAME_INTERPOLATION_TICKS);
+        display.setViewRange(1.0f);
+    }
+
     // --- ANIMATION ENGINE ---
 
     public Set<String> getAvailableAnimations() {
         return animations.keySet();
     }
 
+    /**
+     * Joue une animation en respectant le mode de bouclage déclaré par le modèle
+     * ({@code loop} / {@code hold} / {@code once}).
+     */
     public void playAnimation(World world, String instanceId, String animationName) {
-        if (!animated || animations.isEmpty()) return;
-
-        // Check if the requested animation exists
-        if (!animations.containsKey(animationName)) {
-            KrimsonPlugin.getInstance().getLogger().warning("Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
-            return;
-        }
-
-        Map<Integer, List<AnimationFrame>> keyframes = animations.get(animationName);
-        if (keyframes.isEmpty()) return;
-
-        Map<String, Display> entityMap = new HashMap<>();
-        for (Entity entity : world.getEntities()) {
-            if (entity instanceof Display display) {
-                String id = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
-                String partTag = display.getPersistentDataContainer().get(PART_KEY, PersistentDataType.STRING);
-                if (instanceId.equals(id) && partTag != null) {
-                    entityMap.put(partTag, display);
-                }
-            }
-        }
-
-        if (entityMap.isEmpty()) return;
-
-        int maxTick = Collections.max(keyframes.keySet());
-
-        // Cancel any existing animation for this instance
-        cancelActiveAnimation(instanceId);
-
-        BukkitTask task = new BukkitRunnable() {
-            int currentTick = 0;
-
-            @Override
-            public void run() {
-                if (currentTick > maxTick) {
-                    cancel();
-                    activeAnimationTasks.remove(instanceId);
-                    return;
-                }
-
-                // Play sounds for this tick
-                if (sounds.containsKey(animationName)) {
-                    SoundAnimation soundAnim = sounds.get(animationName);
-                    if (soundAnim.soundFrames().containsKey(currentTick)) {
-                        SoundFrame soundFrame = soundAnim.soundFrames().get(currentTick);
-                        // Find location from any display entity
-                        if (!entityMap.isEmpty()) {
-                            Display firstDisplay = entityMap.values().iterator().next();
-                            playSound(firstDisplay.getWorld(), firstDisplay.getLocation(), soundFrame.soundCommand());
-                        }
-                    }
-                }
-
-                List<AnimationFrame> frames = keyframes.get(currentTick);
-                if (frames != null) {
-                    for (AnimationFrame frame : frames) {
-                        Display display = entityMap.get(frame.partTag());
-                        if (display != null && display.isValid()) {
-                            display.setInterpolationDelay(0);
-                            display.setInterpolationDuration(frame.duration());
-                            display.setTransformationMatrix(frame.transformation());
-
-                            if (display instanceof BlockDisplay bd && frame.blockData() != null) {
-                                bd.setBlock(frame.blockData());
-                            }
-                        }
-                    }
-                }
-
-                currentTick++;
-            }
-        }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
-
-        activeAnimationTasks.put(instanceId, task);
+        startAnimation(world, instanceId, animationName, null);
     }
 
+    /** Joue une animation en forçant le bouclage, quel que soit son mode déclaré. */
     public void playAnimationLoop(World world, String instanceId, String animationName) {
+        startAnimation(world, instanceId, animationName, BBAnimation.LoopMode.LOOP);
+    }
+
+    /**
+     * Coeur du player d'animation, commun aux deux méthodes publiques (elles
+     * étaient auparavant dupliquées à l'identique à un {@code if} près).
+     *
+     * @param forcedLoopMode mode imposé par l'appelant, ou {@code null} pour
+     *                       utiliser celui du modèle
+     */
+    private void startAnimation(World world, String instanceId, String animationName,
+                                BBAnimation.LoopMode forcedLoopMode) {
         if (!animated || animations.isEmpty()) return;
 
-        // Check if the requested animation exists
-        if (!animations.containsKey(animationName)) {
-            KrimsonPlugin.getInstance().getLogger().warning("Animation '" + animationName + "' not found for model " + key + ". Available animations: " + String.join(", ", animations.keySet()));
+        Map<Integer, List<AnimationFrame>> keyframes = animations.get(animationName);
+        if (keyframes == null) {
+            KrimsonPlugin.getInstance().getLogger().warning("Animation '" + animationName
+                    + "' not found for model " + key + ". Available animations: "
+                    + String.join(", ", animations.keySet()));
             return;
         }
-
-        Map<Integer, List<AnimationFrame>> keyframes = animations.get(animationName);
         if (keyframes.isEmpty()) return;
 
-        Map<String, Display> entityMap = new HashMap<>();
-        for (Entity entity : world.getEntities()) {
-            if (entity instanceof Display display) {
-                String id = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
-                String partTag = display.getPersistentDataContainer().get(PART_KEY, PersistentDataType.STRING);
-                if (instanceId.equals(id) && partTag != null) {
-                    entityMap.put(partTag, display);
+        Map<String, Display> entityMap = collectInstanceDisplays(world, instanceId);
+        if (entityMap.isEmpty()) return;
+
+        // Les modèles legacy (BDEngine / commande vanilla) n'ont pas de mode
+        // déclaré : on garde leur comportement historique, à savoir se figer sur
+        // la dernière frame.
+        BBAnimation.LoopMode loopMode = forcedLoopMode != null
+                ? forcedLoopMode
+                : animationLoopModes.getOrDefault(animationName, BBAnimation.LoopMode.HOLD);
+
+        // Parts effectivement affichées pendant cette animation : celles visibles
+        // en bind pose, plus celles que cette animation révèle explicitement.
+        Set<String> revealed = animationRevealedParts.getOrDefault(animationName, Collections.emptySet());
+        Set<String> activeTags = new HashSet<>();
+        parts.forEach((tag, part) -> {
+            if (part.visibleByDefault() || revealed.contains(tag)) activeTags.add(tag);
+        });
+
+        // Toute part non active est parquée immédiatement (échelle nulle, sans
+        // interpolation) : c'est ce qui masque à nouveau les bras "BAM" quand on
+        // enchaîne sur une animation qui ne les utilise pas.
+        entityMap.forEach((tag, display) -> {
+            if (!activeTags.contains(tag)) applyTransform(display, HIDDEN_TRANSFORM, 0);
+        });
+
+        cancelActiveAnimation(instanceId);
+
+        AnimationRunner runner = new AnimationRunner(instanceId, animationName, keyframes,
+                loopMode, entityMap, activeTags);
+        runner.task = KrimsonPlugin.getScheduler().runTaskTimer(runner, 0L, 1L);
+        activeAnimationTasks.put(instanceId, runner.task);
+    }
+
+    /**
+     * Avance une animation d'un tick par exécution.
+     * <p>
+     * Implémenté en classe nommée et non en lambda parce que le runnable doit
+     * pouvoir annuler sa propre tâche, ce qui demande une référence à celle-ci.
+     */
+    private final class AnimationRunner implements Runnable {
+        private final String instanceId;
+        private final String animationName;
+        private final Map<Integer, List<AnimationFrame>> keyframes;
+        private final BBAnimation.LoopMode loopMode;
+        private final Map<String, Display> entityMap;
+        private final Set<String> activeTags;
+        private final int maxTick;
+
+        private MyScheduledTask task;
+        private int currentTick;
+
+        private AnimationRunner(String instanceId, String animationName,
+                                Map<Integer, List<AnimationFrame>> keyframes,
+                                BBAnimation.LoopMode loopMode,
+                                Map<String, Display> entityMap, Set<String> activeTags) {
+            this.instanceId = instanceId;
+            this.animationName = animationName;
+            this.keyframes = keyframes;
+            this.loopMode = loopMode;
+            this.entityMap = entityMap;
+            this.activeTags = activeTags;
+            this.maxTick = Collections.max(keyframes.keySet());
+        }
+
+        @Override
+        public void run() {
+            // Si l'instance a été supprimée entre-temps, la tâche doit mourir avec
+            // elle plutôt que de continuer à pousser des paquets dans le vide.
+            if (entityMap.values().stream().noneMatch(Display::isValid)) {
+                stop();
+                return;
+            }
+
+            playSoundsForTick();
+            applyFramesForTick();
+
+            currentTick++;
+            if (currentTick <= maxTick) return;
+
+            switch (loopMode) {
+                case LOOP -> currentTick = 0;
+                case HOLD -> stop();                       // reste sur la dernière pose
+                case ONCE -> {
+                    restoreBindPose();
+                    stop();
                 }
             }
         }
 
-        if (entityMap.isEmpty()) return;
+        private void playSoundsForTick() {
+            SoundAnimation soundAnim = sounds.get(animationName);
+            if (soundAnim == null) return;
+            SoundFrame soundFrame = soundAnim.soundFrames().get(currentTick);
+            if (soundFrame == null) return;
+            Display reference = entityMap.values().stream()
+                    .filter(Display::isValid)
+                    .findFirst()
+                    .orElse(null);
+            if (reference != null) {
+                playSound(reference.getWorld(), reference.getLocation(), soundFrame.soundCommand());
+            }
+        }
 
-        int maxTick = Collections.max(keyframes.keySet());
+        private void applyFramesForTick() {
+            List<AnimationFrame> frames = keyframes.get(currentTick);
+            if (frames == null) return;
 
-        // Cancel any existing animation for this instance
-        cancelActiveAnimation(instanceId);
+            for (AnimationFrame frame : frames) {
+                if (!activeTags.contains(frame.partTag())) continue;
 
-        BukkitTask task = new BukkitRunnable() {
-            int currentTick = 0;
+                Display display = entityMap.get(frame.partTag());
+                if (display == null || !display.isValid()) continue;
 
-            @Override
-            public void run() {
-                // Play sounds for this tick
-                if (sounds.containsKey(animationName)) {
-                    SoundAnimation soundAnim = sounds.get(animationName);
-                    if (soundAnim.soundFrames().containsKey(currentTick)) {
-                        SoundFrame soundFrame = soundAnim.soundFrames().get(currentTick);
-                        // Find location from any display entity
-                        if (!entityMap.isEmpty()) {
-                            Display firstDisplay = entityMap.values().iterator().next();
-                            playSound(firstDisplay.getWorld(), firstDisplay.getLocation(), soundFrame.soundCommand());
-                        }
-                    }
-                }
+                applyTransform(display, frame.transformation(), frame.duration());
 
-                List<AnimationFrame> frames = keyframes.get(currentTick);
-                if (frames != null) {
-                    for (AnimationFrame frame : frames) {
-                        Display display = entityMap.get(frame.partTag());
-                        if (display != null && display.isValid()) {
-                            display.setInterpolationDelay(0);
-                            display.setInterpolationDuration(frame.duration());
-                            display.setTransformationMatrix(frame.transformation());
-
-                            if (display instanceof BlockDisplay bd && frame.blockData() != null) {
-                                bd.setBlock(frame.blockData());
-                            }
-                        }
-                    }
-                }
-
-                currentTick++;
-                if (currentTick > maxTick) {
-                    currentTick = 0;
+                if (display instanceof BlockDisplay blockDisplay && frame.blockData() != null) {
+                    blockDisplay.setBlock(frame.blockData());
                 }
             }
-        }.runTaskTimer(KrimsonPlugin.getInstance(), 0L, 1L);
+        }
 
-        activeAnimationTasks.put(instanceId, task);
+        private void restoreBindPose() {
+            parts.forEach((tag, part) -> {
+                Display display = entityMap.get(tag);
+                if (display == null || !display.isValid()) return;
+                Matrix4f target = part.visibleByDefault() ? part.transformation() : HIDDEN_TRANSFORM;
+                applyTransform(display, target, FRAME_INTERPOLATION_TICKS);
+            });
+        }
+
+        private void stop() {
+            if (task != null) task.cancel();
+            activeAnimationTasks.remove(instanceId, task);
+        }
+    }
+
+    /**
+     * Applique une transformation à une display entity.
+     * <p>
+     * L'ordre compte : {@code interpolation_delay} et {@code interpolation_duration}
+     * doivent être écrits AVANT la matrice, sinon le client interpole vers la
+     * nouvelle pose avec les réglages de la précédente.
+     */
+    private static void applyTransform(Display display, Matrix4f transformation, int durationTicks) {
+        display.setInterpolationDelay(0);
+        display.setInterpolationDuration(durationTicks);
+        display.setTransformationMatrix(new Matrix4f(transformation));
+    }
+
+    /** Indexe les display entities d'une instance par tag de part. */
+    private static Map<String, Display> collectInstanceDisplays(World world, String instanceId) {
+        Map<String, Display> entityMap = new HashMap<>();
+        for (Entity entity : world.getEntities()) {
+            if (!(entity instanceof Display display)) continue;
+            String id = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
+            String partTag = display.getPersistentDataContainer().get(PART_KEY, PersistentDataType.STRING);
+            if (instanceId.equals(id) && partTag != null) {
+                entityMap.put(partTag, display);
+            }
+        }
+        return entityMap;
     }
 
     private void playSound(World world, Location location, String soundCommand) {
@@ -599,7 +703,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
             // Play sound for all players (simplified - in real implementation you'd parse playerSelector)
             for (org.bukkit.entity.Player player : world.getPlayers()) {
-                player.playSound(new org.bukkit.Location(world, absX, absY, absZ), soundName, org.bukkit.SoundCategory.RECORDS, volume, pitch);
+                player.playSound(new Location(world, absX, absY, absZ), soundName, org.bukkit.SoundCategory.RECORDS, volume, pitch);
             }
         } catch (Exception e) {
             KrimsonPlugin.getInstance().getLogger().warning("Error playing sound: " + e.getMessage());
@@ -616,14 +720,17 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
     public void playAnimationLoop(World world, String instanceId) {
         if (!animated || animations.isEmpty()) return;
 
-        playAnimationLoop(world, instanceId, animations.keySet().stream().findFirst().orElseThrow());
+        // Get random animation
+        String animationName = animations.keySet().stream().skip(new Random().nextInt(animations.size())).findFirst().orElseThrow();
+        KrimsonPlugin.getInstance().getLogger().info("Playing animation loop for model " + key + ": " + animationName);
+        playAnimationLoop(world, instanceId, animationName);
     }
 
     /**
      * Cancel any active animation task for the given instance
      */
     public static void cancelActiveAnimation(String instanceId) {
-        BukkitTask task = activeAnimationTasks.get(instanceId);
+        MyScheduledTask task = activeAnimationTasks.get(instanceId);
         if (task != null) {
             task.cancel();
             activeAnimationTasks.remove(instanceId);
@@ -673,12 +780,12 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         Matrix4f matrix = parseTransformation(tag);
 
         if (id.contains("block_display") || tag.contains("block_state")) {
-            return new DisplayPart(DisplayType.BLOCK, matrix, parseBlockData(tag.getCompound("block_state")), null, null);
+            return new DisplayPart(DisplayType.BLOCK, matrix, parseBlockData(tag.getCompound("block_state")), null, null, true);
         }
         if (id.contains("item_display") || tag.contains("item")) {
             ItemStack itemStack = parseItemStack(tag.getCompound("item"));
             ItemDisplayTransform transform = parseItemTransform(tag.getString("item_display"));
-            return new DisplayPart(DisplayType.ITEM, matrix, null, itemStack, transform);
+            return new DisplayPart(DisplayType.ITEM, matrix, null, itemStack, transform, true);
         }
         return null;
     }
@@ -757,12 +864,19 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
 
     public enum DisplayType { BLOCK, ITEM }
 
+    /**
+     * @param visibleByDefault false pour un bone masqué dans Blockbench : la part
+     *                         est bien spawnée (son item model existe dans le pack)
+     *                         mais parquée à échelle nulle jusqu'à ce qu'une
+     *                         animation la révèle.
+     */
     public record DisplayPart(
             DisplayType type,
             Matrix4f transformation,
             BlockData blockData,
             ItemStack itemStack,
-            ItemDisplayTransform itemTransform
+            ItemDisplayTransform itemTransform,
+            boolean visibleByDefault
     ) {}
 
     public record AnimationFrame(
@@ -774,7 +888,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
             ItemStack itemStack
     ) {
         public DisplayPart toPart() {
-            return new DisplayPart(type, transformation, blockData, itemStack, ItemDisplayTransform.NONE);
+            return new DisplayPart(type, transformation, blockData, itemStack, ItemDisplayTransform.NONE, true);
         }
     }
 

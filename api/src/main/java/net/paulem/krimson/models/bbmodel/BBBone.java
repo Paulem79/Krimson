@@ -10,11 +10,13 @@ import java.util.List;
  * entité item_display en jeu (cf. réponse "1 item_display par bone").
  * <p>
  * IMPORTANT sur les coordonnées bbmodel : le champ "origin" d'un groupe est
- * déjà en coordonnées ABSOLUES du modèle (pas relatif au parent). C'est pour
- * ça que {@link BBModelBaker} n'a pas besoin d'accumuler les pivots pour la
- * bind pose, seulement pour l'accumulation des ROTATIONS pendant l'animation
- * (forward kinematics), puisque les displays ne sont pas montés en Passengers
- * mais spawnés indépendamment et re-transformés à chaque tick.
+ * déjà en coordonnées ABSOLUES du modèle (pas relatif au parent). Cela ne
+ * dispense PAS d'une cinématique directe complète : dès qu'un parent tourne ou
+ * change d'échelle, le pivot absolu de l'enfant doit être transporté par la
+ * matrice du parent. {@link BBModelBaker#solveWorldMatrices} compose donc, pour
+ * chaque bone, {@code parent * T(pivot + position) * Rz * Ry * Rx * S * T(-pivot)},
+ * les displays n'étant pas montés en Passengers mais spawnés indépendamment et
+ * re-transformés à chaque tick.
  */
 public class BBBone {
     public final String uuid;
@@ -33,7 +35,13 @@ public class BBBone {
      * volontairement dans l'éditeur (typiquement des bones "hors-champ" utilisés
      * uniquement par certaines animations d'attaque, ex: bras/jambes de secours
      * positionnés loin sur le côté, amenés en place seulement via leurs propres
-     * keyframes). Non spawné en bind pose par défaut, cf. BBModelBaker.bakeBindPose.
+     * keyframes).
+     * <p>
+     * Ces bones sont désormais bakés ET spawnés, mais parqués à échelle nulle :
+     * c'est ce qui permet à une animation de les révéler en cours de route (cf.
+     * {@link BBModelBaker#bakeAnimations} et {@code BlockDisplayModel.DisplayPart}).
+     * Les ignorer purement et simplement rendait {@code Barrage} et
+     * {@code KickBarrage} inertes, leurs bones n'ayant aucune entité à animer.
      */
     public boolean visible = true;
 

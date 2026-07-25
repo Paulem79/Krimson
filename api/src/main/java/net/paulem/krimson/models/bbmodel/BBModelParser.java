@@ -305,9 +305,11 @@ public final class BBModelParser {
                     if (animatorObj.has("keyframes")) {
                         for (JsonElement kfEl : animatorObj.getAsJsonArray("keyframes")) {
                             JsonObject kfObj = kfEl.getAsJsonObject();
-                            String channel = getString(kfObj, "channel", "rotation");
-                            double time = kfObj.has("time") ? kfObj.get("time").getAsDouble() : 0.0;
-                            String interp = getString(kfObj, "interpolation", "linear");
+                            // Un animator peut porter des canaux non transformants
+                            // ("effect", "sound", "timeline"...) : on les ignore.
+                            BBAnimation.Channel channel = BBAnimation.Channel.fromJson(
+                                    getString(kfObj, "channel", "rotation"));
+                            if (channel == null) continue;
 
                             if (!kfObj.has("data_points")) continue;
                             JsonArray dataPoints = kfObj.getAsJsonArray("data_points");
@@ -315,15 +317,18 @@ public final class BBModelParser {
                             JsonObject dp = dataPoints.get(0).getAsJsonObject();
 
                             BBAnimation.Keyframe kf = new BBAnimation.Keyframe();
-                            kf.time = time;
+                            kf.time = kfObj.has("time") ? kfObj.get("time").getAsDouble() : 0.0;
                             kf.channel = channel;
-                            kf.interpolation = interp;
-                            kf.x = parseMaybeMath(dp, "x");
-                            kf.y = parseMaybeMath(dp, "y");
-                            kf.z = parseMaybeMath(dp, "z");
+                            kf.interpolation = BBAnimation.Interpolation.parse(
+                                    getString(kfObj, "interpolation", "linear"));
+                            kf.x = parseMaybeMath(dp, "x", channel.restValue);
+                            kf.y = parseMaybeMath(dp, "y", channel.restValue);
+                            kf.z = parseMaybeMath(dp, "z", channel.restValue);
                             animator.keyframes.add(kf);
                         }
                     }
+                    // Tri des canaux une fois pour toutes, avant tout bake.
+                    animator.finishLoading();
                     anim.animators.put(boneUuid, animator);
                 }
             }
@@ -332,15 +337,20 @@ public final class BBModelParser {
         return list;
     }
 
-    /** Les data_points de Blockbench sont parfois des strings (expressions molang-like). On ne gère que les nombres purs en V1. */
-    private static float parseMaybeMath(JsonObject dp, String key) {
-        if (!dp.has(key)) return 0f;
+    /**
+     * Les data_points de Blockbench sont souvent des strings (parfois avec un
+     * retour à la ligne, parfois une expression molang). Seuls les nombres purs
+     * sont gérés ; en cas d'expression, on retombe sur la valeur de REPOS du canal
+     * et non sur 0, sinon un canal "scale" non parsé réduirait le bone à néant.
+     */
+    private static float parseMaybeMath(JsonObject dp, String key, float fallback) {
+        if (!dp.has(key) || dp.get(key).isJsonNull()) return fallback;
         JsonElement v = dp.get(key);
         if (v.isJsonPrimitive() && v.getAsJsonPrimitive().isNumber()) return v.getAsFloat();
         try {
             return Float.parseFloat(v.getAsString().trim());
         } catch (NumberFormatException ex) {
-            return 0f; // expression non-numérique (molang) : ignorée en V1
+            return fallback; // expression non-numérique (molang) : non gérée
         }
     }
 
