@@ -28,6 +28,15 @@ public class BBBone {
     public final List<BBBone> children = new ArrayList<>();
     public final List<BBElement> ownElements = new ArrayList<>();
 
+    /**
+     * Reflète le flag "visibility" du groupe Blockbench. false = bone masqué
+     * volontairement dans l'éditeur (typiquement des bones "hors-champ" utilisés
+     * uniquement par certaines animations d'attaque, ex: bras/jambes de secours
+     * positionnés loin sur le côté, amenés en place seulement via leurs propres
+     * keyframes). Non spawné en bind pose par défaut, cf. BBModelBaker.bakeBindPose.
+     */
+    public boolean visible = true;
+
     public BBBone(String uuid, String name) {
         this.uuid = uuid;
         this.name = name;

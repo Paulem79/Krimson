@@ -186,6 +186,7 @@ public final class BBModelParser {
         String name = "bone";
         final org.joml.Vector3f origin = new org.joml.Vector3f();
         final org.joml.Vector3f rotation = new org.joml.Vector3f();
+        boolean visibility = true;
     }
 
     /**
@@ -208,6 +209,7 @@ public final class BBModelParser {
             meta.name = getString(o, "name", "bone");
             if (o.has("origin")) readVec3Array(o.get("origin"), meta.origin);
             if (o.has("rotation")) readVec3Array(o.get("rotation"), meta.rotation);
+            meta.visibility = !o.has("visibility") || o.get("visibility").getAsBoolean();
             map.put(uuid, meta);
         }
         return map;
@@ -246,6 +248,12 @@ public final class BBModelParser {
             readVec3Array(o.get("rotation"), bone.bindRotation);
         } else if (meta != null) {
             bone.bindRotation.set(meta.rotation);
+        }
+
+        if (o.has("visibility")) {
+            bone.visible = o.get("visibility").getAsBoolean();
+        } else if (meta != null) {
+            bone.visible = meta.visibility;
         }
 
         bonesByUuid.put(uuid, bone);

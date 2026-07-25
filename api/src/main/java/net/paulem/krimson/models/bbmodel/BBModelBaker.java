@@ -62,6 +62,11 @@ public final class BBModelBaker {
         List<BakedPart> parts = new ArrayList<>();
         model.forEachBone(bone -> {
             if (!bone.hasGeometry()) return; // bone purement structurel (pas de géométrie propre) -> pas d'entité
+            if (!bone.visible) return; // bone masqué dans l'éditeur (ex: bras/jambes "BAM" hors-champ,
+            // utilisés seulement par certaines animations d'attaque) -> pas spawné par défaut.
+            // cf. javadoc de BBBone.visible pour le détail. Si tu veux QUAND MÊME
+            // ces bones dispo pour certaines animations spécifiques, il faudra un
+            // système de spawn/despawn par animation (pas géré ici en V1).
 
             BakedPart part = new BakedPart();
             part.tag = bone.tag();
