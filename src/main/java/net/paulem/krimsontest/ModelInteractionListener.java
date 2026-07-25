@@ -1,12 +1,10 @@
 package net.paulem.krimsontest;
 
-import net.paulem.krimson.models.BlockDisplayModel;
+import net.paulem.krimson.models.BDEngineModel;
 import net.paulem.krimson.models.Models;
-import net.paulem.krimsontest.sounds.PluginSounds;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Display;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -37,14 +35,14 @@ public class ModelInteractionListener implements Listener {
         if (display == null) return;
 
         PersistentDataContainer pdc = display.getPersistentDataContainer();
-        if (!pdc.has(BlockDisplayModel.INSTANCE_KEY, PersistentDataType.STRING)) return;
+        if (!pdc.has(BDEngineModel.INSTANCE_KEY, PersistentDataType.STRING)) return;
 
-        String instanceId = pdc.get(BlockDisplayModel.INSTANCE_KEY, PersistentDataType.STRING);
-        String modelKeyStr = pdc.get(BlockDisplayModel.MODEL_KEY, PersistentDataType.STRING);
+        String instanceId = pdc.get(BDEngineModel.INSTANCE_KEY, PersistentDataType.STRING);
+        String modelKeyStr = pdc.get(BDEngineModel.MODEL_KEY, PersistentDataType.STRING);
 
         if (modelKeyStr == null || instanceId == null) return;
 
-        BlockDisplayModel model = Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
+        BDEngineModel model = (BDEngineModel) Models.REGISTRY.getOrThrow(NamespacedKey.fromString(modelKeyStr));
 
         model.playAnimationLoop(display.getWorld(), instanceId);
     }
@@ -62,15 +60,15 @@ public class ModelInteractionListener implements Listener {
         if (display == null) return;
 
         PersistentDataContainer pdc = display.getPersistentDataContainer();
-        if (!pdc.has(BlockDisplayModel.INSTANCE_KEY, PersistentDataType.STRING)) return;
+        if (!pdc.has(BDEngineModel.INSTANCE_KEY, PersistentDataType.STRING)) return;
 
-        String instanceId = pdc.get(BlockDisplayModel.INSTANCE_KEY, PersistentDataType.STRING);
+        String instanceId = pdc.get(BDEngineModel.INSTANCE_KEY, PersistentDataType.STRING);
         if (instanceId == null) return;
 
         event.setCancelled(true);
 
         // Use the new method to remove model instance and stop animations/sounds
-        BlockDisplayModel.removeModelInstance(display.getWorld(), instanceId);
+        BDEngineModel.removeModelInstance(display.getWorld(), instanceId);
     }
 
     /**

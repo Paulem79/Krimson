@@ -1,15 +1,15 @@
 package net.paulem.krimson.sounds;
 
 import lombok.Getter;
+import net.paulem.krimson.models.BDEngineModel;
 import net.paulem.krimson.registry.RegistryKey;
 import org.bukkit.NamespacedKey;
 import org.bukkit.SoundCategory;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Represents a custom sound registered through the Krimson API.
  * Follows the same pattern as {@link net.paulem.krimson.items.CustomItem}
- * and {@link net.paulem.krimson.models.BlockDisplayModel}.
+ * and {@link BDEngineModel}.
  *
  * <p>The sound file (.ogg) should be placed in the plugin's resources at
  * {@code assets/krimson/sounds/<key>.ogg} and will be automatically

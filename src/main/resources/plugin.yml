@@ -17,3 +17,6 @@ commands:
   ui:
     description: Test UI elements
     usage: /ui <type> [action]
+  stand:
+    description: Spawn and animate the model rig.
+    usage: /stand <spawn|remove|removeall|play|stop|pause|speed|scale|list|info>

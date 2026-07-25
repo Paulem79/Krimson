@@ -7,7 +7,6 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.paulem.krimson.KrimsonPlugin;
-import net.paulem.krimson.registry.RegistryKey;
 import net.paulem.krimson.utils.JsonLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -31,7 +30,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
+public class BDEngineModel implements Model {
     public static final NamespacedKey INSTANCE_KEY = new NamespacedKey("krimson", "model_instance_id");
     public static final NamespacedKey MODEL_KEY = new NamespacedKey("krimson", "model_key");
     public static final NamespacedKey PART_KEY = new NamespacedKey("krimson", "model_part_tag");
@@ -58,14 +57,14 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
     private final boolean animated;
 
     // Constructeur Legacy (Commande Vanilla /summon)
-    public BlockDisplayModel(NamespacedKey key, String command) {
+    public BDEngineModel(NamespacedKey key, String command) {
         this.key = key;
         this.animated = false;
         parseCommand(command);
     }
 
     // Constructeur JSON (Modèle + Animation)
-    public BlockDisplayModel(NamespacedKey key) {
+    public BDEngineModel(NamespacedKey key) {
         this.key = key;
         this.animated = true;
         JsonObject json = JsonLoader.loadJson("assets/" + key.getNamespace() + "/models/" + key.getKey() + ".json");
@@ -168,10 +167,10 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
                 int stepTicks = soundData.has("stepTicks") ? soundData.get("stepTicks").getAsInt() : 0;
 
                 sounds.put(soundName, new SoundAnimation(
-                    existing.name(),
-                    existing.soundFrames(),
-                    durationTicks,
-                    stepTicks
+                        existing.name(),
+                        existing.soundFrames(),
+                        durationTicks,
+                        stepTicks
                 ));
             }
         }
@@ -662,7 +661,7 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
         if (itemTag.isEmpty()) return new ItemStack(Material.AIR);
         Material material = Material.matchMaterial(itemTag.getString("id"));
         int count = itemTag.contains("Count") ? itemTag.getInt("Count") :
-                    itemTag.contains("count") ? itemTag.getInt("count") : 1;
+                itemTag.contains("count") ? itemTag.getInt("count") : 1;
         return new ItemStack(material != null ? material : Material.AIR, count);
     }
 
