@@ -101,7 +101,11 @@ public class BlockDisplayModel implements RegistryKey<NamespacedKey> {
             for (BBModelBaker.BakedPart part : bakedParts) {
                 assets.itemModels.put(part.modelKeySuffix, part.itemModelJson);
 
-                NamespacedKey itemModelKey = new NamespacedKey(key.getNamespace(), "items/" + part.modelKeySuffix);
+                // PAS de préfixe "items/" ici : le composant item_model résout déjà
+                // implicitement sous assets/<namespace>/items/<path>.json. Mettre
+                // "items/" dans le path produirait assets/.../items/items/<...>.json
+                // (inexistant) et l'item retomberait sur son rendu par défaut.
+                NamespacedKey itemModelKey = new NamespacedKey(key.getNamespace(), part.modelKeySuffix);
                 ItemStack displayItem = BBModelBaker.buildDisplayItem(itemModelKey);
 
                 DisplayPart displayPart = new DisplayPart(

@@ -18,26 +18,57 @@ import java.io.File
 private val prettyGson = GsonBuilder().setPrettyPrinting().create()
 
 /**
- * Écrit dans le dossier de sortie du pack :
+ * Écrit dans le dossier de sortie du pack, format resource-pack 46+ (MC 1.21.4+,
+ * système "Client Item" à 2 niveaux introduit par le rework item_model) :
+ *
  * - assets/krimson/textures/<baseName>.png
- * - assets/krimson/items/<modelKeySuffix>.json (un par bone)
+ * - assets/krimson/models/item/<modelKeySuffix>.json   -> géométrie brute
+ *   (parent/textures/elements), ce qu'on générait déjà avant.
+ * - assets/krimson/items/<modelKeySuffix>.json         -> définition "Client Item",
+ *   c'est CE fichier que le composant item_model de l'ItemStack référence. Il ne
+ *   doit PAS contenir la géométrie directement : Minecraft s'attend à y trouver
+ *   un objet "model" typé (ex: {"model":{"type":"minecraft:model","model":"..."}}),
+ *   sinon erreur au chargement : "No key model in MapLike[...]".
+ *
+ * Avant ce fix, on écrivait la géométrie brute directement sous assets/krimson/items/,
+ * ce qui produisait exactement cette erreur et empêchait le pack de charger les
+ * modèles (donc les textures ne s'appliquaient jamais, l'item restait en fallback).
  *
  * À appeler dans main() de ce fichier, juste APRES `pack.save(deleteOld = true)`
- * et avant `pack.createZip(zipFile)`.
+ * et avant `pack.createZip(zipFile)` (pour ne pas se faire effacer par le save()).
  */
 fun addBBModelAssets(outputDir: File, modelKey: String) {
     val assets = BBModelAssets.REGISTRY[modelKey] ?: return
 
-    val texturesDir = File(outputDir, "assets/krimson/textures")
+    // "block/" requis pour que l'atlas des blocs stitch ces textures (cf.
+    // référence "krimson:block/<key>" générée dans BBModelBaker) — même
+    // convention que le reste du pack (createBlockModel / test_block).
+    val texturesDir = File(outputDir, "assets/krimson/textures/block")
     texturesDir.mkdirs()
     for ((textureName, pngBytes) in assets.textures) {
         File(texturesDir, "$textureName.png").writeBytes(pngBytes)
     }
 
-    val itemsDir = File(outputDir, "assets/krimson/items")
-    itemsDir.mkdirs()
+    val geometryDir = File(outputDir, "assets/krimson/models/item")
+    geometryDir.mkdirs()
+    val definitionsDir = File(outputDir, "assets/krimson/items")
+    definitionsDir.mkdirs()
+
     for ((modelKeySuffix, itemModelJson) in assets.itemModels) {
-        File(itemsDir, "$modelKeySuffix.json").writeText(prettyGson.toJson(itemModelJson))
+        // 1) la géométrie réelle (parent/textures/elements), inchangée
+        File(geometryDir, "$modelKeySuffix.json").writeText(prettyGson.toJson(itemModelJson))
+
+        // 2) le "Client Item" qui pointe dessus - c'est CETTE clé que
+        //    ItemMeta#setItemModel(NamespacedKey("krimson", modelKeySuffix)) résout
+        val definition = """
+            {
+              "model": {
+                "type": "minecraft:model",
+                "model": "krimson:item/$modelKeySuffix"
+              }
+            }
+        """.trimIndent()
+        File(definitionsDir, "$modelKeySuffix.json").writeText(definition)
     }
 }
 

@@ -92,9 +92,14 @@ public final class BBModelBaker {
 
         JsonObject textures = new JsonObject();
         for (int i = 0; i < textureKeys.size(); i++) {
-            textures.addProperty("tex" + i, "krimson:" + textureKeys.get(i));
+            // "block/" est requis : c'est le seul sous-dossier de textures/ que
+            // l'atlas des blocs scanne par défaut (atlases/blocks.json vanilla).
+            // Une texture placée à la racine de textures/ est ignorée par le
+            // stitcher, d'où "Missing textures ... blocks.png:krimson:xxx" même
+            // si le fichier PNG existe et est valide.
+            textures.addProperty("tex" + i, "krimson:block/" + textureKeys.get(i));
         }
-        if (!textureKeys.isEmpty()) textures.addProperty("particle", "krimson:" + textureKeys.get(0));
+        if (!textureKeys.isEmpty()) textures.addProperty("particle", "krimson:block/" + textureKeys.get(0));
         root.add("textures", textures);
 
         JsonArray elements = new JsonArray();
