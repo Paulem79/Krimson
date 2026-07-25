@@ -3,10 +3,7 @@ package net.paulem.krimson.models.blockbench;
 import lombok.Getter;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.models.Model;
-import net.paulem.krimson.models.blockbench.model.BbModel;
-import net.paulem.krimson.models.blockbench.model.BbModelBaker;
-import net.paulem.krimson.models.blockbench.model.BbModelLoader;
-import net.paulem.krimson.models.blockbench.model.BlockbenchModelAssets;
+import net.paulem.krimson.models.blockbench.model.*;
 import net.paulem.krimson.models.blockbench.rig.RigManifest;
 import net.paulem.krimson.models.blockbench.rig.RigPart;
 import org.bukkit.Material;
@@ -16,10 +13,13 @@ import org.joml.Vector3f;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class BlockbenchDisplayModel implements Model {
     @Getter
     private final NamespacedKey key;
+    @Getter
+    private final Function<BbBone, Float> rotYAdderFunction;
 
     @Getter
     private BbModel model;
@@ -29,7 +29,12 @@ public class BlockbenchDisplayModel implements Model {
     private RigManager rigs;
 
     public BlockbenchDisplayModel(NamespacedKey key) {
+        this(key, b -> 0.0f);
+    }
+
+    public BlockbenchDisplayModel(NamespacedKey key, Function<BbBone, Float> rotYAdderFunction) {
         this.key = key;
+        this.rotYAdderFunction = rotYAdderFunction;
 
         if (!loadAssets()) {
             KrimsonPlugin.getInstance().getLogger().severe("Could not load or bake the model for " + key);
@@ -63,7 +68,7 @@ public class BlockbenchDisplayModel implements Model {
                 KrimsonPlugin.getInstance().getLogger().severe(key.getKey() + ".bbmodel missing from the jar.");
                 return false;
             }
-            this.model = BbModelLoader.load(modelStream);
+            this.model = BbModelLoader.load(modelStream, this);
 
             BbModelBaker.BakeResult baked = BbModelBaker.bake(model, key.getKey());
             for (String warning : baked.warnings()) {

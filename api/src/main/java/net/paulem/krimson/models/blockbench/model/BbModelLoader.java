@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.paulem.krimson.models.blockbench.BlockbenchDisplayModel;
 import net.paulem.krimson.models.blockbench.anim.BbAnimation;
 
 import java.io.IOException;
@@ -19,15 +20,15 @@ public final class BbModelLoader {
     private BbModelLoader() {
     }
 
-    public static BbModel load(InputStream input) throws IOException {
+    public static BbModel load(InputStream input, BlockbenchDisplayModel parent) throws IOException {
         try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
             JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
-            return parse(root);
+            return parse(root, parent);
         }
     }
 
-    public static BbModel parse(JsonObject root) {
-        BbModel model = new BbModel();
+    public static BbModel parse(JsonObject root, BlockbenchDisplayModel parent) {
+        BbModel model = new BbModel(parent);
 
         if (root.has("resolution")) {
             JsonObject resolution = root.getAsJsonObject("resolution");

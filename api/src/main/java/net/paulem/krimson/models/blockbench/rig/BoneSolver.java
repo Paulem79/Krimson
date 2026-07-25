@@ -64,11 +64,7 @@ public final class BoneSolver {
 
         float rotY = bone.rotation[1] + pose[AnimationPlayer.ROT + 1];
 
-        // TODO : directly in model constructor, not hardcoded here
-        // Compensation de 180° si c'est le groupe head principal
-        if ("head".equalsIgnoreCase(bone.name)) {
-            rotY += 180.0F;
-        }
+        rotY += model.parent.getRotYAdderFunction().apply(bone);
 
         rotateZyx(out,
                 bone.rotation[0] + pose[AnimationPlayer.ROT],
