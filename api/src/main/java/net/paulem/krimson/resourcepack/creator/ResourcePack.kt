@@ -20,14 +20,10 @@ private val prettyGson = GsonBuilder().setPrettyPrinting().create()
 /**
  * Écrit dans le dossier de sortie du pack :
  * - assets/krimson/textures/<baseName>.png
- * - assets/krimson/items/<modelKeySuffix>.json  (un par bone)
+ * - assets/krimson/items/<modelKeySuffix>.json (un par bone)
  *
- * À appeler dans main() de ce fichier, juste avant `pack.save(deleteOld = true)`,
- * pour chaque modèle bbmodel enregistré :
- *
- *     for ((modelKey, _) in BBModelAssets.REGISTRY) {
- *         addBBModelAssets(tmpDir, modelKey)
- *     }
+ * À appeler dans main() de ce fichier, juste APRES `pack.save(deleteOld = true)`
+ * et avant `pack.createZip(zipFile)`.
  */
 fun addBBModelAssets(outputDir: File, modelKey: String) {
     val assets = BBModelAssets.REGISTRY[modelKey] ?: return
@@ -116,14 +112,15 @@ fun main(dataFolder: File, packFormat: Int): File {
         }
     }
 
+    // Save the resource pack - this triggers hook execution and file saves (clears tmpDir first!)
+    pack.save(deleteOld = true)
+
+    // Génération des assets BBModel après save() pour éviter qu'ils ne soient supprimés
     for (modelKey in BBModelAssets.REGISTRY.keys) {
         addBBModelAssets(tmpDir, modelKey)
     }
 
-
-    // Save the resource pack - this triggers hook execution and file saves
-    pack.save(deleteOld = true)
-
+    // Création du ZIP contenant tout ce qui a été écrit dans tmpDir
     pack.createZip(zipFile)
     tmpDir.deleteRecursively()
 
