@@ -4,14 +4,15 @@ import com.google.gson.*;
 import lombok.Getter;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.utils.JsonLoader;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.ItemDisplay.ItemDisplayTransform;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -20,7 +21,7 @@ import org.joml.Vector3f;
 
 import java.util.*;
 
-public class BbModel implements Model<BlockDisplay> {
+public class BbModel implements Model<ItemDisplay> {
 
     public static final NamespacedKey INSTANCE_KEY = new NamespacedKey("krimson", "bb_instance_id");
     public static final NamespacedKey MODEL_KEY = new NamespacedKey("krimson", "bb_model_key");
@@ -48,9 +49,8 @@ public class BbModel implements Model<BlockDisplay> {
     // --- PARSING DU FICHIER BBMODEL ---
 
     private void parseBbModel(JsonObject root) {
-        // 1. Charger les groupes/arborescence
         Map<String, BbGroup> groupsByUuid = new HashMap<>();
-        Map<String, String> parentMap = new HashMap<>(); // Child UUID -> Parent UUID
+        Map<String, String> parentMap = new HashMap<>();
 
         if (root.has("groups")) {
             for (JsonElement elem : root.getAsJsonArray("groups")) {
@@ -58,7 +58,6 @@ public class BbModel implements Model<BlockDisplay> {
             }
         }
 
-        // 2. Charger les éléments (cubes)
         Map<String, JsonObject> rawElements = new HashMap<>();
         if (root.has("elements")) {
             for (JsonElement elem : root.getAsJsonArray("elements")) {
@@ -67,32 +66,33 @@ public class BbModel implements Model<BlockDisplay> {
             }
         }
 
-        // 3. Associer les éléments à leur groupe parent via l'Outliner
         Map<String, String> elementParentMap = new HashMap<>();
         if (root.has("outliner")) {
             parseOutliner(root.getAsJsonArray("outliner"), null, elementParentMap);
         }
 
-        // 4. Calculer la matrice globale de repos (Bind Pose) pour chaque élément
         for (Map.Entry<String, JsonObject> entry : rawElements.entrySet()) {
             String elementUuid = entry.getKey();
             JsonObject cubeObj = entry.getValue();
 
             if (cubeObj.has("export") && !cubeObj.get("export").getAsBoolean()) {
-                continue; // Ignorer si désactivé à l'export
+                continue;
             }
 
             String parentGroupUuid = elementParentMap.get(elementUuid);
             Matrix4f globalMatrix = computeElementGlobalMatrix(cubeObj, parentGroupUuid, groupsByUuid, parentMap, null);
 
-            // Pour l'instant, on utilise une BlockData par défaut (ex: STONE)
-            // On gérera le texturage/mapping UV au prochain étape.
-            BlockData defaultBlock = Bukkit.createBlockData(Material.SMOOTH_STONE);
+            // Création de l'ItemStack avec la clé du modèle 1.21.4+
+            ItemStack itemStack = new ItemStack(Material.PAPER);
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta != null) {
+                meta.setItemModel(new NamespacedKey(key.getNamespace(), "bb_" + key.getKey() + "_" + elementUuid));
+                itemStack.setItemMeta(meta);
+            }
 
-            parts.put(elementUuid, new BbElementPart(elementUuid, globalMatrix, defaultBlock, parentGroupUuid));
+            parts.put(elementUuid, new BbElementPart(elementUuid, globalMatrix, itemStack, parentGroupUuid));
         }
 
-        // 5. Parsing des animations
         if (root.has("animations")) {
             parseAnimations(root.getAsJsonArray("animations"), groupsByUuid, parentMap, rawElements, elementParentMap);
         }
@@ -122,7 +122,6 @@ public class BbModel implements Model<BlockDisplay> {
     private void parseOutliner(JsonArray outliner, String currentParentUuid, Map<String, String> elementParentMap) {
         for (JsonElement item : outliner) {
             if (item.isJsonPrimitive()) {
-                // Il s'agit du UUID d'un élément
                 elementParentMap.put(item.getAsString(), currentParentUuid);
             } else if (item.isJsonObject()) {
                 JsonObject groupObj = item.getAsJsonObject();
@@ -143,14 +142,10 @@ public class BbModel implements Model<BlockDisplay> {
             Map<String, String> parentMap,
             Map<String, BbBoneTransform> animTransforms
     ) {
-        // Matrice locale de l'élément (Cube)
         Vector3f from = parseVector3f(cubeObj, "from", 0f);
-        Vector3f to = parseVector3f(cubeObj, "to", 0f);
-        Vector3f size = new Vector3f(to).sub(from).div(16.0f);
-
         Matrix4f elemMatrix = new Matrix4f();
 
-        // Rotation propre de l'élément (si présente)
+        // 1. Rotation propre au cube (si origin/rotation définis sur le cube)
         if (cubeObj.has("rotation") || cubeObj.has("origin")) {
             Vector3f origin = parseVector3f(cubeObj, "origin", 0f).div(16.0f);
             Vector3f rot = parseVector3f(cubeObj, "rotation", 0f);
@@ -160,11 +155,12 @@ public class BbModel implements Model<BlockDisplay> {
             elemMatrix.translate(new Vector3f(origin).negate());
         }
 
-        // Offset de position du coin inférieur gauche du cube
-        elemMatrix.translate(from.div(16.0f));
-        elemMatrix.scale(size);
+        // 2. Offset de position du coin "from" + compensation du centrage ItemDisplayTransform.FIXED (+0.5, +0.5, +0.5)
+        Vector3f fromMeters = new Vector3f(from).div(16.0f);
+        elemMatrix.translate(fromMeters);
+        elemMatrix.translate(0.5f, 0.5f, 0.5f);
 
-        // Multiplier par les transformations des groupes parents (du bas vers le haut)
+        // 3. Multiplier par les transformations des groupes parents
         Matrix4f parentChainMatrix = computeParentGroupChain(parentGroupUuid, groups, parentMap, animTransforms);
 
         return new Matrix4f(parentChainMatrix).mul(elemMatrix);
@@ -182,7 +178,7 @@ public class BbModel implements Model<BlockDisplay> {
         List<String> chain = new ArrayList<>();
         String current = groupUuid;
         while (current != null) {
-            chain.add(0, current); // Remonter la hiérarchie jusqu'à la racine
+            chain.add(0, current);
             current = parentMap.get(current);
         }
 
@@ -195,7 +191,6 @@ public class BbModel implements Model<BlockDisplay> {
             Vector3f posOffset = new Vector3f(0, 0, 0);
             Vector3f scaleOffset = new Vector3f(1, 1, 1);
 
-            // Injecter la transformation d'animation si disponible pour ce groupe
             if (animTransforms != null && animTransforms.containsKey(gUuid)) {
                 BbBoneTransform pose = animTransforms.get(gUuid);
                 rot.add(pose.rotation);
@@ -237,7 +232,7 @@ public class BbModel implements Model<BlockDisplay> {
             Map<Integer, Map<String, BbBoneTransform>> keyframesByTick = new HashMap<>();
 
             for (Map.Entry<String, JsonElement> entry : animators.entrySet()) {
-                String targetUuid = entry.getKey(); // Group/Bone UUID
+                String targetUuid = entry.getKey();
                 JsonObject animator = entry.getValue().getAsJsonObject();
 
                 if (!animator.has("keyframes")) continue;
@@ -246,7 +241,7 @@ public class BbModel implements Model<BlockDisplay> {
                     JsonObject kf = kfElem.getAsJsonObject();
                     float time = kf.get("time").getAsFloat();
                     int tick = Math.round(time * 20f);
-                    String channel = kf.get("channel").getAsString(); // "position", "rotation", "scale"
+                    String channel = kf.get("channel").getAsString();
 
                     Vector3f dataPoint = parseDataPoint(kf);
 
@@ -257,7 +252,6 @@ public class BbModel implements Model<BlockDisplay> {
                 }
             }
 
-            // Calculer les matrices de chaque élément pour chaque Tick
             Map<Integer, Map<String, Matrix4f>> animFrames = new TreeMap<>();
 
             for (int t = 0; t <= totalTicks; t++) {
@@ -283,17 +277,17 @@ public class BbModel implements Model<BlockDisplay> {
 
     // --- SPAWN ET RENDU IN-GAME ---
 
-    public List<BlockDisplay> spawn(Location location) {
-        List<BlockDisplay> spawned = new ArrayList<>();
+    public List<ItemDisplay> spawn(Location location) {
+        List<ItemDisplay> spawned = new ArrayList<>();
         String instanceId = UUID.randomUUID().toString();
 
         parts.forEach((uuid, part) -> {
-            BlockDisplay display = location.getWorld().spawn(location, BlockDisplay.class, d -> {
-                d.setBlock(part.blockData());
+            ItemDisplay display = location.getWorld().spawn(location, ItemDisplay.class, d -> {
+                d.setItemStack(part.itemStack());
+                d.setItemDisplayTransform(ItemDisplayTransform.FIXED);
                 d.setTransformationMatrix(part.defaultMatrix());
             });
 
-            // Sauvegarde dans le PersistentDataContainer (PDC)
             display.getPersistentDataContainer().set(INSTANCE_KEY, PersistentDataType.STRING, instanceId);
             display.getPersistentDataContainer().set(MODEL_KEY, PersistentDataType.STRING, key.toString());
             display.getPersistentDataContainer().set(PART_KEY, PersistentDataType.STRING, uuid);
@@ -310,10 +304,9 @@ public class BbModel implements Model<BlockDisplay> {
         Map<Integer, Map<String, Matrix4f>> keyframes = animations.get(animationName);
         if (keyframes.isEmpty()) return;
 
-        // Récupérer les entités associées à l'instance ID
-        Map<String, BlockDisplay> entityMap = new HashMap<>();
+        Map<String, ItemDisplay> entityMap = new HashMap<>();
         for (Entity entity : world.getEntities()) {
-            if (entity instanceof BlockDisplay display) {
+            if (entity instanceof ItemDisplay display) {
                 String id = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
                 String partUuid = display.getPersistentDataContainer().get(PART_KEY, PersistentDataType.STRING);
 
@@ -342,10 +335,10 @@ public class BbModel implements Model<BlockDisplay> {
                 Map<String, Matrix4f> frame = keyframes.get(currentTick);
                 if (frame != null) {
                     frame.forEach((uuid, matrix) -> {
-                        BlockDisplay display = entityMap.get(uuid);
+                        ItemDisplay display = entityMap.get(uuid);
                         if (display != null && display.isValid()) {
                             display.setInterpolationDelay(0);
-                            display.setInterpolationDuration(1); // Fluidité de transition
+                            display.setInterpolationDuration(1);
                             display.setTransformationMatrix(matrix);
                         }
                     });
@@ -384,11 +377,11 @@ public class BbModel implements Model<BlockDisplay> {
         );
     }
 
-    // --- CLASSES INTERNES ET STRUCTURES DE DONNÉES ---
+    // --- STRUCTURES DE DONNÉES ---
 
     public record BbGroup(String uuid, String name, Vector3f origin, Vector3f rotation) {}
 
-    public record BbElementPart(String uuid, Matrix4f defaultMatrix, BlockData blockData, String parentGroupUuid) {}
+    public record BbElementPart(String uuid, Matrix4f defaultMatrix, ItemStack itemStack, String parentGroupUuid) {}
 
     public static class BbBoneTransform {
         @Getter private final Vector3f position = new Vector3f(0, 0, 0);

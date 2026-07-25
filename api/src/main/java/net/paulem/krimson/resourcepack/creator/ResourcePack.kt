@@ -2,6 +2,7 @@ package net.paulem.krimson.resourcepack.creator
 
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.Items
+import net.paulem.krimson.models.Models
 import net.paulem.krimson.sounds.Sounds
 import net.paulem.krimson.ui.UIRegistry
 import net.paulem.krimson.ui.font.CustomFontUI
@@ -46,28 +47,32 @@ fun main(dataFolder: File, packFormat: Int): File {
         assetResolutionStrategy = ResourceAssetResolutionStrategy(this::class.java)
     }
 
+    // 1. Enregistrement des CustomBlockItems
     for (namespacedKey in Items.REGISTRY.keys()) {
-        val blockItem: CustomBlockItem = Items.REGISTRY.getOrThrow(namespacedKey) as CustomBlockItem
-        val modelPath = blockItem.customBlock.itemDisplayStack.itemMeta!!.itemModel ?: continue
-        createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
-    }
-
-    // Register sounds from the Krimson API registry
-    val soundList = pack.addSounds("krimson") {
-        for (namespacedKey in Sounds.REGISTRY.keys()) {
-            val sound = Sounds.REGISTRY.getOrThrow(namespacedKey)
-            add(Key(sound.key.namespace, sound.key.key)) {
-                // The packed library will resolve assets/krimson/sounds/<key>.ogg from classpath
-            }
+        val item = Items.REGISTRY.getOrThrow(namespacedKey)
+        if (item is CustomBlockItem) {
+            val modelPath = item.customBlock.itemDisplayStack.itemMeta?.itemModel ?: continue
+            createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
         }
     }
 
-    // Generate custom font definitions for font-based UIs
+    // 2. Génération des assets .bbmodel directement dans le dossier créé
+    for (namespacedKey in Models.REGISTRY.keys()) {
+        BbModelPackGenerator.generateModelAssets(pack.outputDir, namespacedKey.namespace, namespacedKey.key)
+    }
+
+    // 3. Enregistrement des sons
+    pack.addSounds("krimson") {
+        for (namespacedKey in Sounds.REGISTRY.keys()) {
+            val sound = Sounds.REGISTRY.getOrThrow(namespacedKey)
+            add(Key(sound.key.namespace, sound.key.key))
+        }
+    }
+
+    // 4. Enregistrement des fonts UI
     for (namespacedKey in UIRegistry.REGISTRY.keys()) {
         val ui = UIRegistry.REGISTRY.getOrThrow(namespacedKey)
         if (ui is CustomFontUI) {
-            // Add the font definition
-            // Font Key must match CustomFontUI.fontKey, which is e.g. "krimson:mana_font"
             val fontKeyComponents = ui.fontKey.split(":")
             val namespace = fontKeyComponents[0]
             val value = fontKeyComponents[1]
@@ -84,9 +89,7 @@ fun main(dataFolder: File, packFormat: Int): File {
         }
     }
 
-    // Save the resource pack - this triggers hook execution and file saves
     pack.save(deleteOld = true)
-
     pack.createZip(zipFile)
     tmpDir.deleteRecursively()
 
