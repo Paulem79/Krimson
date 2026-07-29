@@ -1,7 +1,7 @@
 package net.paulem.krimsontest.models;
 
 import net.paulem.krimson.KrimsonPlugin;
-import net.paulem.krimson.models.BDEngineModel;
+import net.paulem.krimson.models.bdengine.BDEngineModel;
 import net.paulem.krimson.models.Models;
 import net.paulem.krimson.models.blockbench.BlockbenchDisplayModel;
 

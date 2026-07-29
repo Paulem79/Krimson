@@ -16,6 +16,11 @@ public class PluginSounds {
     }
 
     public static final CustomSound TEST_SOUND = Sounds.registerSound("test_sound", CustomSound::new);
+    public static final CustomSound SUMMON_STAND = Sounds.registerSound("summon_stand", CustomSound::new);
+    public static final CustomSound SUMMON_KILLER_QUEEN = Sounds.registerSound("summon_killer_queen", CustomSound::new);
+    public static final CustomSound STAND_THEWORLD_MUDA2 = Sounds.registerSound("stand_theworld_muda2", CustomSound::new);
+    public static final CustomSound STAND_THEWORLD_MUDA3 = Sounds.registerSound("stand_theworld_muda3", CustomSound::new);
+    public static final CustomSound THEWORLD_MUDA = Sounds.registerSound("theworld_muda", CustomSound::new);
 
     public static void init() {
         KrimsonPlugin.getInstance().getLogger().info("Registering sounds...");

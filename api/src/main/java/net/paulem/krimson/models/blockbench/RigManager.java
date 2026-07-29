@@ -21,6 +21,7 @@ public final class RigManager {
     private final int periodTicks;
     private final Vector3f originOffset;
 
+    // TODO: Not every instances on one rig, like BDEngineModel, it's one instance per rig, so per instance of BlockbenchDisplayModel
     private final Map<UUID, ModelInstance> instances = new LinkedHashMap<>();
     private BukkitTask task;
     private long lastTickNanos;
@@ -82,16 +83,9 @@ public final class RigManager {
         lastUpdateCount = updates;
     }
 
-    /** Spawns a rig two blocks in front of {@code player}, facing them. */
-    public ModelInstance spawnFor(Player player) {
-        Location location = player.getLocation();
-        Location target = location.clone()
-                .add(location.getDirection().setY(0).normalize().multiply(2.0));
-        target.setYaw(0.0F);
-        target.setPitch(0.0F);
-        // Turn to face the player: their yaw plus half a turn.
-        float yaw = location.getYaw() + 180.0F;
-        ModelInstance instance = new ModelInstance(model, manifest, target, yaw, carrier,
+    /** Spawns a rig */
+    public ModelInstance spawnFor(Location location) {
+        ModelInstance instance = new ModelInstance(model, manifest, location, location.getYaw(), carrier,
                 periodTicks, originOffset);
         instance.spawn();
         instances.put(instance.id, instance);
@@ -103,15 +97,15 @@ public final class RigManager {
     }
 
     /** The rig nearest to a player, for commands that act on "the" rig. */
-    public ModelInstance nearest(Player player) {
+    public ModelInstance nearest(Location location) {
         ModelInstance best = null;
         double bestDistance = Double.MAX_VALUE;
         for (ModelInstance instance : instances.values()) {
             Location base = instance.base();
-            if (!base.getWorld().equals(player.getWorld())) {
+            if (!base.getWorld().equals(location.getWorld())) {
                 continue;
             }
-            double distance = base.distanceSquared(player.getLocation());
+            double distance = base.distanceSquared(location);
             if (distance < bestDistance) {
                 bestDistance = distance;
                 best = instance;

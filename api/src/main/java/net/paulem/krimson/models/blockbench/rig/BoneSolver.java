@@ -16,6 +16,22 @@ import java.util.Map;
  * {@code T(origin + animPos) * Rz * Ry * Rx * S * T(-origin)} — the same order vanilla
  * {@code ModelPart} and Blockbench use, so poses match the Blockbench preview.
  *
+ * <p><b>Blockbench vs. Minecraft facing.</b> Blockbench models face {@code +Z} while a
+ * Minecraft entity with yaw 0 faces {@code -Z}. That mismatch is a single rigid 180°
+ * turn of the <em>whole posed assembly</em> — every bone's origin, rotation and the
+ * cubes hanging off it are all still expressed consistently in Blockbench's own space.
+ * {@code ModelInstance} applies that turn exactly once, to the {@code root} matrix
+ * passed into {@link #solve}. Because it sits outside the entire parent/child chain,
+ * conjugating it in only cancels out again once you multiply the chain out — so bones
+ * underneath must use their rotation values completely unchanged, with no extra sign
+ * flips of any kind. Applying a <em>second</em>, per-bone conversion on top (as this
+ * class used to, toggled by matching bone names like "arm"/"leg"/"head" and by
+ * whitelisting specific animation names) double-transforms roughly half the rig and is
+ * exactly what produced heads/props coming out upside-down or mirrored in some poses
+ * but not others: the two "fixes" were fighting each other. There is now exactly one
+ * rotation rule and it applies identically to every bone, in every animation, all the
+ * time.
+ *
  * <p>Matrices are allocated once per bone and rewritten in place, since this runs for
  * every rig on every tick.
  */
@@ -68,16 +84,7 @@ public final class BoneSolver {
 
         rotY += model.parent.getRotYAdderFunction().apply(bone);
 
-        // Debug logging for specific bones like extra_details
-        //debugBoneTransformation(bone.name, bone.origin, bone.rotation, new float[] {rotX, rotY, rotZ});
-
-        // Determine rotation method based on bone type
-        boolean useDirectRotation = shouldUseDirectRotation(bone.name);
-        if (useDirectRotation) {
-            rotateZyx(out, rotX, rotY, rotZ);
-        } else {
-            rotateZyxWithConversion(out, rotX, rotY, rotZ);
-        }
+        rotateZyx(out, rotX, rotY, rotZ);
 
         float sx = pose[AnimationPlayer.SCALE];
         float sy = pose[AnimationPlayer.SCALE + 1];
@@ -96,45 +103,7 @@ public final class BoneSolver {
         return world.get(boneName);
     }
 
-    /**
-     * Determines the rotation behavior for a bone based on its name and type.
-     *
-     * Blockbench and Minecraft use different coordinate systems:
-     * - Blockbench: Right-handed, Y-up, Z-forward
-     * - Minecraft: Right-handed, Y-up, Z-backward (faces -Z)
-     *
-     * This requires sign inversion for X and Y rotations when converting between systems.
-     * However, arms and legs are typically animated in a way that they should NOT have
-     * this conversion applied, as they were already authored with the correct orientation.
-     *
-     * @param boneName the name of the bone to check
-     * @return true if this bone should use direct rotation (no coordinate system conversion),
-     *         false if it should use converted rotation (with sign inversion for X and Y)
-     */
-    public static boolean shouldUseDirectRotation(String boneName) {
-        String lowerName = boneName.toLowerCase();
-
-        // Arms and legs should use direct rotation (no coordinate system conversion)
-        boolean isArmOrLeg = lowerName.contains("arm") || lowerName.contains("leg");
-
-        // Special cases: some bones may need direct rotation even if not arms/legs
-        // For example, "extra_details" might be positioned incorrectly with conversion
-        boolean isSpecialCase = lowerName.contains("extra_details") ||
-                               lowerName.contains("detail") ||
-                               lowerName.contains("accessory");
-
-        // Head and body parts typically need coordinate system conversion
-        boolean isHeadOrBody = lowerName.contains("head") ||
-                              lowerName.contains("body") ||
-                              lowerName.contains("torso") ||
-                              lowerName.contains("chest");
-
-        // Default behavior: use coordinate system conversion for most bones
-        // except arms, legs, and special cases
-        return isArmOrLeg || isSpecialCase || !isHeadOrBody;
-    }
-
-    /** Applies Z, then Y, then X, in degrees. */
+    /** Applies Z, then Y, then X, in degrees — the one and only rotation rule, for every bone. */
     public static void rotateZyx(Matrix4f matrix, float degX, float degY, float degZ) {
         if (degZ != 0.0F) {
             matrix.rotateZ((float) Math.toRadians(degZ));
@@ -144,32 +113,6 @@ public final class BoneSolver {
         }
         if (degX != 0.0F) {
             matrix.rotateX((float) Math.toRadians(degX));
-        }
-    }
-
-    /** Applies Z, then Y, then X, in degrees, with coordinate system conversion. */
-    public static void rotateZyxWithConversion(Matrix4f matrix, float degX, float degY, float degZ) {
-        if (degZ != 0.0F) {
-            matrix.rotateZ((float) Math.toRadians(degZ));
-        }
-        if (degY != 0.0F) {
-            matrix.rotateY((float) Math.toRadians(-degY));
-        }
-        if (degX != 0.0F) {
-            matrix.rotateX((float) Math.toRadians(-degX));
-        }
-    }
-
-    /**
-     * Debug method to log bone transformation details.
-     */
-    public void debugBoneTransformation(String boneName, float[] origin, float[] rotation, float[] poseRotation) {
-        if (boneName.equalsIgnoreCase("extra_details") || boneName.toLowerCase().contains("detail")) {
-            System.out.println("[BoneSolver] Debug for bone: " + boneName);
-            System.out.println("  Origin: [" + origin[0] + ", " + origin[1] + ", " + origin[2] + "]");
-            System.out.println("  Base Rotation: [" + rotation[0] + ", " + rotation[1] + ", " + rotation[2] + "]");
-            System.out.println("  Pose Rotation: [" + poseRotation[0] + ", " + poseRotation[1] + ", " + poseRotation[2] + "]");
-            System.out.println("  Using direct rotation: " + shouldUseDirectRotation(boneName));
         }
     }
 }

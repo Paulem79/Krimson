@@ -1,4 +1,4 @@
-package net.paulem.krimson.models;
+package net.paulem.krimson.models.bdengine;
 
 import com.google.gson.*;
 import lombok.Getter;
@@ -7,6 +7,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.paulem.krimson.KrimsonPlugin;
+import net.paulem.krimson.models.Model;
 import net.paulem.krimson.utils.JsonLoader;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -30,7 +31,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BDEngineModel implements Model {
+public class BDEngineModel implements Model<List<Display>, World, String> {
     public static final NamespacedKey INSTANCE_KEY = new NamespacedKey("krimson", "model_instance_id");
     public static final NamespacedKey MODEL_KEY = new NamespacedKey("krimson", "model_key");
     public static final NamespacedKey PART_KEY = new NamespacedKey("krimson", "model_part_tag");
@@ -299,7 +300,7 @@ public class BDEngineModel implements Model {
     }
 
     // --- SPAWN & LINKING VIA PDC ---
-
+    @Override
     public List<Display> spawn(Location location) {
         Location spawnLoc = location.clone().add(originOffset.x(), originOffset.y(), originOffset.z());
         List<Display> spawnedDisplays = new ArrayList<>();

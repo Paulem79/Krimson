@@ -1,10 +1,12 @@
 package net.paulem.krimson.sounds;
 
 import lombok.Getter;
-import net.paulem.krimson.models.BDEngineModel;
+import net.paulem.krimson.models.bdengine.BDEngineModel;
 import net.paulem.krimson.registry.RegistryKey;
+import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.SoundCategory;
+import org.bukkit.entity.Player;
 
 /**
  * Represents a custom sound registered through the Krimson API.
@@ -71,5 +73,13 @@ public class CustomSound implements RegistryKey<NamespacedKey> {
      */
     public String getSoundPath() {
         return key.getNamespace() + ":sounds/" + key.getKey();
+    }
+
+    public void play(Player player, float volume, float pitch) {
+        player.playSound(player.getLocation(), getSoundKey(), soundCategory, volume, pitch);
+    }
+
+    public void play(Location location, float volume, float pitch) {
+        location.getWorld().playSound(location, getSoundKey(), soundCategory, volume, pitch);
     }
 }

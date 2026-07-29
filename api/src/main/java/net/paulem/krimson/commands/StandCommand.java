@@ -73,12 +73,12 @@ public final class StandCommand implements CommandExecutor, TabCompleter {
 
         switch (sub) {
             case "spawn" -> {
-                ModelInstance instance = rigs.spawnFor(player);
+                ModelInstance instance = rigs.spawnFor(player.getLocation());
                 reply(sender, "Spawned with " + instance.displayCount()
                         + " display entities. Try /stand play Idle");
             }
             case "remove" -> {
-                ModelInstance instance = rigs.nearest(player);
+                ModelInstance instance = rigs.nearest(player.getLocation());
                 if (instance == null) {
                     reply(sender, "No rig nearby.");
                     return true;
@@ -150,7 +150,7 @@ public final class StandCommand implements CommandExecutor, TabCompleter {
                 reply(sender, "Scale " + value + "x");
             }
             case "info" -> {
-                ModelInstance instance = rigs.nearest(player);
+                ModelInstance instance = rigs.nearest(player.getLocation());
                 BbAnimation animation = instance == null ? null
                         : instance.player().current();
                 reply(sender, String.format(
@@ -172,7 +172,7 @@ public final class StandCommand implements CommandExecutor, TabCompleter {
     }
 
     private ModelInstance requireNearest(Player player, RigManager rigs) {
-        ModelInstance instance = rigs.nearest(player);
+        ModelInstance instance = rigs.nearest(player.getLocation());
         if (instance == null) {
             reply(player, "No rig nearby — run /stand spawn first.");
         }

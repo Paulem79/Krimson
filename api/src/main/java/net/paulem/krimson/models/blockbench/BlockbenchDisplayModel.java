@@ -4,10 +4,14 @@ import lombok.Getter;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.models.Model;
 import net.paulem.krimson.models.blockbench.model.*;
+import net.paulem.krimson.models.blockbench.rig.ModelInstance;
 import net.paulem.krimson.models.blockbench.rig.RigManifest;
 import net.paulem.krimson.models.blockbench.rig.RigPart;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import java.io.InputStream;
@@ -15,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-public class BlockbenchDisplayModel implements Model {
+public class BlockbenchDisplayModel implements Model<ModelInstance, Location, ModelInstance> {
     @Getter
     private final NamespacedKey key;
     @Getter
@@ -52,6 +56,16 @@ public class BlockbenchDisplayModel implements Model {
                 "%s Ready: %d bones, %d animations, %d rig parts (%d visible by default).",
                 key, model.bones.size(), model.animations.size(), manifest.size(),
                 manifest.parts().stream().filter(p -> p.visibleByDefault).count()));
+    }
+
+    @Override
+    public ModelInstance spawn(Location location) {
+        return rigs.spawnFor(location);
+    }
+
+    @Override
+    public void playAnimation(Location kindaLoc, ModelInstance instance, String animationName) {
+        instance.play(animationName, 0.15F);
     }
 
     /**
@@ -93,5 +107,11 @@ public class BlockbenchDisplayModel implements Model {
             KrimsonPlugin.getInstance().getLogger().severe("Failed to load/bake assets: " + exception);
             return false;
         }
+    }
+
+    // TODO: Same as comment in RigManager
+    @Nullable
+    private ModelInstance requireNearest(Location location) {
+        return rigs.nearest(location);
     }
 }
