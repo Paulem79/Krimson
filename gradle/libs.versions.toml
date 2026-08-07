@@ -16,7 +16,7 @@ annotations = "26.0.2-1"
 lombok = "1.18.42"
 
 universalScheduler = "0.+"
-customBlockData = "2.2.5"
+customBlockData = "2.2.8"
 packedCore = "1.1.4"
 mcbrawlsInject = "3.+"
 javalin = "7.+"
