@@ -91,10 +91,15 @@ public class NoteBlockCustomBlock extends CustomBlock {
         // Intentionally empty
     }
 
-    /** Nothing to respawn. */
+    /**
+     * No display to respawn, but the blockstate itself has to be watched: vanilla re-picks the instrument
+     * from {@code NoteBlock#updateShape} whenever the block above or below changes, and that path does not
+     * fire {@code BlockPhysicsEvent}, so the listener cannot cancel it. Restoring it here covers every
+     * source of drift at once.
+     */
     @Override
     public void tickSync() {
-        // Intentionally empty
+        heal();
     }
 
     /** Nothing to despawn. */

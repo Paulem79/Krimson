@@ -1,6 +1,7 @@
 package net.paulem.krimson.blocks.noteblock.listeners;
 
 import net.paulem.krimson.KrimsonAPI;
+import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.blocks.noteblock.NoteBlockCustomBlock;
 import net.paulem.krimson.blocks.noteblock.VanillaNoteBlocks;
 import org.bukkit.Material;
@@ -120,6 +121,12 @@ public class NoteBlockListener implements Listener {
         VanillaNoteBlocks.setPowered(block, block.isBlockIndirectlyPowered());
     }
 
+    /** A block appearing above or below a note block changes that note block's instrument in vanilla. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onNeighbourPlaced(BlockPlaceEvent event) {
+        repinNeighbours(event.getBlockPlaced());
+    }
+
     /** Keeps the chunk PDC from accumulating entries for note blocks that no longer exist. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBreak(BlockBreakEvent event) {
@@ -129,6 +136,30 @@ public class NoteBlockListener implements Listener {
         }
 
         VanillaNoteBlocks.clear(block);
+    }
+
+    /** Same as above, for a block disappearing next to a note block. */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onNeighbourBroken(BlockBreakEvent event) {
+        repinNeighbours(event.getBlock());
+    }
+
+    /**
+     * Vanilla re-picks the instrument of a note block whenever its vertical neighbour changes, through
+     * {@code NoteBlock#updateShape} - a path that never fires {@link BlockPhysicsEvent}, so it cannot be
+     * cancelled. Custom blocks repair themselves on their sync tick; real note blocks have no tick, so they
+     * are re-pinned here, or they would drift onto a state that belongs to a custom block and start
+     * rendering as it.
+     */
+    private static void repinNeighbours(Block block) {
+        KrimsonPlugin.getScheduler().runTask(() -> {
+            for (int dy : new int[]{-1, 1}) {
+                Block neighbour = block.getRelative(0, dy, 0);
+                if (neighbour.getType() == Material.NOTE_BLOCK && !KrimsonAPI.isCustomBlock(neighbour)) {
+                    VanillaNoteBlocks.pin(neighbour);
+                }
+            }
+        });
     }
 
     private static NoteBlockCustomBlock customBlockAt(Block block) {
