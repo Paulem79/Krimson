@@ -1,6 +1,7 @@
 plugins {
     `java-library`
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.paperweight.userdev)
     alias(libs.plugins.shadow)
     alias(libs.plugins.run.paper)
     id("idea")
@@ -38,8 +39,10 @@ allprojects {
 }
 
 dependencies {
+    // Paper NMS
+    paperweight.paperDevBundle(libs.versions.paper)
+
     implementation(project(":api"))
-    compileOnly(libs.paper.api)
 
     implementation(libs.commons.lang3)
 

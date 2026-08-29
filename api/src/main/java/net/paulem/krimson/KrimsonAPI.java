@@ -3,6 +3,8 @@ package net.paulem.krimson;
 import com.jeff_media.customblockdata.CustomBlockData;
 import net.paulem.krimson.commands.StandCommand;
 import net.paulem.krimson.listeners.*;
+import net.paulem.krimson.mobs.CustomMobs;
+import net.paulem.krimson.mobs.listeners.CustomMobListener;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
@@ -64,6 +66,9 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         plugin.initItems();
         plugin.initBlocks();
         plugin.initModels();
+        plugin.initMobs();
+        CustomMobs.REGISTRY.freeze();
+        CustomMobs.init();
         plugin.initSounds();
         plugin.initUIs();
 
@@ -75,6 +80,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         pluginManager.registerEvents(new LightSourcePreventionListener(), plugin);
         pluginManager.registerEvents(new BlockItemHandlerListener(), plugin);
         pluginManager.registerEvents(new MigrationListener(), plugin);
+        pluginManager.registerEvents(new CustomMobListener(), plugin);
         CustomBlockData.registerListener(plugin);
 
         // Commands
@@ -116,6 +122,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
 
     public void stop() {
         packHosting.stop();
+        CustomMobs.shutdown();
 
         getLogger().info("Goodbye from Krimson API!");
     }
