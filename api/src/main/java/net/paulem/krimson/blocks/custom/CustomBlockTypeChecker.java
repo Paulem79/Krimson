@@ -2,6 +2,7 @@ package net.paulem.krimson.blocks.custom;
 
 import org.bukkit.block.Block;
 import net.paulem.krimson.KrimsonAPI;
+import net.paulem.krimson.blocks.noteblock.NoteBlockCustomBlock;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.properties.PDCWrapper;
 
@@ -12,6 +13,10 @@ public class CustomBlockTypeChecker {
     public CustomBlockTypeChecker(Block block) {
         this.block = block;
         this.properties = new PDCWrapper(block);
+    }
+
+    public boolean isNoteBlock() {
+        return properties.has(Keys.NOTE_BLOCK);
     }
 
     public boolean isLightBlock() {
@@ -26,7 +31,11 @@ public class CustomBlockTypeChecker {
 
     public CustomBlock get() {
         if (KrimsonAPI.isCustomBlock(block)) {
-            if (isLightBlock()) {
+            // Checked first: the note block backend renders through the blockstate, so it must not be
+            // reconstructed as a display based block.
+            if (isNoteBlock()) {
+                return new NoteBlockCustomBlock(block);
+            } else if (isLightBlock()) {
                 return new LightBlock(block);
             } else if (isInventoryBlock()) {
                 return new InventoryCustomBlock(block);

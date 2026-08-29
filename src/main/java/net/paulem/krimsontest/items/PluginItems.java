@@ -16,6 +16,12 @@ public class PluginItems {
                 customBlock.copyOf().spawn(placeLoc)
     );
 
+    public static final CustomBlockItem NOTE_TEST = Items.registerBlockItem(
+            PluginBlocks.NOTE_TEST,
+            (customBlock, player, placeLoc) ->
+                customBlock.copyOf().spawn(placeLoc)
+    );
+
     public static void init() {
         KrimsonPlugin.getInstance().getLogger().info("Registering items...");
 

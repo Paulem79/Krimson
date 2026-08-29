@@ -1,6 +1,9 @@
 package net.paulem.krimson.resourcepack.creator
 
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
+import net.paulem.krimson.blocks.noteblock.NoteBlockState
+import net.paulem.krimson.blocks.noteblock.NoteBlockStates
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.Items
 import net.paulem.krimson.models.blockbench.model.BlockbenchModelAssets
@@ -13,6 +16,7 @@ import net.radstevee.packed.core.item.definition.ItemDefinition
 import net.radstevee.packed.core.key.Key
 import net.radstevee.packed.core.pack.ResourcePack
 import net.radstevee.packed.core.pack.ResourcePackBuilder.Companion.resourcePack
+import org.bukkit.NamespacedKey
 import java.io.File
 import java.io.InputStream
 import java.util.zip.ZipInputStream
@@ -87,6 +91,64 @@ fun addBBModelAssets(outputDir: File, modelKey: String) {
     }
 }
 
+/**
+ * Écrit `assets/minecraft/blockstates/note_block.json`, la pièce maîtresse des blocs custom à base de
+ * noteblocks : chaque état du noteblock (`instrument` x `note` x `powered`) y est associé à un modèle.
+ * Les états alloués pointent vers le modèle du bloc custom, tous les autres restent sur le modèle vanilla
+ * pour qu'un vrai noteblock continue de ressembler à un noteblock.
+ *
+ * À appeler **après** `pack.save(deleteOld = true)`, qui vide `outputDir`.
+ */
+fun writeNoteBlockStates(outputDir: File) {
+    val allocations = NoteBlockStates.allocations()
+    if (allocations.isEmpty()) return
+
+    val modelByVariant = HashMap<String, String>()
+    for ((key, state) in allocations) {
+        modelByVariant[state.variantString()] = blockModelKey(key)
+    }
+
+    val variants = JsonObject()
+    for (index in 0..NoteBlockState.maxIndex()) {
+        val variant = NoteBlockState.fromIndex(index).variantString()
+        val entry = JsonObject()
+        entry.addProperty("model", modelByVariant[variant] ?: "minecraft:block/note_block")
+        variants.add(variant, entry)
+    }
+
+    val root = JsonObject()
+    root.add("variants", variants)
+
+    val blockstatesDir = File(outputDir, "assets/minecraft/blockstates")
+    blockstatesDir.mkdirs()
+    File(blockstatesDir, "note_block.json").writeText(prettyGson.toJson(root))
+
+    // Filet de sécurité : un bloc noteblock enregistré sans CustomBlockItem n'est pas passé par
+    // createBlockModel, et le blockstate pointerait alors vers un modèle inexistant.
+    for (key in allocations.keys) {
+        ensureCubeAllModel(outputDir, key)
+    }
+}
+
+/** Le modèle utilisé à la fois comme modèle de bloc et comme modèle d'objet, cf. `ItemUtils.getWithItemModel`. */
+private fun blockModelKey(key: NamespacedKey) = "${key.namespace}:block/${key.key}"
+
+private fun ensureCubeAllModel(outputDir: File, key: NamespacedKey) {
+    val modelFile = File(outputDir, "assets/${key.namespace}/models/block/${key.key}.json")
+    if (modelFile.exists()) return
+
+    modelFile.parentFile.mkdirs()
+
+    val textures = JsonObject()
+    textures.addProperty("all", "${key.namespace}:block/${key.key}")
+
+    val model = JsonObject()
+    model.addProperty("parent", "minecraft:block/cube_all")
+    model.add("textures", textures)
+
+    modelFile.writeText(prettyGson.toJson(model))
+}
+
 fun createBlockModel(
     pack: ResourcePack,
     texture: Key,
@@ -121,8 +183,8 @@ fun main(dataFolder: File, packFormat: Int): File {
     }
 
     for (namespacedKey in Items.REGISTRY.keys()) {
-        val blockItem: CustomBlockItem = Items.REGISTRY.getOrThrow(namespacedKey) as CustomBlockItem
-        val modelPath = blockItem.customBlock.itemDisplayStack.itemMeta!!.itemModel ?: continue
+        val blockItem = Items.REGISTRY.getOrThrow(namespacedKey) as? CustomBlockItem ?: continue
+        val modelPath = blockItem.customBlock.itemDisplayStack.itemMeta?.itemModel ?: continue
         createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
     }
 
@@ -166,6 +228,9 @@ fun main(dataFolder: File, packFormat: Int): File {
     for (modelKey in BlockbenchModelAssets.REGISTRY.keys) {
         addBBModelAssets(tmpDir, modelKey)
     }
+
+    // 3. Blockstates du noteblock : c'est ce fichier qui fait apparaître les blocs custom
+    writeNoteBlockStates(tmpDir)
 
     // Création du ZIP final contenant la fusion des deux packs
     pack.createZip(zipFile)

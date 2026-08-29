@@ -2,10 +2,10 @@
 
 A library for creating custom blocks in a Spigot/Paper-based Minecraft server environment.
 
-Future library to add UI, custom blocks, custom models + animations + sounds with BDEngine, sounds and more !
+Future library to add UI, custom blocks, custom models + animations + sounds with BDEngine, sounds and more!
 
-The goal of this API is to be fully extendable and customizable to your usage, and always free !
-Any contribution is welcome, especially on the custom blocks side, where implementing custom blocks using noteblocks can be something good (implies recreating the noteblock system to make it works, ig by retaining the noteblocks informations when used and changed in the PDC to custom handle it)
+The goal of this API is to be fully extendable and customizable to your usage, and always free!
+Any contribution is welcome!
 
 ## Showcases
 ![Screenshot of the custom block, BDEngine and custom UI](assets/block-bdengine-ui.png)

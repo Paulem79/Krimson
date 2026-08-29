@@ -204,6 +204,14 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
             });
         }
 
+        registerLive(block);
+    }
+
+    /**
+     * Marks the block as a live custom block: builds its properties, writes the custom block marker to the
+     * PDC and hands the instance to the tracker. Shared by every backend (display based or not).
+     */
+    protected void registerLive(Block block) {
         setDisplayAndProperties(block);
         properties.getContainer().set(Keys.CUSTOM_BLOCK, (byte) 1);
         KrimsonAPI.customBlocks.registerBlock(this);

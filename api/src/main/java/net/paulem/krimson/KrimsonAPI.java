@@ -1,6 +1,8 @@
 package net.paulem.krimson;
 
 import com.jeff_media.customblockdata.CustomBlockData;
+import net.paulem.krimson.blocks.noteblock.NoteBlockStates;
+import net.paulem.krimson.blocks.noteblock.listeners.NoteBlockListener;
 import net.paulem.krimson.commands.StandCommand;
 import net.paulem.krimson.listeners.*;
 import net.paulem.krimson.mobs.CustomMobs;
@@ -63,8 +65,12 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         customBlocks = new CustomBlockTracker();
         getLogger().info("Scheduled ticking!");
 
+        // Must run before initBlocks(): registering a note block backed block allocates a blockstate.
+        NoteBlockStates.load(plugin.getDataFolder());
+
         plugin.initItems();
         plugin.initBlocks();
+        NoteBlockStates.save();
         plugin.initModels();
         plugin.initMobs();
         CustomMobs.REGISTRY.freeze();
@@ -81,6 +87,9 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         pluginManager.registerEvents(new BlockItemHandlerListener(), plugin);
         pluginManager.registerEvents(new MigrationListener(), plugin);
         pluginManager.registerEvents(new CustomMobListener(), plugin);
+        // Registered last on purpose: it denies note block interactions, and the listeners above must get
+        // their turn at the same priority first.
+        pluginManager.registerEvents(new NoteBlockListener(), plugin);
         CustomBlockData.registerListener(plugin);
 
         // Commands

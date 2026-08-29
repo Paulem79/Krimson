@@ -24,4 +24,13 @@ public final class Keys {
 
     // Light
     public static final DataKey<Integer, Integer> EMITTING_LIGHT_LEVEL = new DataKey<>("emitting_light_level", PersistentDataType.INTEGER);
+
+    // Note block backed custom blocks
+    /** Marker telling {@code CustomBlockTypeChecker} that this block renders through a note block state. */
+    public static final DataKey<Byte, Byte> NOTE_BLOCK = new DataKey<>("note_block", PersistentDataType.BYTE);
+
+    // Vanilla note block emulation: the real note block keeps its blockstate pinned, so the state a player
+    // would normally see in the world lives here instead.
+    public static final DataKey<Integer, Integer> VANILLA_NOTE = new DataKey<>("vanilla_note", PersistentDataType.INTEGER);
+    public static final DataKey<Byte, Byte> VANILLA_POWERED = new DataKey<>("vanilla_powered", PersistentDataType.BYTE);
 }
