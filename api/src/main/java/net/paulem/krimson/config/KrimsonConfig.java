@@ -7,6 +7,10 @@ import net.paulem.arcana.config.ConfigEntry;
 
 @Config
 public class KrimsonConfig implements ConfigData {
+    /**
+     * Renders item display custom blocks as 6 flat displays, one per face, each lit by the block laid
+     * against it. When disabled, a single display is used, lit by the brightest neighbour block.
+     */
     @Getter
     @ConfigEntry
     private boolean preciseLightning = true;

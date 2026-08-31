@@ -1,4 +1,6 @@
-# Verify lightning like Minecraft or do a less precise one by checking the upper block (which may cause the block to be black)
+# Light item display custom blocks per face, like Minecraft does: the block is rendered as 6 flat displays
+# (one per face), each lit by the block laid against it. Costs 6 entities per block instead of 1.
+# When disabled, a single display is used, lit by the brightest of the 6 neighbour blocks.
 preciseLightning: true
 
 # The maximum distance (in chunks) a player can tick item display custom blocks

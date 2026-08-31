@@ -24,6 +24,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
+import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import net.paulem.krimson.KrimsonAPI;
 import net.paulem.krimson.blocks.Blocks;
@@ -34,7 +35,10 @@ import net.paulem.krimson.items.Items;
 import net.paulem.krimson.properties.PDCWrapper;
 import net.paulem.krimson.registry.RegistryKey;
 
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class CustomBlock implements RegistryKey<NamespacedKey> {
@@ -52,6 +56,22 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     protected final Material blockMaterial;
     @Getter
     protected ItemDisplay linkedDisplay;
+
+    /**
+     * Displays used when per face lighting is enabled: one flattened display per cartesian face, each lit
+     * by the block laid against it. Concurrent because it is written when the block spawns, on the main
+     * thread, and read by {@link #tickLight()} on the async ticking thread. Empty when the block is rendered by a single display, in which case
+     * {@link #linkedDisplay} is the one to use (and it is {@code null} the other way around).
+     */
+    @Getter
+    protected final Map<BlockFace, ItemDisplay> faceDisplays = new ConcurrentHashMap<>();
+
+    /**
+     * Last brightness pushed to each display, packed as {@code blockLight << 4 | skyLight} and keyed by
+     * face ({@link BlockFace#SELF} for the single display). Lighting is ticked every tick for every loaded
+     * block, so we only send an update when the computed value actually changed.
+     */
+    private final Map<BlockFace, Integer> lastBrightness = new ConcurrentHashMap<>();
     @Getter
     protected Block block;
     @Getter
@@ -174,14 +194,15 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         blockLoc.setPitch(0);
         blockLoc.setYaw(0);
 
+        this.linkedDisplay = null;
+        faceDisplays.clear();
+        lastBrightness.clear();
+
         if (getItemDisplayStack().getType() == Material.PLAYER_HEAD) {
             // HEAD
             Location spawnLoc = blockLoc.add(.5, 0 + OFFSET.y(), .5);
 
-            // Remove existing displays to prevent ghosts
-            spawnLoc.getWorld().getNearbyEntities(spawnLoc, 0.2, 0.2, 0.2).stream()
-                    .filter(e -> e instanceof ItemDisplay)
-                    .forEach(org.bukkit.entity.Entity::remove);
+            removeGhostDisplays(spawnLoc);
 
             blockLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
@@ -205,14 +226,14 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
 
                 tickLight();
             });
+        } else if (usesPerFaceLighting()) {
+            // BLOCK, one flat display per face
+            spawnFaceDisplays(blockLoc.add(.5, .5, .5));
         } else {
             // BLOCK
             Location spawnLoc = blockLoc.add(.5, .5, .5);
 
-            // Remove existing displays to prevent ghosts
-            spawnLoc.getWorld().getNearbyEntities(spawnLoc, 0.2, 0.2, 0.2).stream()
-                    .filter(e -> e instanceof ItemDisplay)
-                    .forEach(org.bukkit.entity.Entity::remove);
+            removeGhostDisplays(spawnLoc);
 
             linkedDisplay = blockLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, itemDisplay -> {
                 this.linkedDisplay = itemDisplay;
@@ -244,6 +265,83 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     }
 
     /**
+     * Whether this block is rendered as six flattened displays, one per face, each lit on its own.
+     * Player head models are not full cubes, so they always keep a single display.
+     */
+    protected boolean usesPerFaceLighting() {
+        return KrimsonPlugin.getConfiguration().isPreciseLightning()
+                && getItemDisplayStack().getType() != Material.PLAYER_HEAD;
+    }
+
+    /**
+     * Removes the displays already sitting at the given location, to prevent ghosts.
+     */
+    protected void removeGhostDisplays(Location spawnLoc) {
+        spawnLoc.getWorld().getNearbyEntities(spawnLoc, 0.2, 0.2, 0.2).stream()
+                .filter(ItemDisplay.class::isInstance)
+                .forEach(org.bukkit.entity.Entity::remove);
+    }
+
+    /**
+     * Spawns one display per cartesian face, each flattened into a 2D plane laid on that face, so that
+     * {@link #tickLight()} can light every face with its own neighbour.
+     *
+     * <p>All six displays are spawned at the center of the block and only differ by their transformation,
+     * so the ghost cleanup and the respawn logic stay the same whatever the lighting mode is - which is
+     * also what makes toggling the option at runtime self healing.</p>
+     */
+    protected void spawnFaceDisplays(Location spawnLoc) {
+        removeGhostDisplays(spawnLoc);
+
+        ItemStack stack = getItemDisplayStack();
+        Map<BlockFace, ItemDisplay> displays = new EnumMap<>(BlockFace.class);
+
+        for (BlockFace face : BlockFace.values()) {
+            if (!face.isCartesian()) {
+                continue;
+            }
+
+            displays.put(face, spawnLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, itemDisplay -> {
+                itemDisplay.setPersistent(false);
+                itemDisplay.setItemStack(stack);
+
+                itemDisplay.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.HEAD);
+
+                itemDisplay.setTransformation(faceTransformation(face));
+            }));
+        }
+
+        faceDisplays.clear();
+        faceDisplays.putAll(displays);
+
+        tickLight();
+    }
+
+    /**
+     * Builds the transformation flattening the block model into the plane of the given face, keeping the
+     * orientation used by the single display so the rendering is unchanged.
+     */
+    protected Transformation faceTransformation(BlockFace face) {
+        float thickness = OFFSET.x();
+        // Pushed slightly outside the block it covers, to avoid z-fighting with the real block
+        float distance = .5f + thickness;
+
+        Vector3f translation = new Vector3f(face.getModX(), face.getModY(), face.getModZ()).mul(distance);
+        Vector3f scale = new Vector3f(
+                face.getModX() != 0 ? thickness : 1f,
+                face.getModY() != 0 ? thickness : 1f,
+                face.getModZ() != 0 ? thickness : 1f
+        );
+
+        return new Transformation(
+                translation,
+                new Quaternionf().rotateY((float) Math.toRadians(180)),
+                scale,
+                new Quaternionf()
+        );
+    }
+
+    /**
      * Marks the block as a live custom block: builds its properties, writes the custom block marker to the
      * PDC and hands the instance to the tracker. Shared by every backend (display based or not).
      */
@@ -268,31 +366,63 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     public void tickSync() {
         Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
-        if (linkedDisplay == null || !linkedDisplay.isValid()) {
+        if (!hasValidDisplays()) {
             spawnDisplay(block.getLocation());
         }
+    }
+
+    /**
+     * Whether the displays expected for the current lighting mode are all alive. Toggling
+     * {@code preciseLightning} at runtime makes this false, so the block respawns with the right layout.
+     */
+    protected boolean hasValidDisplays() {
+        if (usesPerFaceLighting()) {
+            return faceDisplays.size() == 6 && faceDisplays.values().stream().allMatch(ItemDisplay::isValid);
+        }
+
+        return linkedDisplay != null && linkedDisplay.isValid();
     }
 
     public final void tickLight() {
         Preconditions.checkState(!isRegistryReference(), REGISTRY_REFERENCE_ERROR_MESSAGE);
 
-        // For advanced per-face lighting, consider implementing a multi-display approach:
-        // 1. Create 6 flat block displays (one for each face)
-        // 2. Use scale transform to flatten them into 2D planes
-        // 3. Calculate light levels per face and apply to corresponding display
+        // Precise lightning: the block is rendered as 6 flat displays (see spawnFaceDisplays), so each of
+        // them takes the light of the block laid against its face, like vanilla does for a real block.
         // Reference: https://discord.com/channels/690411863766466590/741875863271899136/1396952975494217933
-        // Current implementation uses simplified lighting for performance.
-        if (KrimsonPlugin.getConfiguration().isPreciseLightning()) {
-            // Precise lightning: check the light level of the block in all cartesian directions
-            byte skyLight = BlockUtils.computeLight(Block::getLightFromSky, block);
-            byte blockLight = BlockUtils.computeLight(Block::getLightFromBlocks, block);
+        if (!faceDisplays.isEmpty()) {
+            faceDisplays.forEach((face, display) -> {
+                Block neighbour = block.getRelative(face);
 
-            linkedDisplay.setBrightness(new Display.Brightness(blockLight, skyLight));
-        } else {
-            // Normal lightning: check the light level of the block above the item
-            Block up = block.getRelative(BlockFace.UP);
-            linkedDisplay.setBrightness(new Display.Brightness(up.getLightFromBlocks(), up.getLightFromSky()));
+                applyBrightness(face, display, neighbour.getLightFromBlocks(), neighbour.getLightFromSky());
+            });
+
+            return;
         }
+
+        // Normal lightning: a single display, hence a single brightness for the whole block, taken as the
+        // brightest of the cartesian neighbours
+        byte skyLight = BlockUtils.computeLight(Block::getLightFromSky, block);
+        byte blockLight = BlockUtils.computeLight(Block::getLightFromBlocks, block);
+
+        applyBrightness(BlockFace.SELF, linkedDisplay, blockLight, skyLight);
+    }
+
+    /**
+     * Applies a brightness to a display, skipping the update when it did not change since the last tick.
+     */
+    private void applyBrightness(BlockFace face, @Nullable ItemDisplay display, int blockLight, int skyLight) {
+        if (display == null || !display.isValid()) {
+            return; // tickSync respawns it
+        }
+
+        int packed = blockLight << 4 | skyLight;
+        Integer previous = lastBrightness.get(face);
+        if (previous != null && previous == packed) {
+            return;
+        }
+
+        display.setBrightness(new Display.Brightness(blockLight, skyLight));
+        lastBrightness.put(face, packed);
     }
 
     // Registry of item meta to get the reference from OR better get from original block reference
@@ -383,7 +513,14 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         KrimsonPlugin.getInstance().getLogger().info("Unloading custom block " + dropIdentifier + " at " + block.getLocation());
 
 
-        linkedDisplay.remove();
+        if (linkedDisplay != null) {
+            linkedDisplay.remove();
+            linkedDisplay = null;
+        }
+
+        faceDisplays.values().forEach(org.bukkit.entity.Entity::remove);
+        faceDisplays.clear();
+        lastBrightness.clear();
     }
 
     public void remove() {
