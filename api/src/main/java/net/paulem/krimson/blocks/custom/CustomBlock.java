@@ -59,9 +59,11 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
 
     /**
      * Displays used when per face lighting is enabled: one flattened display per cartesian face, each lit
-     * by the block laid against it. Concurrent because it is written when the block spawns, on the main
-     * thread, and read by {@link #tickLight()} on the async ticking thread. Empty when the block is rendered by a single display, in which case
+     * by the block laid against it. Empty when the block is rendered by a single display, in which case
      * {@link #linkedDisplay} is the one to use (and it is {@code null} the other way around).
+     *
+     * <p>Concurrent because it is written when the block spawns, on the main thread, and read by
+     * {@link #tickLight()} on the async ticking thread.</p>
      */
     @Getter
     protected final Map<BlockFace, ItemDisplay> faceDisplays = new ConcurrentHashMap<>();
