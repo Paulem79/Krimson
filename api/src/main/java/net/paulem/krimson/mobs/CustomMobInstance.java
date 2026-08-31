@@ -80,6 +80,9 @@ public final class CustomMobInstance {
 
     /** Advances the rig to follow the entity and ticks its animation state. Called by {@link CustomMobManager}. */
     void tick(float deltaSeconds) {
+        // Always apply to be sure it's invisible
+        entity.setInvisible(true);
+
         brain.tick(entity, deltaSeconds);
 
         Location current = entity.getLocation();
