@@ -2,13 +2,12 @@ package net.paulem.krimson.models.bdengine;
 
 import com.google.gson.*;
 import lombok.Getter;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.nbt.TagParser;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.models.Model;
 import net.paulem.krimson.utils.JsonLoader;
+import net.paulem.krimson.utils.nbt.SnbtCompound;
+import net.paulem.krimson.utils.nbt.SnbtList;
+import net.paulem.krimson.utils.nbt.SnbtParser;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -187,13 +186,13 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
 
             for (String entityStr : entityStrings) {
                 try {
-                    CompoundTag entityTag = TagParser.parseTag(entityStr);
+                    SnbtCompound entityTag = SnbtParser.parse(entityStr);
 
                     // Extraire le tag (ex: "bde_0") depuis le champ Tags
                     String partTag = "bde_" + (index++);
-                    if (entityTag.contains("Tags", Tag.TAG_LIST)) {
-                        ListTag tags = entityTag.getList("Tags", Tag.TAG_STRING);
-                        if (tags.size() > 0) {
+                    if (entityTag.isList("Tags")) {
+                        SnbtList tags = entityTag.getList("Tags");
+                        if (!tags.isEmpty()) {
                             partTag = tags.getString(0);
                         }
                     }
@@ -244,11 +243,12 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         String tag = tagMatcher.group(1);
         String typeStr = typeMatcher.find() ? typeMatcher.group(1) : "block_display";
 
-        int nbtStart = cmd.indexOf('{');
-        if (nbtStart == -1) return null;
+        // La commande peut contenir du texte après le compound : on isole le premier bloc équilibré
+        List<String> compounds = extractEntityCompounds(cmd);
+        if (compounds.isEmpty()) return null;
 
         try {
-            CompoundTag nbt = TagParser.parseTag(cmd.substring(nbtStart));
+            SnbtCompound nbt = SnbtParser.parse(compounds.get(0));
             Matrix4f matrix = parseTransformation(nbt);
             int duration = nbt.contains("interpolation_duration") ? nbt.getInt("interpolation_duration") : 0;
 
@@ -546,11 +546,11 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         return coord.startsWith("~") ? (coord.length() == 1 ? 0f : Float.parseFloat(coord.substring(1))) : Float.parseFloat(coord);
     }
 
-    private boolean isDisplayEntity(CompoundTag tag) {
+    private boolean isDisplayEntity(SnbtCompound tag) {
         return tag.contains("block_state") || tag.contains("item");
     }
 
-    private DisplayPart parsePart(CompoundTag tag) {
+    private DisplayPart parsePart(SnbtCompound tag) {
         String id = tag.contains("id") ? tag.getString("id") : "";
         Matrix4f matrix = parseTransformation(tag);
 
@@ -565,10 +565,10 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         return null;
     }
 
-    private Matrix4f parseTransformation(CompoundTag tag) {
+    private Matrix4f parseTransformation(SnbtCompound tag) {
         Matrix4f matrix = new Matrix4f();
-        if (tag.contains("transformation", Tag.TAG_LIST)) {
-            ListTag list = tag.getList("transformation", Tag.TAG_FLOAT);
+        if (tag.isList("transformation")) {
+            SnbtList list = tag.getList("transformation");
             if (list.size() == 16) {
                 float[] m = new float[16];
                 for (int i = 0; i < 16; i++) m[i] = list.getFloat(i);
@@ -579,16 +579,16 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         return matrix;
     }
 
-    private BlockData parseBlockData(CompoundTag blockStateTag) {
+    private BlockData parseBlockData(SnbtCompound blockStateTag) {
         if (blockStateTag.isEmpty()) return Bukkit.createBlockData(Material.AIR);
         String name = blockStateTag.getString("Name");
         StringBuilder sb = new StringBuilder(name);
-        if (blockStateTag.contains("Properties", Tag.TAG_COMPOUND)) {
-            CompoundTag properties = blockStateTag.getCompound("Properties");
+        if (blockStateTag.isCompound("Properties")) {
+            SnbtCompound properties = blockStateTag.getCompound("Properties");
             if (!properties.isEmpty()) {
                 sb.append("[");
                 List<String> propList = new ArrayList<>();
-                for (String propKey : properties.getAllKeys()) {
+                for (String propKey : properties.keys()) {
                     propList.add(propKey + "=" + properties.getString(propKey));
                 }
                 sb.append(String.join(",", propList)).append("]");
@@ -601,32 +601,8 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         }
     }
 
-    private ItemStack parseItemStack(CompoundTag itemTag) {
-        if (itemTag.isEmpty()) return new ItemStack(Material.AIR);
-        try {
-            // Normaliser l'ancien format NBT (Count -> count) pour le codec Data Component 1.21.4+
-            if (itemTag.contains("Count") && !itemTag.contains("count")) {
-                itemTag.putInt("count", itemTag.getInt("Count"));
-                itemTag.remove("Count");
-            }
-
-            // Utiliser le codec ItemStack pour parser correctement les components (player_head skins, etc.)
-            return net.minecraft.world.item.ItemStack.CODEC
-                    .parse(net.minecraft.nbt.NbtOps.INSTANCE, itemTag)
-                    .result()
-                    .map(net.minecraft.world.item.ItemStack::asBukkitCopy)
-                    .orElseGet(() -> fallbackParseItemStack(itemTag));
-        } catch (Exception e) {
-            return fallbackParseItemStack(itemTag);
-        }
-    }
-
-    private ItemStack fallbackParseItemStack(CompoundTag itemTag) {
-        if (itemTag.isEmpty()) return new ItemStack(Material.AIR);
-        Material material = Material.matchMaterial(itemTag.getString("id"));
-        int count = itemTag.contains("Count") ? itemTag.getInt("Count") :
-                itemTag.contains("count") ? itemTag.getInt("count") : 1;
-        return new ItemStack(material != null ? material : Material.AIR, count);
+    private ItemStack parseItemStack(SnbtCompound itemTag) {
+        return BDEngineItems.fromNbt(itemTag);
     }
 
     private ItemDisplayTransform parseItemTransform(String transformStr) {

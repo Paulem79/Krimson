@@ -4,6 +4,8 @@ import com.jeff_media.customblockdata.CustomBlockData;
 import net.paulem.krimson.blocks.mining.MiningManager;
 import net.paulem.krimson.blocks.noteblock.NoteBlockStates;
 import net.paulem.krimson.blocks.noteblock.listeners.NoteBlockListener;
+import net.paulem.krimson.commands.BDEngineCommand;
+import net.paulem.krimson.commands.CustomMobCommand;
 import net.paulem.krimson.commands.StandCommand;
 import net.paulem.krimson.listeners.*;
 import net.paulem.krimson.mobs.CustomMobs;
@@ -23,6 +25,7 @@ import net.paulem.krimson.properties.PDCWrapper;
 import net.paulem.krimson.regions.CustomBlockTracker;
 import net.paulem.krimson.resourcepack.ResourcePackHosting;
 import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.TabCompleter;
 
 import java.util.logging.Logger;
 
@@ -108,6 +111,16 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
             standCommand.setExecutor(standCommandInstance);
             standCommand.setTabCompleter(standCommandInstance);
 
+            PluginCommand bdEngineCommand = plugin.getCommand("bdengine");
+            BDEngineCommand bdEngineCommandInstance = new BDEngineCommand();
+            bdEngineCommand.setExecutor(bdEngineCommandInstance);
+            bdEngineCommand.setTabCompleter(bdEngineCommandInstance);
+
+            PluginCommand customMobCommand = plugin.getCommand("custommob");
+            CustomMobCommand customMobCommandInstance = new CustomMobCommand();
+            customMobCommand.setExecutor(customMobCommandInstance);
+            customMobCommand.setTabCompleter(customMobCommandInstance);
+
             // Register UI command if it exists
             try {
                 PluginCommand uiCommand = plugin.getCommand("ui");
@@ -115,6 +128,9 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
                     Class<?> uiCommandClass = Class.forName("net.paulem.krimsontest.commands.UICommand");
                     Object uiCommandInstance = uiCommandClass.getDeclaredConstructor().newInstance();
                     uiCommand.setExecutor((CommandExecutor) uiCommandInstance);
+                    if (uiCommandInstance instanceof TabCompleter tabCompleter) {
+                        uiCommand.setTabCompleter(tabCompleter);
+                    }
                 }
             } catch (ClassNotFoundException e) {
                 // UI command class not found - this is expected if the test plugin isn't using it

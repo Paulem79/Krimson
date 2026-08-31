@@ -20,3 +20,9 @@ commands:
   stand:
     description: Spawn and animate the model rig.
     usage: /stand <spawn|remove|removeall|play|stop|pause|speed|scale|list|info>
+  bdengine:
+    description: Spawn and animate BDEngine models.
+    usage: /bdengine <models|spawn|play|loop|stop|remove|removeall|list|info>
+  custommob:
+    description: Spawn and animate custom mobs.
+    usage: /custommob <types|spawn|anim|remove|removeall|list|info>

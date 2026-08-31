@@ -38,7 +38,7 @@ public final class PluginMobs {
 
     /** A tall, entirely peaceful custom animal. Body: an invisible horse (for the taller hitbox). */
     public static final CustomMobType<CustomHorseEntity> GIRAFFE = CustomMobs.register("giraffe",
-            key -> CustomMobType.builder(key, EntityTypeCast.<CustomHorseEntity>as(EntityType.HORSE),
+            key -> CustomMobType.builder(key, EntityTypeCast.as(EntityType.HORSE),
                             CustomHorseEntity::new)
                     .model(new NamespacedKey(KrimsonPlugin.getInstance(), "the_world"))
                     .animation("idle", "idle")
@@ -59,7 +59,7 @@ public final class PluginMobs {
     /** Mechanically a real zombie - it still burns in daylight and converts to a drowned in water,
      *  since it extends Zombie directly - wearing a completely custom body and a beefed-up kit. */
     public static final CustomMobType<CustomZombieEntity> WRAITH_ZOMBIE = CustomMobs.register("wraith_zombie",
-            key -> CustomMobType.builder(key, EntityTypeCast.<CustomZombieEntity>as(EntityType.ZOMBIE),
+            key -> CustomMobType.builder(key, EntityTypeCast.as(EntityType.ZOMBIE),
                             CustomZombieEntity::new)
                     .model(new NamespacedKey(KrimsonPlugin.getInstance(), "the_world"))
                     .animation("idle", "idle")
@@ -91,7 +91,7 @@ public final class PluginMobs {
 
     /** A boss with an iron-golem body (big hitbox, high knockback resistance) plus a bar and a phase. */
     public static final CustomMobType<CustomIronGolemEntity> CINDER_TITAN = CustomMobs.register("cinder_titan",
-            key -> CustomMobType.builder(key, EntityTypeCast.<CustomIronGolemEntity>as(EntityType.IRON_GOLEM),
+            key -> CustomMobType.builder(key, EntityTypeCast.as(EntityType.IRON_GOLEM),
                             CustomIronGolemEntity::new)
                     .model(new NamespacedKey(KrimsonPlugin.getInstance(), "the_world"), 1.6F)
                     .animation("idle", "idle")
