@@ -11,7 +11,7 @@ import java.util.Collection;
  */
 public final class BreakingStageManager {
     /** Radius, in blocks, in which the cracking animation is shown to other players. */
-    public static final double RADIUS = KrimsonPlugin.getConfiguration().getDouble("miningDamageRadius", 16);
+    public static final double RADIUS = KrimsonPlugin.getConfiguration().getMiningDamageRadius();
 
     private BreakingStageManager() {
         /* This utility class should not be instantiated */

@@ -35,6 +35,7 @@ allprojects {
         maven("https://maven.mcbrawls.net/releases/")
         maven("https://repo.viaversion.com")
         maven { url = uri("https://libraries.minecraft.net/") }
+        maven("https://maven.paulem.net/releases")
     }
 }
 
@@ -44,10 +45,12 @@ dependencies {
 
     implementation(project(":api"))
 
-    implementation(libs.commons.lang3)
+    implementation(libs.arcana)
 
     compileOnly(libs.viaversion.api)
     compileOnly(libs.jetbrains.annotations)
+
+    implementation(libs.commons.lang3)
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

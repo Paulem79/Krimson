@@ -5,6 +5,8 @@ import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskSchedule
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
 import lombok.Getter;
+import net.paulem.arcana.ArcanaAPI;
+import net.paulem.krimson.config.KrimsonConfig;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,7 +25,10 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
     private static TaskScheduler scheduler;
 
     @Getter
-    private static FileConfiguration configuration;
+    private static KrimsonConfig configuration;
+
+    @Getter
+    private ArcanaAPI<KrimsonPlugin<T>> arcanaAPI;
 
     @Override
     public void onEnable() {
@@ -31,8 +36,11 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
 
         instance = this;
 
+        arcanaAPI = new ArcanaAPI<>(this);
+        arcanaAPI.init();
+
         saveDefaultConfig();
-        configuration = getConfig();
+        configuration = arcanaAPI.loadConfig(KrimsonConfig.class, getConfig());
 
         scheduler = UniversalScheduler.getScheduler(this);
 

@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class ChunkUtils {
-    public static final int VIEW_DISTANCE = KrimsonPlugin.getConfiguration().getInt("view-distance", 6);
+    public static final int VIEW_DISTANCE = KrimsonPlugin.getConfiguration().getViewDistance();
 
     public static Collection<Chunk> getChunksAroundPlayer(Player player) {
         World world = player.getWorld();

@@ -23,7 +23,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
  */
 public class MiningListener implements Listener {
     private static boolean enabled() {
-        return KrimsonPlugin.getConfiguration().getBoolean("customMining", true);
+        return KrimsonPlugin.getConfiguration().isCustomMining();
     }
 
     @EventHandler

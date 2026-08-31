@@ -282,7 +282,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         // 3. Calculate light levels per face and apply to corresponding display
         // Reference: https://discord.com/channels/690411863766466590/741875863271899136/1396952975494217933
         // Current implementation uses simplified lighting for performance.
-        if (KrimsonPlugin.getConfiguration().getBoolean("preciseLightning", true)) {
+        if (KrimsonPlugin.getConfiguration().isPreciseLightning()) {
             // Precise lightning: check the light level of the block in all cartesian directions
             byte skyLight = BlockUtils.computeLight(Block::getLightFromSky, block);
             byte blockLight = BlockUtils.computeLight(Block::getLightFromBlocks, block);

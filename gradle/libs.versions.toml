@@ -15,6 +15,8 @@ viaversion = "5.+"
 annotations = "26.1.0"
 lombok = "1.18.46"
 
+arcana = "0.0.2"
+
 universalScheduler = "0.+"
 customBlockData = "2.2.8"
 packedCore = "1.1.4"
@@ -28,6 +30,8 @@ commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "co
 viaversion-api = { module = "com.viaversion:viaversion-api", version.ref = "viaversion" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+
+arcana = { module = "net.paulem:arcana", version.ref = "arcana" }
 
 universal-scheduler = { module = "com.github.Anon8281:UniversalScheduler", version.ref = "universalScheduler" }
 custom-block-data = { module = "com.jeff-media:custom-block-data", version.ref = "customBlockData" }

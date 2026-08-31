@@ -12,18 +12,20 @@ dependencies {
     paperweight.paperDevBundle(libs.versions.paper)
 
     // Dépendances de l'API exportées
-    api(libs.universal.scheduler)
-    api(libs.custom.block.data)
-    api(libs.packed.core)
+    implementation(libs.universal.scheduler)
+    implementation(libs.custom.block.data)
+    implementation(libs.packed.core)
 
-    api(libs.mcbrawls.inject.spigot)
-    api(libs.mcbrawls.inject.api)
-    api(libs.mcbrawls.inject.http)
-    api(libs.mcbrawls.inject.jetty)
-    api(libs.mcbrawls.inject.javalin) {
+    implementation(libs.mcbrawls.inject.spigot)
+    implementation(libs.mcbrawls.inject.api)
+    implementation(libs.mcbrawls.inject.http)
+    implementation(libs.mcbrawls.inject.jetty)
+    implementation(libs.mcbrawls.inject.javalin) {
         isTransitive = false
     }
-    api(libs.javalin)
+    implementation(libs.javalin)
+
+    implementation(libs.arcana)
 
     implementation(libs.commons.lang3)
 
