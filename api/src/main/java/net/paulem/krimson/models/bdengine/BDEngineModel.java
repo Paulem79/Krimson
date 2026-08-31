@@ -57,13 +57,6 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
     @Getter
     private final boolean animated;
 
-    // Constructeur Legacy (Commande Vanilla /summon)
-    public BDEngineModel(NamespacedKey key, String command) {
-        this.key = key;
-        this.animated = false;
-        parseCommand(command);
-    }
-
     // Constructeur JSON (Modèle + Animation)
     public BDEngineModel(NamespacedKey key) {
         this.key = key;
@@ -266,36 +259,6 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
             return new AnimationFrame(tag, type, matrix, duration, blockData, itemStack);
         } catch (Exception e) {
             return null;
-        }
-    }
-
-    // --- PARSING LEGACY COMMAND ---
-
-    private void parseCommand(String command) {
-        if (command == null || command.isBlank()) return;
-        parseOriginOffset(command);
-
-        int nbtStart = command.indexOf('{');
-        if (nbtStart == -1) return;
-
-        try {
-            CompoundTag rootTag = TagParser.parseTag(command.substring(nbtStart));
-            int index = 0;
-
-            if (isDisplayEntity(rootTag)) {
-                DisplayPart part = parsePart(rootTag);
-                if (part != null) parts.put("bde_" + (index++), part);
-            }
-
-            if (rootTag.contains("Passengers", Tag.TAG_LIST)) {
-                ListTag passengers = rootTag.getList("Passengers", Tag.TAG_COMPOUND);
-                for (int i = 0; i < passengers.size(); i++) {
-                    DisplayPart part = parsePart(passengers.getCompound(i));
-                    if (part != null) parts.put("bde_" + (index++), part);
-                }
-            }
-        } catch (Exception e) {
-            KrimsonPlugin.getInstance().getLogger().severe("Erreur parsing Legacy " + key + " : " + e.getMessage());
         }
     }
 
