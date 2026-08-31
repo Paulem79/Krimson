@@ -3,9 +3,11 @@ package net.paulem.krimson.mobs.listeners;
 import net.paulem.krimson.mobs.CustomMobInstance;
 import net.paulem.krimson.mobs.CustomMobs;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -24,8 +26,16 @@ public final class CustomMobListener implements Listener {
             return;
         }
         CustomMobInstance instance = CustomMobs.manager().instanceOf(living);
-        if (instance != null) {
-            instance.triggerHurt();
+        if (instance == null) {
+            return;
+        }
+        instance.triggerHurt();
+
+        // Bukkit-only replacement for vanilla's HurtByTargetGoal: retaliate against whoever
+        // just hit us, taking over from whatever KrimsonGoal was targeting before.
+        if (living instanceof Mob mob && event instanceof EntityDamageByEntityEvent damageByEntity
+                && damageByEntity.getDamager() instanceof LivingEntity attacker) {
+            mob.setTarget(attacker);
         }
     }
 

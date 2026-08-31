@@ -1,16 +1,14 @@
 package net.paulem.krimsontest.mobs;
 
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.mobs.CustomMobType;
 import net.paulem.krimson.mobs.CustomMobs;
+import net.paulem.krimson.mobs.ai.goals.FloatGoal;
+import net.paulem.krimson.mobs.ai.goals.LookAtNearestPlayerGoal;
+import net.paulem.krimson.mobs.ai.goals.MeleeAttackGoal;
+import net.paulem.krimson.mobs.ai.goals.TargetNearestPlayerGoal;
+import net.paulem.krimson.mobs.ai.goals.WanderGoal;
 import net.paulem.krimson.mobs.boss.BossSettings;
 import net.paulem.krimson.mobs.nms.CustomHorseEntity;
 import net.paulem.krimson.mobs.nms.CustomZombieEntity;
@@ -45,15 +43,14 @@ public final class PluginMobs {
                     .animation("walk", "walk")
                     .attribute(Attribute.MAX_HEALTH, 30.0)
                     .attribute(Attribute.MOVEMENT_SPEED, 0.2)
-                    .ai((mob, goals, targets) -> {
-                        // Real vanilla goals, nothing reinvented. Priority is the first argument,
-                        // exactly like a data-driven vanilla mob's goal list would be.
-                        goals.addGoal(0, new FloatGoal(mob));
-                        goals.addGoal(1, new WaterAvoidingRandomStrollGoal(mob, 1.0));
-                        goals.addGoal(2, new LookAtPlayerGoal(mob, net.minecraft.world.entity.player.Player.class, 8.0F));
-                        goals.addGoal(3, new RandomLookAroundGoal(mob));
-                        // No targetSelector goals: a giraffe never attacks or gets angry.
-                    })
+                    // Bukkit-only goals, no NMS. Priority is the first constructor argument,
+                    // exactly like a data-driven vanilla mob's goal list would be.
+                    .ai(
+                            new FloatGoal(0),
+                            new WanderGoal(1, 1.0),
+                            new LookAtNearestPlayerGoal(2, 8.0)
+                            // No target goal: a giraffe never attacks or gets angry.
+                    )
                     .build());
 
     /** Mechanically a real zombie - it still burns in daylight and converts to a drowned in water,
@@ -72,17 +69,15 @@ public final class PluginMobs {
                     .attribute(Attribute.ATTACK_DAMAGE, 8.0)
                     .attribute(Attribute.MOVEMENT_SPEED, 0.27)
                     .attribute(Attribute.ARMOR, 4.0)
-                    .ai((mob, goals, targets) -> {
-                        goals.addGoal(0, new FloatGoal(mob));
-                        goals.addGoal(1, new MeleeAttackGoal(mob, 1.15, false));
-                        goals.addGoal(2, new WaterAvoidingRandomStrollGoal(mob, 1.0));
-                        goals.addGoal(3, new LookAtPlayerGoal(mob, net.minecraft.world.entity.player.Player.class, 8.0F));
-                        goals.addGoal(4, new RandomLookAroundGoal(mob));
-
-                        targets.addGoal(0, new HurtByTargetGoal(mob));
-                        targets.addGoal(1, new NearestAttackableTargetGoal<>(
-                                mob, net.minecraft.world.entity.player.Player.class, true));
-                    })
+                    .ai(
+                            new FloatGoal(0),
+                            new MeleeAttackGoal(1, 1.15),
+                            new WanderGoal(2, 1.0),
+                            new LookAtNearestPlayerGoal(3, 8.0),
+                            new TargetNearestPlayerGoal(0, 16.0)
+                            // HurtByTargetGoal's job (retaliate on damage) is handled by
+                            // CustomMobListener#onDamage for every custom mob, not per-type here.
+                    )
                     .onSpawn(mob -> {
                         // Anything else you'd want on the raw NMS entity before it's added to the
                         // world - custom NBT, persistence flags, whatever - goes here.
@@ -106,15 +101,12 @@ public final class PluginMobs {
                     .attribute(Attribute.ARMOR, 10.0)
                     .attribute(Attribute.MOVEMENT_SPEED, 0.22)
                     .attribute(Attribute.KNOCKBACK_RESISTANCE, 1.0)
-                    .ai((mob, goals, targets) -> {
-                        goals.addGoal(0, new MeleeAttackGoal(mob, 1.0, true));
-                        goals.addGoal(1, new WaterAvoidingRandomStrollGoal(mob, 0.6));
-                        goals.addGoal(2, new LookAtPlayerGoal(mob, net.minecraft.world.entity.player.Player.class, 10.0F));
-                        goals.addGoal(3, new RandomLookAroundGoal(mob));
-
-                        targets.addGoal(0, new NearestAttackableTargetGoal<>(
-                                mob, net.minecraft.world.entity.player.Player.class, true));
-                    })
+                    .ai(
+                            new MeleeAttackGoal(1, 1.0),
+                            new WanderGoal(2, 0.6),
+                            new LookAtNearestPlayerGoal(3, 10.0),
+                            new TargetNearestPlayerGoal(0, 20.0)
+                    )
                     .boss(BossSettings.builder("§4§lCinder Titan")
                             .color(BarColor.RED)
                             // Below 50% health: speed up and roar. Add as many phases as the fight needs.

@@ -92,7 +92,7 @@ public final class CustomMobManager {
         nmsEntity.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
         nmsEntity.setInvisible(true); // the vanilla body is hidden; the rig is what's actually seen
         nmsEntity.setPersistenceRequired();
-        nmsEntity.applyGoals(type);
+        nmsEntity.clearVanillaGoals(); // Krimson's own AI drives the mob from here, not vanilla's
 
         if (type.onSpawn() != null) {
             type.onSpawn().accept(nmsEntity);
@@ -102,6 +102,11 @@ public final class CustomMobManager {
 
         Entity bukkitEntity = nmsEntity.getBukkitEntity();
         org.bukkit.entity.Mob mob = (org.bukkit.entity.Mob) bukkitEntity;
+
+        // Re-assert invisibility through the Bukkit-level API: this forces a metadata sync
+        // packet to every player already tracking the entity, in case the NMS-level flag set
+        // above (before addFreshEntity) didn't make it into the initial spawn snapshot.
+        mob.setInvisible(true);
 
         applyAttributes(mob, type);
 
@@ -119,7 +124,8 @@ public final class CustomMobManager {
             boss = new BossController(mob, type.bossSettings());
         }
 
-        CustomMobInstance instance = new CustomMobInstance(type, mob, rig, boss);
+        CustomMobInstance instance = new CustomMobInstance(
+                type, mob, rig, boss, new net.paulem.krimson.mobs.ai.KrimsonGoalSelector(type.aiGoals()));
         instances.put(mob.getUniqueId(), instance);
         return instance;
     }

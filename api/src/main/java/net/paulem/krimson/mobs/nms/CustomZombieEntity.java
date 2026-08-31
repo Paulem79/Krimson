@@ -3,7 +3,6 @@ package net.paulem.krimson.mobs.nms;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.level.Level;
-import net.paulem.krimson.mobs.CustomMobType;
 
 /**
  * A custom mob whose body is a real {@code Zombie}. It has to extend {@code Zombie}
@@ -29,9 +28,8 @@ public class CustomZombieEntity extends Zombie implements KrimsonMob<CustomZombi
     }
 
     @Override
-    public void applyGoals(CustomMobType<CustomZombieEntity> type) {
+    public void clearVanillaGoals() {
         this.goalSelector.removeAllGoals(goal -> true);
         this.targetSelector.removeAllGoals(goal -> true);
-        type.goalConfigurator().configure(this, this.goalSelector, this.targetSelector);
     }
 }

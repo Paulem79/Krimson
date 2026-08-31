@@ -1,5 +1,6 @@
 package net.paulem.krimson.mobs;
 
+import net.paulem.krimson.mobs.ai.KrimsonGoalSelector;
 import net.paulem.krimson.mobs.animation.MobAnimationController;
 import net.paulem.krimson.mobs.boss.BossController;
 import net.paulem.krimson.models.blockbench.rig.ModelInstance;
@@ -19,18 +20,21 @@ public final class CustomMobInstance {
     private final Mob entity;
     private final ModelInstance rig;
     private final MobAnimationController animation;
+    private final KrimsonGoalSelector brain;
 
     @Nullable
     private final BossController boss;
 
     private Location lastLocation;
 
-    CustomMobInstance(CustomMobType<?> type, Mob entity, ModelInstance rig, @Nullable BossController boss) {
+    CustomMobInstance(CustomMobType<?> type, Mob entity, ModelInstance rig, @Nullable BossController boss,
+                       KrimsonGoalSelector brain) {
         this.type = type;
         this.entity = entity;
         this.rig = rig;
         this.animation = new MobAnimationController(type, rig);
         this.boss = boss;
+        this.brain = brain;
         this.lastLocation = entity.getLocation();
     }
 
@@ -76,6 +80,8 @@ public final class CustomMobInstance {
 
     /** Advances the rig to follow the entity and ticks its animation state. Called by {@link CustomMobManager}. */
     void tick(float deltaSeconds) {
+        brain.tick(entity, deltaSeconds);
+
         Location current = entity.getLocation();
         double moved = current.distanceSquared(lastLocation);
         boolean moving = moved > 1.0E-5 || entity.getVelocity().lengthSquared() > 4.0E-3;
@@ -95,6 +101,7 @@ public final class CustomMobInstance {
 
     /** Removes the rig (and boss bar, if any). Does not remove the backing entity. */
     void disposeVisuals() {
+        brain.stopAll(entity);
         rig.remove();
         if (boss != null) {
             boss.dispose();

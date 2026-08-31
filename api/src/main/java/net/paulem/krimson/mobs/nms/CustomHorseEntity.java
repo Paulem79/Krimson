@@ -3,7 +3,6 @@ package net.paulem.krimson.mobs.nms;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.horse.Horse;
 import net.minecraft.world.level.Level;
-import net.paulem.krimson.mobs.CustomMobType;
 
 /**
  * A custom mob whose body is a real {@code Horse} — a good base for anything that wants a
@@ -22,9 +21,8 @@ public class CustomHorseEntity extends Horse implements KrimsonMob<CustomHorseEn
     }
 
     @Override
-    public void applyGoals(CustomMobType<CustomHorseEntity> type) {
+    public void clearVanillaGoals() {
         this.goalSelector.removeAllGoals(goal -> true);
         this.targetSelector.removeAllGoals(goal -> true);
-        type.goalConfigurator().configure(this, this.goalSelector, this.targetSelector);
     }
 }

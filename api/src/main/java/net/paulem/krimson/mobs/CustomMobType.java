@@ -2,8 +2,8 @@ package net.paulem.krimson.mobs;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.level.Level;
+import net.paulem.krimson.mobs.ai.KrimsonGoal;
 import net.paulem.krimson.mobs.boss.BossSettings;
 import net.paulem.krimson.mobs.nms.KrimsonMob;
 import net.paulem.krimson.registry.RegistryKey;
@@ -12,7 +12,9 @@ import org.bukkit.attribute.Attribute;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -24,28 +26,24 @@ import java.util.function.Consumer;
  * register once (see {@link CustomMobs#register}) and then spawn many times via
  * {@link CustomMobs#spawn}.
  *
- * <h2>Why it's a "true copy" of the vanilla mob system, not a re-implementation</h2>
- * The AI is not reinvented: {@link #goalConfigurator()} hands you the entity's <b>real</b>
- * {@code net.minecraft.world.entity.ai.goal.GoalSelector}s, the same ones vanilla mobs use.
- * You can add stock vanilla goals ({@code new MeleeAttackGoal(...)}, {@code new
- * WaterAvoidingRandomStrollGoal(...)}, ...), goals from any other mod/plugin, or your own
- * {@code Goal} subclasses - Krimson does not get in the way. Attributes
+ * <h2>Body vs. brain</h2>
+ * The body is real: the backing entity is a real vanilla NMS mob (kept invisible), which is
+ * what gives it working physics, gravity, collisions and pathfinding for free - a Blockbench
+ * item-display rig (see {@code BlockbenchDisplayModel}) is puppeted on top of it every tick,
+ * which is how the giraffe/boss/reskinned-zombie all get their own texture and skeleton
+ * despite being, mechanically, a real zombie/cow/ravager. Attributes
  * ({@link #attributeOverrides()}) are the same {@link Attribute} instances vanilla mobs are
- * tuned with. The only genuinely custom part is the body: the backing entity is turned
- * invisible and a Blockbench item-display rig (see {@code BlockbenchDisplayModel}) is
- * puppeted on top of it every tick, which is how the giraffe/boss/reskinned-zombie all get
- * their own texture and skeleton despite being, mechanically, a real zombie/cow/ravager.
+ * tuned with.
  *
- * @param <T> the NMS class backing this mob - see {@link net.paulem.krimson.mobs.nms}
+ * <p>The brain is not: AI ({@link #aiGoals()}) is a list of {@link KrimsonGoal}s, written
+ * entirely against the public {@code org.bukkit.entity.Mob} API - no
+ * {@code net.minecraft.world.entity.ai.goal.Goal}, no {@code GoalSelector}. Vanilla's own
+ * goal selector is wiped on spawn and never touched again.
+ *
+ * @param <T> the NMS class backing this mob's body - see {@link net.paulem.krimson.mobs.nms}
  *            for the three ready-made shapes (monster, animal, generic pathfinder mob)
  */
 public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements RegistryKey<NamespacedKey> {
-
-    /** Hooks the real vanilla goal selectors of a freshly-created mob. This IS the AI. */
-    @FunctionalInterface
-    public interface GoalConfigurator<T extends Mob> {
-        void configure(T mob, GoalSelector goalSelector, GoalSelector targetSelector);
-    }
 
     /** Constructs the backing NMS entity. Almost always a constructor reference. */
     @FunctionalInterface
@@ -56,7 +54,7 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
     private final NamespacedKey key;
     private final EntityType<T> baseEntityType;
     private final MobFactory<T> factory;
-    private final GoalConfigurator<T> goalConfigurator;
+    private final List<KrimsonGoal> aiGoals;
 
     private final NamespacedKey modelKey;
     private final Map<String, String> animations;
@@ -79,7 +77,7 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         this.key = builder.key;
         this.baseEntityType = builder.baseEntityType;
         this.factory = builder.factory;
-        this.goalConfigurator = builder.goalConfigurator;
+        this.aiGoals = List.copyOf(builder.aiGoals);
         this.modelKey = builder.modelKey;
         this.animations = Map.copyOf(builder.animations);
         this.modelScale = builder.modelScale;
@@ -110,8 +108,8 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         return factory;
     }
 
-    public GoalConfigurator<T> goalConfigurator() {
-        return goalConfigurator;
+    public List<KrimsonGoal> aiGoals() {
+        return aiGoals;
     }
 
     public NamespacedKey modelKey() {
@@ -170,9 +168,7 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         private final NamespacedKey key;
         private final EntityType<T> baseEntityType;
         private final MobFactory<T> factory;
-        private GoalConfigurator<T> goalConfigurator = (mob, goals, targets) -> {
-            /* no AI by default: an unconfigured mob just stands there */
-        };
+        private final List<KrimsonGoal> aiGoals = new ArrayList<>();
 
         private NamespacedKey modelKey;
         private final Map<String, String> animations = new LinkedHashMap<>();
@@ -198,11 +194,12 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         }
 
         /**
-         * The hook where you write the mob's brain, using the same {@code GoalSelector}
-         * and {@code Goal} classes vanilla itself uses.
+         * Adds one or more {@link KrimsonGoal}s to this mob's brain - see
+         * {@code net.paulem.krimson.mobs.ai.goals} for the ready-made ones
+         * ({@code WanderGoal}, {@code MeleeAttackGoal}, {@code TargetNearestPlayerGoal}, ...).
          */
-        public Builder<T> ai(GoalConfigurator<T> configurator) {
-            this.goalConfigurator = configurator;
+        public Builder<T> ai(KrimsonGoal... goals) {
+            this.aiGoals.addAll(List.of(goals));
             return this;
         }
 

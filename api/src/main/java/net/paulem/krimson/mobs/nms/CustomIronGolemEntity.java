@@ -3,7 +3,6 @@ package net.paulem.krimson.mobs.nms;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.level.Level;
-import net.paulem.krimson.mobs.CustomMobType;
 
 /**
  * A custom mob whose body is a real {@code IronGolem} — a solid base for a boss: big
@@ -21,9 +20,8 @@ public class CustomIronGolemEntity extends IronGolem implements KrimsonMob<Custo
     }
 
     @Override
-    public void applyGoals(CustomMobType<CustomIronGolemEntity> type) {
+    public void clearVanillaGoals() {
         this.goalSelector.removeAllGoals(goal -> true);
         this.targetSelector.removeAllGoals(goal -> true);
-        type.goalConfigurator().configure(this, this.goalSelector, this.targetSelector);
     }
 }
