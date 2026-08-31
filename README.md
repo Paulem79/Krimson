@@ -15,11 +15,11 @@ Any contribution is welcome!
     - [x] "Custom" textures
     - [x] Custom animations
     - [x] "Custom" sounds
-  - [ ] Blockbench
+  - [ ] Blockbench (some calculations errors)
     - [x] Custom textures
     - [x] Custom animations
 - [x] Custom sounds
-- [ ] Custom UI (almost finished ig ?)
+- [ ] Custom UI (more support for positioning and something else?)
 
 ## Showcases
 ![Screenshot of the custom block, BDEngine and custom UI](assets/block-bdengine-ui.png)
