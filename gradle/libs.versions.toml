@@ -22,7 +22,7 @@ customBlockData = "2.2.8"
 packedCore = "1.1.4"
 mcbrawlsInject = "3.+"
 javalin = "7.+"
-packetevents = "2.9.3"
+packetevents = "2.13.0"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
