@@ -15,6 +15,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.block.NotePlayEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -103,6 +104,17 @@ public class NoteBlockListener implements Listener {
         event.setUseItemInHand(Event.Result.DENY);
 
         VanillaNoteBlocks.playNote(block, VanillaNoteBlocks.cycleNote(block));
+    }
+
+    /**
+     * A custom block only happens to be carried by a note block: it must never make a note, whatever plays
+     * it - punching it to start mining, a redstone pulse, or a neighbouring note block.
+     */
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
+    public void onNotePlay(NotePlayEvent event) {
+        if (KrimsonAPI.isCustomBlockFromWatcher(event.getBlock())) {
+            event.setCancelled(true);
+        }
     }
 
     /**
