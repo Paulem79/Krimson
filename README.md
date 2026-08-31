@@ -21,6 +21,9 @@ Any contribution is welcome!
 - [x] Custom sounds
 - [ ] Custom UI (more support for positioning and something else?)
 
+## Known issues
+- Entities lose their behaviour and model on restart.
+
 ## Showcases
 ![Screenshot of the custom block, BDEngine and custom UI](assets/block-bdengine-ui.png)
 ![Screenshot of blockbench loader, almost finished](assets/blockbench-almost-finished.png)
