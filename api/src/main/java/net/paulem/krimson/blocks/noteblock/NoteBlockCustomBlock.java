@@ -61,6 +61,7 @@ public class NoteBlockCustomBlock extends CustomBlock {
 
         copy.registryReference = false;
         copy.setMeta(this.getMeta());
+        copy.miningProperties = this.miningProperties;
 
         return copy;
     }

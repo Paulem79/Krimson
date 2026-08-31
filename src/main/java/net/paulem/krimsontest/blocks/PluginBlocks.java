@@ -2,6 +2,8 @@ package net.paulem.krimsontest.blocks;
 
 import net.paulem.krimson.blocks.Blocks;
 import net.paulem.krimson.blocks.custom.InventoryCustomBlock;
+import net.paulem.krimson.blocks.mining.MiningProperties;
+import net.paulem.krimson.blocks.mining.ToolTier;
 import net.paulem.krimson.blocks.noteblock.NoteBlockCustomBlock;
 import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.Material;
@@ -36,6 +38,9 @@ public class PluginBlocks {
 
     public static void init() {
         KrimsonPlugin.getInstance().getLogger().info("Registering blocks...");
+
+        // Mined like an obsidian-ish ore: needs an iron pickaxe to drop anything.
+        NOTE_TEST.setMiningProperties(MiningProperties.pickaxe(15f, ToolTier.IRON));
 
         Blocks.REGISTRY.freeze();
     }

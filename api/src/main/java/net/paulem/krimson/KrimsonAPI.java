@@ -1,6 +1,7 @@
 package net.paulem.krimson;
 
 import com.jeff_media.customblockdata.CustomBlockData;
+import net.paulem.krimson.blocks.mining.MiningManager;
 import net.paulem.krimson.blocks.noteblock.NoteBlockStates;
 import net.paulem.krimson.blocks.noteblock.listeners.NoteBlockListener;
 import net.paulem.krimson.commands.StandCommand;
@@ -87,10 +88,13 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         pluginManager.registerEvents(new BlockItemHandlerListener(), plugin);
         pluginManager.registerEvents(new MigrationListener(), plugin);
         pluginManager.registerEvents(new CustomMobListener(), plugin);
+        pluginManager.registerEvents(new MiningListener(), plugin);
         // Registered last on purpose: it denies note block interactions, and the listeners above must get
         // their turn at the same priority first.
         pluginManager.registerEvents(new NoteBlockListener(), plugin);
         CustomBlockData.registerListener(plugin);
+
+        MiningManager.getInstance().start();
 
         // Commands
         if(registerCommand) {
@@ -132,6 +136,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
     public void stop() {
         packHosting.stop();
         CustomMobs.shutdown();
+        MiningManager.getInstance().stop();
 
         getLogger().info("Goodbye from Krimson API!");
     }

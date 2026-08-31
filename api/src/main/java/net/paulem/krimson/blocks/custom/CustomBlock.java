@@ -26,6 +26,8 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
 import net.paulem.krimson.KrimsonAPI;
+import net.paulem.krimson.blocks.Blocks;
+import net.paulem.krimson.blocks.mining.MiningProperties;
 import net.paulem.krimson.constants.Keys;
 import net.paulem.krimson.items.CustomItem;
 import net.paulem.krimson.items.Items;
@@ -54,6 +56,12 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
     protected Block block;
     @Getter
     protected CustomBlockProperties properties;
+    /**
+     * How this block reacts to mining. Defaults to {@link MiningProperties#INHERIT}, meaning the block keeps
+     * the vanilla behaviour of the material carrying it.
+     */
+    @Getter
+    protected MiningProperties miningProperties = MiningProperties.INHERIT;
 
     /**
      * Create a custom block with the given item
@@ -92,8 +100,36 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         // 2. Configure the specific state for a "live" block
         copy.registryReference = false;
         copy.meta = this.meta;
+        copy.miningProperties = this.miningProperties;
 
         return copy;
+    }
+
+    /**
+     * Sets how this block reacts to mining. Only allowed on a registry template, so it must be called before
+     * {@code Blocks.REGISTRY.freeze()}; live copies inherit the value through {@link #copyOf()}.
+     */
+    public void setMiningProperties(MiningProperties miningProperties) {
+        Preconditions.checkState(isRegistryReference(), "Mining properties must be set on the registry template, before freezing the registry.");
+
+        this.miningProperties = miningProperties;
+    }
+
+    /**
+     * Resolves the mining properties to actually use for this block.
+     *
+     * <p>Instances reconstructed from the world (see {@link #CustomBlock(Block)} and
+     * {@link CustomBlockTypeChecker}) carry no template data, so the registry stays the source of truth —
+     * same approach as the drop identifier.</p>
+     */
+    public MiningProperties resolveMiningProperties() {
+        if (!miningProperties.inherits()) {
+            return miningProperties;
+        }
+
+        return Blocks.REGISTRY.get(key)
+                .map(CustomBlock::getMiningProperties)
+                .orElse(MiningProperties.INHERIT);
     }
 
     protected void setDisplayAndProperties(Block block) {

@@ -3,3 +3,9 @@ preciseLightning: true
 
 # The maximum distance (in chunks) a player can tick custom blocks
 viewDistance: 6
+
+# Server driven mining of custom blocks that declare their own MiningProperties
+customMining: true
+
+# Radius (in blocks) in which the block cracking animation is shown to other players
+miningDamageRadius: 16
