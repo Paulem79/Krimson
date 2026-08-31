@@ -188,8 +188,12 @@ public class MiningManager {
     }
 
     /**
-     * Finishes the mining: fires a {@link BlockBreakEvent} so the existing listeners get their say, then
-     * breaks the custom block, dropping only when the held tool may harvest it.
+     * Finishes the mining by firing a {@link BlockBreakEvent}, exactly as a vanilla break would.
+     *
+     * <p>{@link net.paulem.krimson.listeners.CustomBlockSuppressionListener} already turns that event into
+     * the actual break (removal, drop and tool damage), so this method must not break the block a second
+     * time; {@code setDropItems} carries the "may this tool harvest it" decision down to
+     * {@link CustomBlock#onBreak}.</p>
      */
     public void complete(Player player, MiningSession session) {
         Block block = session.getBlock();
@@ -213,13 +217,9 @@ public class MiningManager {
                 Particle.BLOCK, center, 40, .3, .3, .3, .1, session.getCarrierMaterial().createBlockData()
         );
 
-        if (event.isDropItems()) {
-            // Handles the removal, the drop and the tool damage.
+        // Safety net: the suppression listener normally already handled the break during the dispatch above.
+        if (KrimsonAPI.isCustomBlockFromWatcher(block)) {
             customBlock.onPlayerBreak(event);
-        } else {
-            // Wrong tool: the block is still broken, but yields nothing.
-            customBlock.remove();
-            player.damageItemStack(player.getInventory().getItemInMainHand(), 1);
         }
     }
 

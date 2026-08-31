@@ -40,7 +40,7 @@ public class PluginBlocks {
         KrimsonPlugin.getInstance().getLogger().info("Registering blocks...");
 
         // Mined like an obsidian-ish ore: needs an iron pickaxe to drop anything.
-        NOTE_TEST.setMiningProperties(MiningProperties.pickaxe(15f, ToolTier.IRON));
+        NOTE_TEST.setMiningProperties(MiningProperties.pickaxe(5f, ToolTier.IRON));
 
         Blocks.REGISTRY.freeze();
     }

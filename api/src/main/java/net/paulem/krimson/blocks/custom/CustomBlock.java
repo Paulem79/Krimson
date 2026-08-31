@@ -343,7 +343,7 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         onBreak(event, player);
 
         // Damage player tool
-        player.damageItemStack(player.getActiveItem(), 1);
+        player.damageItemStack(player.getInventory().getItemInMainHand(), 1);
     }
 
     /**
@@ -355,6 +355,10 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         remove();
 
         if (player != null && player.getGameMode() == GameMode.CREATIVE) return;
+
+        // The mining system marks a break made with a tool that cannot harvest the block: it still breaks,
+        // but yields nothing, exactly like a vanilla ore mined with a bare hand.
+        if (event instanceof BlockBreakEvent blockBreakEvent && !blockBreakEvent.isDropItems()) return;
 
         // DROP ITEM PART
         if (dropIdentifier.equals(NamespacedKeyUtils.none())) return;
