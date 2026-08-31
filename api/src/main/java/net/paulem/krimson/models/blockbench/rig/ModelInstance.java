@@ -1,14 +1,13 @@
 package net.paulem.krimson.models.blockbench.rig;
 
+import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import net.paulem.krimson.models.blockbench.anim.AnimationPlayer;
 import net.paulem.krimson.models.blockbench.anim.BbAnimation;
 import net.paulem.krimson.models.blockbench.model.BbModel;
+import net.paulem.krimson.packets.entity.VirtualDisplayEntity;
+import net.paulem.krimson.packets.entity.VirtualEntityManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.Display;
-import org.bukkit.entity.ItemDisplay;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -17,9 +16,11 @@ import java.util.*;
 /**
  * One posed instance of the model in the world.
  *
- * <p>Each {@link RigPart} gets an {@code ItemDisplay} spawned at the rig's base
- * location; all the motion lives in each display's transformation matrix, so moving the
- * whole rig is one teleport rather than fifty.
+ * <p>Each {@link RigPart} gets a packet-only {@link VirtualDisplayEntity} anchored at the
+ * rig's base location; all the motion lives in each display's transformation matrix, so
+ * moving the whole rig is one teleport rather than fifty. Nothing here is a real Bukkit
+ * entity — the rig is visible only to players the {@link VirtualEntityManager} has added
+ * as viewers, and disappears with zero server-side entity bookkeeping when it does.
  *
  * <p><b>The transform.</b> For a part in bone {@code B} with baked-geometry centre
  * {@code c}, let
@@ -42,7 +43,7 @@ public final class ModelInstance {
     private final BoneSolver solver;
     private final AnimationPlayer player = new AnimationPlayer();
 
-    private final Map<String, ItemDisplay> displays = new LinkedHashMap<>();
+    private final Map<String, VirtualDisplayEntity> displays = new LinkedHashMap<>();
     private final Map<String, Matrix4f> lastSent = new HashMap<>();
 
     private Location base;
@@ -100,53 +101,46 @@ public final class ModelInstance {
 
     // ------------------------------------------------------------------- lifecycle
 
-    /** Spawns every part's display entity, already posed, so nothing pops in untransformed. */
+    /** Spawns every part's virtual display, already posed, so nothing pops in untransformed. */
     public void spawn() {
         solveInto();
         for (RigPart part : manifest.parts()) {
             Matrix4f matrix = visible(part) ? partMatrix(part) : HIDDEN;
             Matrix4f initial = new Matrix4f(matrix);
-            ItemDisplay display = base.getWorld().spawn(base, ItemDisplay.class, entity -> {
-                entity.setItemStack(itemFor(part));
-                entity.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-                entity.setBillboard(Display.Billboard.FIXED);
-                entity.setTransformationMatrix(initial);
-                entity.setInterpolationDuration(interpolationTicks);
-                entity.setInterpolationDelay(0);
-                entity.setTeleportDuration(interpolationTicks);
-                entity.setViewRange(1.0F);
-                entity.setPersistent(false);
-                entity.setInvulnerable(true);
-                entity.setBrightness(new Display.Brightness(15, 15));
-            });
+
+            VirtualDisplayEntity display = new VirtualDisplayEntity(VirtualDisplayEntity.Kind.ITEM, base);
+            display.setItemStack(itemFor(part));
+            display.setItemDisplayTransform(0); // ItemDisplayContext.NONE
+            display.setBillboard(VirtualDisplayEntity.Billboard.FIXED);
+            display.setTransformationMatrix(initial);
+            display.setInterpolationDuration(interpolationTicks);
+            display.setInterpolationDelay(0);
+            display.setTeleportDuration(interpolationTicks);
+            display.setViewRange(1.0F);
+            display.setBrightness(15, 15);
+
+            VirtualEntityManager.getInstance().register(display);
             displays.put(part.id, display);
             lastSent.put(part.id, initial);
         }
     }
 
     public void remove() {
-        for (ItemDisplay display : displays.values()) {
-            if (display.isValid()) {
-                display.remove();
-            }
+        for (VirtualDisplayEntity display : displays.values()) {
+            VirtualEntityManager.getInstance().unregister(display);
         }
         displays.clear();
         lastSent.clear();
     }
 
-    /** True if any of the rig's entities were unloaded or killed out from under us. */
+    /** True if the rig has no parts to show, e.g. removed already. */
     public boolean isBroken() {
-        for (ItemDisplay display : displays.values()) {
-            if (!display.isValid()) {
-                return true;
-            }
-        }
         return displays.isEmpty();
     }
 
     public void teleport(Location location) {
         this.base = location.clone();
-        for (ItemDisplay display : displays.values()) {
+        for (VirtualDisplayEntity display : displays.values()) {
             display.teleport(location);
         }
     }
@@ -172,8 +166,8 @@ public final class ModelInstance {
         int updated = 0;
 
         for (RigPart part : manifest.parts()) {
-            ItemDisplay display = displays.get(part.id);
-            if (display == null || !display.isValid()) {
+            VirtualDisplayEntity display = displays.get(part.id);
+            if (display == null) {
                 continue;
             }
             boolean show = part.visibleByDefault || revealed.contains(part.bone);
@@ -185,6 +179,7 @@ public final class ModelInstance {
             display.setInterpolationDelay(0);
             display.setInterpolationDuration(interpolationTicks);
             display.setTransformationMatrix(target);
+            display.pushMetadata();
             if (previous == null) {
                 lastSent.put(part.id, new Matrix4f(target));
             } else {
@@ -236,15 +231,16 @@ public final class ModelInstance {
     }
 
     private ItemStack itemFor(RigPart part) {
-        ItemStack stack = new ItemStack(carrier);
-        ItemMeta meta = stack.getItemMeta();
+        // Built as a real Bukkit ItemStack first so we can use its item_model API, then
+        // converted to the packet representation — the carrier item itself is irrelevant
+        // beyond needing to exist, since item_model replaces the whole rendered model.
+        org.bukkit.inventory.ItemStack bukkitStack = new org.bukkit.inventory.ItemStack(carrier);
+        org.bukkit.inventory.meta.ItemMeta meta = bukkitStack.getItemMeta();
         if (meta != null) {
-            // The item_model component replaces the whole model, so the carrier item
-            // is irrelevant beyond needing to exist.
             meta.setItemModel(part.itemModel);
-            stack.setItemMeta(meta);
+            bukkitStack.setItemMeta(meta);
         }
-        return stack;
+        return io.github.retrooper.packetevents.util.SpigotConversionUtil.fromBukkitItemStack(bukkitStack);
     }
 
     private static boolean nearlyEqual(Matrix4f a, Matrix4f b) {

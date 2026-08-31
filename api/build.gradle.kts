@@ -29,6 +29,8 @@ dependencies {
 
     implementation(libs.commons.lang3)
 
+    implementation(libs.packetevents.spigot)
+
     compileOnly(libs.viaversion.api)
     compileOnly(libs.jetbrains.annotations)
 

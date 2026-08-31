@@ -29,6 +29,10 @@ allprojects {
         }
         maven { url = uri("https://jitpack.io") }
         maven {
+            name = "codemc-releases"
+            url = uri("https://repo.codemc.io/repository/maven-public/")
+        }
+        maven {
             name = "radRepoPublic"
             url = uri("https://maven.rad.vg/public")
         }
@@ -86,6 +90,8 @@ tasks.shadowJar {
 
     relocate("com.github.Anon8281.universalScheduler", "net.paulem.krimson.libs.universalScheduler")
     relocate("com.jeff_media.customblockdata", "net.paulem.krimson.libs.customblockdata")
+    relocate("io.github.retrooper.packetevents", "net.paulem.krimson.libs.packetevents")
+    relocate("com.github.retrooper.packetevents", "net.paulem.krimson.libs.packetevents.api")
 }
 
 tasks.build {

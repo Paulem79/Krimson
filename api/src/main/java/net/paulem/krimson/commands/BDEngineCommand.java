@@ -5,20 +5,18 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.paulem.krimson.models.Model;
 import net.paulem.krimson.models.Models;
 import net.paulem.krimson.models.bdengine.BDEngineModel;
+import net.paulem.krimson.models.bdengine.BDEngineModel.ModelInstanceHandle;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Display;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.World;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -66,18 +64,16 @@ public final class BDEngineCommand implements CommandExecutor, TabCompleter {
                 if (model == null) {
                     return true;
                 }
-                List<Display> displays = model.spawn(player.getLocation());
-                if (displays.isEmpty()) {
+                ModelInstanceHandle instance = model.spawn(player.getLocation());
+                if (instance.displays().isEmpty()) {
                     reply(sender, "Le modèle " + model.getKey() + " n'a produit aucun display.");
                     return true;
                 }
-                String instanceId = displays.get(0).getPersistentDataContainer()
-                        .get(BDEngineModel.INSTANCE_KEY, PersistentDataType.STRING);
-                reply(sender, "Modèle " + model.getKey() + " apparu (" + displays.size()
-                        + " displays, instance " + shortId(instanceId) + ").");
+                reply(sender, "Modèle " + model.getKey() + " apparu (" + instance.displays().size()
+                        + " displays, instance " + shortId(instance.instanceId()) + ").");
             }
             case "play", "loop" -> {
-                Instance instance = requireNearest(player);
+                ModelInstanceHandle instance = requireNearest(player);
                 if (instance == null) {
                     return true;
                 }
@@ -89,37 +85,37 @@ public final class BDEngineCommand implements CommandExecutor, TabCompleter {
                 boolean loop = sub.equals("loop");
                 if (animation == null) {
                     if (loop) {
-                        instance.model().playAnimationLoop(player.getWorld(), instance.id());
+                        instance.model().playAnimationLoop(player.getWorld(), instance.instanceId());
                     } else {
-                        instance.model().playAnimation(player.getWorld(), instance.id());
+                        instance.model().playAnimation(player.getWorld(), instance.instanceId());
                     }
                 } else if (loop) {
-                    instance.model().playAnimationLoop(player.getWorld(), instance.id(), animation);
+                    instance.model().playAnimationLoop(player.getWorld(), instance.instanceId(), animation);
                 } else {
-                    instance.model().playAnimation(player.getWorld(), instance.id(), animation);
+                    instance.model().playAnimation(player.getWorld(), instance.instanceId(), animation);
                 }
                 reply(sender, (loop ? "Lecture en boucle de " : "Lecture de ")
                         + (animation == null ? "l'animation par défaut" : animation)
-                        + " sur l'instance " + shortId(instance.id()) + ".");
+                        + " sur l'instance " + shortId(instance.instanceId()) + ".");
             }
             case "stop" -> {
-                Instance instance = requireNearest(player);
+                ModelInstanceHandle instance = requireNearest(player);
                 if (instance == null) {
                     return true;
                 }
-                BDEngineModel.cancelActiveAnimation(instance.id());
-                reply(sender, "Animation arrêtée sur l'instance " + shortId(instance.id()) + ".");
+                BDEngineModel.cancelActiveAnimation(instance.instanceId());
+                reply(sender, "Animation arrêtée sur l'instance " + shortId(instance.instanceId()) + ".");
             }
             case "remove" -> {
-                Instance instance = requireNearest(player);
+                ModelInstanceHandle instance = requireNearest(player);
                 if (instance == null) {
                     return true;
                 }
-                BDEngineModel.removeModelInstance(player.getWorld(), instance.id());
-                reply(sender, "Instance " + shortId(instance.id()) + " supprimée.");
+                BDEngineModel.removeModelInstance(player.getWorld(), instance.instanceId());
+                reply(sender, "Instance " + shortId(instance.instanceId()) + " supprimée.");
             }
             case "removeall" -> {
-                List<String> ids = new ArrayList<>(instances(player.getWorld().getEntities()).keySet());
+                List<String> ids = new ArrayList<>(instancesInWorld(player.getWorld()).keySet());
                 for (String id : ids) {
                     BDEngineModel.removeModelInstance(player.getWorld(), id);
                 }
@@ -133,7 +129,7 @@ public final class BDEngineCommand implements CommandExecutor, TabCompleter {
                         return true;
                     }
                 } else {
-                    Instance instance = requireNearest(player);
+                    ModelInstanceHandle instance = requireNearest(player);
                     if (instance == null) {
                         return true;
                     }
@@ -150,13 +146,13 @@ public final class BDEngineCommand implements CommandExecutor, TabCompleter {
                 reply(sender, builder.toString());
             }
             case "info" -> {
-                Map<String, Instance> instances = instances(player.getWorld().getEntities());
-                Instance nearest = nearest(player);
+                Map<String, ModelInstanceHandle> instances = instancesInWorld(player.getWorld());
+                ModelInstanceHandle nearest = nearest(player);
                 StringBuilder builder = new StringBuilder("instances dans ce monde: " + instances.size());
                 if (nearest == null) {
                     builder.append("\nla plus proche: aucune");
                 } else {
-                    builder.append("\nla plus proche: ").append(shortId(nearest.id()))
+                    builder.append("\nla plus proche: ").append(shortId(nearest.instanceId()))
                             .append(" — modèle ").append(nearest.model().getKey())
                             .append(", ").append(nearest.displays().size()).append(" displays");
                 }
@@ -170,44 +166,23 @@ public final class BDEngineCommand implements CommandExecutor, TabCompleter {
 
     // --- RECHERCHE DES INSTANCES ---
 
-    /** Une instance apparue: son id, le modèle d'origine et ses displays vivants. */
-    private record Instance(String id, BDEngineModel model, List<Display> displays) {
-        Location location() {
-            return displays.get(0).getLocation();
-        }
-    }
-
-    private static Map<String, Instance> instances(List<Entity> entities) {
-        Map<String, List<Display>> displaysById = new LinkedHashMap<>();
-        Map<String, String> modelKeyById = new LinkedHashMap<>();
-
-        for (Entity entity : entities) {
-            if (!(entity instanceof Display display)) continue;
-            String id = display.getPersistentDataContainer()
-                    .get(BDEngineModel.INSTANCE_KEY, PersistentDataType.STRING);
-            String modelKey = display.getPersistentDataContainer()
-                    .get(BDEngineModel.MODEL_KEY, PersistentDataType.STRING);
-            if (id == null || modelKey == null) continue;
-            displaysById.computeIfAbsent(id, key -> new ArrayList<>()).add(display);
-            modelKeyById.putIfAbsent(id, modelKey);
-        }
-
-        Map<String, Instance> instances = new LinkedHashMap<>();
-        displaysById.forEach((id, displays) -> {
-            BDEngineModel model = modelOrNull(modelKeyById.get(id));
-            if (model != null) {
-                instances.put(id, new Instance(id, model, displays));
+    /** Toutes les instances actives dont l'emplacement de base est dans ce monde. */
+    private static Map<String, ModelInstanceHandle> instancesInWorld(World world) {
+        Map<String, ModelInstanceHandle> result = new java.util.LinkedHashMap<>();
+        BDEngineModel.activeInstances().forEach((id, instance) -> {
+            if (world.equals(instance.location().getWorld())) {
+                result.put(id, instance);
             }
         });
-        return instances;
+        return result;
     }
 
-    private static Instance nearest(Player player) {
+    private static ModelInstanceHandle nearest(Player player) {
         Location origin = player.getLocation();
-        Instance best = null;
+        ModelInstanceHandle best = null;
         double bestDistance = NEAREST_RADIUS * NEAREST_RADIUS;
 
-        for (Instance instance : instances(player.getWorld().getEntities()).values()) {
+        for (ModelInstanceHandle instance : instancesInWorld(player.getWorld()).values()) {
             double distance = instance.location().distanceSquared(origin);
             if (distance <= bestDistance) {
                 bestDistance = distance;
@@ -217,8 +192,8 @@ public final class BDEngineCommand implements CommandExecutor, TabCompleter {
         return best;
     }
 
-    private Instance requireNearest(Player player) {
-        Instance instance = nearest(player);
+    private ModelInstanceHandle requireNearest(Player player) {
+        ModelInstanceHandle instance = nearest(player);
         if (instance == null) {
             reply(player, "Aucun modèle à proximité — lancez /bdengine spawn <modèle> d'abord.");
         }
@@ -274,7 +249,7 @@ public final class BDEngineCommand implements CommandExecutor, TabCompleter {
                 return partial(modelKeys(), args[1]);
             }
             if ((sub.equals("play") || sub.equals("loop")) && sender instanceof Player player) {
-                Instance instance = nearest(player);
+                ModelInstanceHandle instance = nearest(player);
                 if (instance == null) return Collections.emptyList();
                 return partial(new ArrayList<>(instance.model().getAnimations().keySet()), args[1]);
             }

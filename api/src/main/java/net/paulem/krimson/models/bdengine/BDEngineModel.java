@@ -1,9 +1,12 @@
 package net.paulem.krimson.models.bdengine;
 
 import com.google.gson.*;
+import io.github.retrooper.packetevents.util.SpigotConversionUtil;
 import lombok.Getter;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.models.Model;
+import net.paulem.krimson.packets.entity.VirtualDisplayEntity;
+import net.paulem.krimson.packets.entity.VirtualEntityManager;
 import net.paulem.krimson.utils.JsonLoader;
 import net.paulem.krimson.utils.nbt.SnbtCompound;
 import net.paulem.krimson.utils.nbt.SnbtList;
@@ -14,13 +17,8 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.BlockDisplay;
-import org.bukkit.entity.Display;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.ItemDisplay.ItemDisplayTransform;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.joml.Matrix4f;
@@ -30,10 +28,22 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BDEngineModel implements Model<List<Display>, World, String> {
-    public static final NamespacedKey INSTANCE_KEY = new NamespacedKey("krimson", "model_instance_id");
-    public static final NamespacedKey MODEL_KEY = new NamespacedKey("krimson", "model_key");
-    public static final NamespacedKey PART_KEY = new NamespacedKey("krimson", "model_part_tag");
+public class BDEngineModel implements Model<BDEngineModel.ModelInstanceHandle, World, String> {
+    /** Every spawned instance, keyed by instance id, across all BDEngine models. */
+    private static final Map<String, ModelInstanceHandle> ACTIVE_INSTANCES = new LinkedHashMap<>();
+
+    /** A spawned instance: its virtual displays, keyed by part tag, and where it lives. */
+    public record ModelInstanceHandle(String instanceId, BDEngineModel model,
+                                       Map<String, VirtualDisplayEntity> displays, Location location) {
+    }
+
+    public static Map<String, ModelInstanceHandle> activeInstances() {
+        return Collections.unmodifiableMap(ACTIVE_INSTANCES);
+    }
+
+    public static ModelInstanceHandle instance(String instanceId) {
+        return ACTIVE_INSTANCES.get(instanceId);
+    }
 
     @Getter
     private final NamespacedKey key;
@@ -262,38 +272,35 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         }
     }
 
-    // --- SPAWN & LINKING VIA PDC ---
+    // --- SPAWN ---
     @Override
-    public List<Display> spawn(Location location) {
+    public ModelInstanceHandle spawn(Location location) {
         Location spawnLoc = location.clone().add(originOffset.x(), originOffset.y(), originOffset.z());
-        List<Display> spawnedDisplays = new ArrayList<>();
         String instanceId = UUID.randomUUID().toString();
+        Map<String, VirtualDisplayEntity> displays = new LinkedHashMap<>();
 
         parts.forEach((tag, part) -> {
-            Display display = null;
+            VirtualDisplayEntity display;
             if (part.type() == DisplayType.BLOCK) {
-                display = spawnLoc.getWorld().spawn(spawnLoc, BlockDisplay.class, d -> {
-                    d.setBlock(part.blockData() != null ? part.blockData() : Bukkit.createBlockData(Material.STONE));
-                    d.setTransformationMatrix(part.transformation());
-                });
-            } else if (part.type() == DisplayType.ITEM) {
-                display = spawnLoc.getWorld().spawn(spawnLoc, ItemDisplay.class, d -> {
-                    d.setItemStack(part.itemStack() != null ? part.itemStack() : new ItemStack(Material.AIR));
-                    d.setItemDisplayTransform(part.itemTransform() != null ? part.itemTransform() : ItemDisplayTransform.NONE);
-                    d.setTransformationMatrix(part.transformation());
-                });
+                display = new VirtualDisplayEntity(VirtualDisplayEntity.Kind.BLOCK, spawnLoc);
+                display.setBlockState(SpigotConversionUtil.fromBukkitBlockData(
+                        part.blockData() != null ? part.blockData() : Bukkit.createBlockData(Material.STONE)));
+            } else {
+                display = new VirtualDisplayEntity(VirtualDisplayEntity.Kind.ITEM, spawnLoc);
+                display.setItemStack(SpigotConversionUtil.fromBukkitItemStack(
+                        part.itemStack() != null ? part.itemStack() : new ItemStack(Material.AIR)));
+                display.setItemDisplayTransform(
+                        (part.itemTransform() != null ? part.itemTransform() : ItemDisplayTransform.NONE).ordinal());
             }
+            display.setTransformationMatrix(part.transformation());
 
-            if (display != null) {
-                // Liaison des entités via PDC
-                display.getPersistentDataContainer().set(INSTANCE_KEY, PersistentDataType.STRING, instanceId);
-                display.getPersistentDataContainer().set(MODEL_KEY, PersistentDataType.STRING, key.toString());
-                display.getPersistentDataContainer().set(PART_KEY, PersistentDataType.STRING, tag);
-                spawnedDisplays.add(display);
-            }
+            VirtualEntityManager.getInstance().register(display);
+            displays.put(tag, display);
         });
 
-        return spawnedDisplays;
+        ModelInstanceHandle handle = new ModelInstanceHandle(instanceId, this, displays, spawnLoc);
+        ACTIVE_INSTANCES.put(instanceId, handle);
+        return handle;
     }
 
     // --- ANIMATION ENGINE ---
@@ -314,18 +321,9 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         Map<Integer, List<AnimationFrame>> keyframes = animations.get(animationName);
         if (keyframes.isEmpty()) return;
 
-        Map<String, Display> entityMap = new HashMap<>();
-        for (Entity entity : world.getEntities()) {
-            if (entity instanceof Display display) {
-                String id = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
-                String partTag = display.getPersistentDataContainer().get(PART_KEY, PersistentDataType.STRING);
-                if (instanceId.equals(id) && partTag != null) {
-                    entityMap.put(partTag, display);
-                }
-            }
-        }
-
-        if (entityMap.isEmpty()) return;
+        ModelInstanceHandle instance = ACTIVE_INSTANCES.get(instanceId);
+        if (instance == null || instance.displays().isEmpty()) return;
+        Map<String, VirtualDisplayEntity> entityMap = instance.displays();
 
         int maxTick = Collections.max(keyframes.keySet());
 
@@ -348,26 +346,23 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
                     SoundAnimation soundAnim = sounds.get(animationName);
                     if (soundAnim.soundFrames().containsKey(currentTick)) {
                         SoundFrame soundFrame = soundAnim.soundFrames().get(currentTick);
-                        // Find location from any display entity
-                        if (!entityMap.isEmpty()) {
-                            Display firstDisplay = entityMap.values().iterator().next();
-                            playSound(firstDisplay.getWorld(), firstDisplay.getLocation(), soundFrame.soundCommand());
-                        }
+                        playSound(world, instance.location(), soundFrame.soundCommand());
                     }
                 }
 
                 List<AnimationFrame> frames = keyframes.get(currentTick);
                 if (frames != null) {
                     for (AnimationFrame frame : frames) {
-                        Display display = entityMap.get(frame.partTag());
-                        if (display != null && display.isValid()) {
+                        VirtualDisplayEntity display = entityMap.get(frame.partTag());
+                        if (display != null) {
                             display.setInterpolationDelay(0);
                             display.setInterpolationDuration(frame.duration());
                             display.setTransformationMatrix(frame.transformation());
 
-                            if (display instanceof BlockDisplay bd && frame.blockData() != null) {
-                                bd.setBlock(frame.blockData());
+                            if (display.kind() == VirtualDisplayEntity.Kind.BLOCK && frame.blockData() != null) {
+                                display.setBlockState(SpigotConversionUtil.fromBukkitBlockData(frame.blockData()));
                             }
+                            display.pushMetadata();
                         }
                     }
                 }
@@ -391,18 +386,9 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         Map<Integer, List<AnimationFrame>> keyframes = animations.get(animationName);
         if (keyframes.isEmpty()) return;
 
-        Map<String, Display> entityMap = new HashMap<>();
-        for (Entity entity : world.getEntities()) {
-            if (entity instanceof Display display) {
-                String id = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
-                String partTag = display.getPersistentDataContainer().get(PART_KEY, PersistentDataType.STRING);
-                if (instanceId.equals(id) && partTag != null) {
-                    entityMap.put(partTag, display);
-                }
-            }
-        }
-
-        if (entityMap.isEmpty()) return;
+        ModelInstanceHandle instance = ACTIVE_INSTANCES.get(instanceId);
+        if (instance == null || instance.displays().isEmpty()) return;
+        Map<String, VirtualDisplayEntity> entityMap = instance.displays();
 
         int maxTick = Collections.max(keyframes.keySet());
 
@@ -419,26 +405,23 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
                     SoundAnimation soundAnim = sounds.get(animationName);
                     if (soundAnim.soundFrames().containsKey(currentTick)) {
                         SoundFrame soundFrame = soundAnim.soundFrames().get(currentTick);
-                        // Find location from any display entity
-                        if (!entityMap.isEmpty()) {
-                            Display firstDisplay = entityMap.values().iterator().next();
-                            playSound(firstDisplay.getWorld(), firstDisplay.getLocation(), soundFrame.soundCommand());
-                        }
+                        playSound(world, instance.location(), soundFrame.soundCommand());
                     }
                 }
 
                 List<AnimationFrame> frames = keyframes.get(currentTick);
                 if (frames != null) {
                     for (AnimationFrame frame : frames) {
-                        Display display = entityMap.get(frame.partTag());
-                        if (display != null && display.isValid()) {
+                        VirtualDisplayEntity display = entityMap.get(frame.partTag());
+                        if (display != null) {
                             display.setInterpolationDelay(0);
                             display.setInterpolationDuration(frame.duration());
                             display.setTransformationMatrix(frame.transformation());
 
-                            if (display instanceof BlockDisplay bd && frame.blockData() != null) {
-                                bd.setBlock(frame.blockData());
+                            if (display.kind() == VirtualDisplayEntity.Kind.BLOCK && frame.blockData() != null) {
+                                display.setBlockState(SpigotConversionUtil.fromBukkitBlockData(frame.blockData()));
                             }
+                            display.pushMetadata();
                         }
                     }
                 }
@@ -520,13 +503,10 @@ public class BDEngineModel implements Model<List<Display>, World, String> {
         // Cancel any active animations for this instance
         cancelActiveAnimation(instanceId);
 
-        // Remove all entities sharing the same instance_id
-        for (Entity entity : world.getEntities()) {
-            if (entity instanceof Display display) {
-                String otherInstanceId = display.getPersistentDataContainer().get(INSTANCE_KEY, PersistentDataType.STRING);
-                if (instanceId.equals(otherInstanceId)) {
-                    display.remove();
-                }
+        ModelInstanceHandle instance = ACTIVE_INSTANCES.remove(instanceId);
+        if (instance != null) {
+            for (VirtualDisplayEntity display : instance.displays().values()) {
+                VirtualEntityManager.getInstance().unregister(display);
             }
         }
     }

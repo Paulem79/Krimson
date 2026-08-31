@@ -6,7 +6,7 @@ paper = "1.21.4-R0.1-SNAPSHOT"
 # Plugins
 kotlin = "2.4.10"
 shadow = "9.6.1"
-runPaper = "3.0.2"
+runPaper = "3.1.0"
 paperweightPlugin = "2.0.0-beta.23"
 
 # Libraries
@@ -22,6 +22,7 @@ customBlockData = "2.2.8"
 packedCore = "1.1.4"
 mcbrawlsInject = "3.+"
 javalin = "7.+"
+packetevents = "2.9.3"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -43,6 +44,7 @@ mcbrawls-inject-http = { module = "net.mcbrawls.inject:http", version.ref = "mcb
 mcbrawls-inject-jetty = { module = "net.mcbrawls.inject:jetty", version.ref = "mcbrawlsInject" }
 mcbrawls-inject-javalin = { module = "net.mcbrawls.inject:javalin", version.ref = "mcbrawlsInject" }
 javalin = { module = "io.javalin:javalin", version.ref = "javalin" }
+packetevents-spigot = { module = "com.github.retrooper:packetevents-spigot", version.ref = "packetevents" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

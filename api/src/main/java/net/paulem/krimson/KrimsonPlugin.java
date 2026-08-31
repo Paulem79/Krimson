@@ -2,8 +2,10 @@ package net.paulem.krimson;
 
 import com.github.Anon8281.universalScheduler.UniversalScheduler;
 import com.github.Anon8281.universalScheduler.scheduling.schedulers.TaskScheduler;
+import com.github.retrooper.packetevents.PacketEvents;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.ViaAPI;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import lombok.Getter;
 import net.paulem.arcana.ArcanaAPI;
 import net.paulem.krimson.config.KrimsonConfig;
@@ -31,10 +33,22 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
     private ArcanaAPI<KrimsonPlugin<T>> arcanaAPI;
 
     @Override
+    public void onLoad() {
+        super.onLoad();
+
+        // Must be built/loaded in onLoad(): PacketEvents needs to inject before the
+        // server starts accepting connections.
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        PacketEvents.getAPI().load();
+    }
+
+    @Override
     public void onEnable() {
         super.onEnable();
 
         instance = this;
+
+        PacketEvents.getAPI().init();
 
         arcanaAPI = new ArcanaAPI<>(this);
         arcanaAPI.init();
@@ -55,6 +69,13 @@ public abstract class KrimsonPlugin<T extends KrimsonPlugin<T>> extends JavaPlug
         }
 
         getLogger().info("KrimsonPlugin instantiated!");
+    }
+
+    @Override
+    public void onDisable() {
+        super.onDisable();
+
+        PacketEvents.getAPI().terminate();
     }
 
     public abstract void initBlocks();

@@ -10,12 +10,14 @@ import net.paulem.krimson.commands.StandCommand;
 import net.paulem.krimson.listeners.*;
 import net.paulem.krimson.mobs.CustomMobs;
 import net.paulem.krimson.mobs.listeners.CustomMobListener;
+import net.paulem.krimson.packets.entity.VirtualEntityManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.plugin.PluginManager;
@@ -98,6 +100,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         CustomBlockData.registerListener(plugin);
 
         MiningManager.getInstance().start();
+        VirtualEntityManager.getInstance().start(plugin);
 
         // Commands
         if(registerCommand) {
@@ -153,8 +156,14 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         packHosting.stop();
         CustomMobs.shutdown();
         MiningManager.getInstance().stop();
+        VirtualEntityManager.getInstance().stop();
 
         getLogger().info("Goodbye from Krimson API!");
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        VirtualEntityManager.getInstance().handleQuit(event.getPlayer().getUniqueId());
     }
 
     public Logger getLogger() {
