@@ -20,6 +20,9 @@ Any contribution is welcome!
     - [x] Custom animations
 - [x] Custom sounds
 - [ ] Custom UI (more support for positioning and something else?)
+- [ ] Custom items
+- [ ] Custom enchantments?
+- [ ] Split into modules
 
 ## Known issues
 - Entities lose their behaviour and model on restart.
