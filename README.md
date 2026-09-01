@@ -29,6 +29,7 @@ Any contribution is welcome!
 - [ ] Ore generation
 - [ ] Localized items/blocks name
 - [ ] Ensure two and more plugins using Krimson don't conflict
+- [ ] Custom (easy!) recipes
 
 ## Known issues
 - Entities lose their behaviour and model on restart.
