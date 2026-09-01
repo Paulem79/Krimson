@@ -147,14 +147,15 @@ public class MiningManager {
                 continue;
             }
 
-            // A tool swap changes the mining speed mid-session, exactly like vanilla.
+            // Recomputed every tick, exactly like vanilla: a tool swap, landing on ground, or entering/leaving
+            // water all change the mining speed mid-session.
             ItemStack held = player.getInventory().getItemInMainHand();
             if (!held.isSimilar(session.getTool())) {
                 session.setTool(held.clone());
-                session.setDamagePerTick(MiningSpeedCalculator.damagePerTick(
-                        player, session.getProperties(), session.getCarrierMaterial(), session.getOwnFatigueAmplifier()
-                ));
             }
+            session.setDamagePerTick(MiningSpeedCalculator.damagePerTick(
+                    player, session.getProperties(), session.getCarrierMaterial(), session.getOwnFatigueAmplifier()
+            ));
 
             session.setProgress(session.getProgress() + session.getDamagePerTick());
             session.setTicks(session.getTicks() + 1);
