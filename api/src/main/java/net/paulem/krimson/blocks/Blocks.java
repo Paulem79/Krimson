@@ -5,7 +5,6 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Nullable;
 import net.paulem.krimson.blocks.custom.CustomBlock;
-import net.paulem.krimson.blocks.noteblock.NoteBlockCustomBlock;
 import net.paulem.krimson.registry.NewFrozenRegistry;
 
 import java.util.function.Consumer;
@@ -23,15 +22,6 @@ public class Blocks {
         KrimsonPlugin.getInstance().getLogger().info("Registered block: " + key);
 
         return (T) REGISTRY.getOrThrow(customBlock.getKey());
-    }
-
-    /**
-     * Registers a block rendered by a note block blockstate instead of by an item display entity.
-     * Its state is allocated by {@link net.paulem.krimson.blocks.noteblock.NoteBlockStates} and written to
-     * the resource pack's {@code note_block.json} blockstates file.
-     */
-    public static NoteBlockCustomBlock registerNoteBlock(String key, @Nullable Consumer<ItemMeta> meta) {
-        return register(key, meta, identifier -> new NoteBlockCustomBlock(identifier, identifier));
     }
 
     private Blocks() {

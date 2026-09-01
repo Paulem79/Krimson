@@ -7,6 +7,7 @@ import net.paulem.krimson.blocks.mining.ToolTier;
 import net.paulem.krimson.blocks.noteblock.NoteBlockCustomBlock;
 import net.paulem.krimson.KrimsonPlugin;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 
 import java.util.List;
 
@@ -28,12 +29,13 @@ public class PluginBlocks {
      * Same idea as {@link #TEST}, but rendered by a note block blockstate instead of by an item display
      * entity: no entity, vanilla lighting, vanilla persistence.
      */
-    public static final NoteBlockCustomBlock NOTE_TEST = Blocks.registerNoteBlock(
+    public static final NoteBlockCustomBlock NOTE_TEST = Blocks.register(
             "mythril_ore",
             meta -> {
                 meta.setDisplayName("§dNote Test Block");
                 meta.setLore(List.of("§bA custom block rendered", "§bthrough a noteblock state."));
-            }
+            },
+            key -> new NoteBlockCustomBlock(key, new NamespacedKey(KrimsonPlugin.getInstance(), "mythril_axe"))
     );
 
     public static void init() {
