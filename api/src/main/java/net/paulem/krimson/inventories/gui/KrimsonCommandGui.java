@@ -14,6 +14,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public class KrimsonCommandGui {
+    private KrimsonCommandGui() {
+        /* This utility class should not be instantiated */
+    }
+
     public static void invoke(Player player) {
         ChestGui gui = new ChestGui(6, "Shop");
 
