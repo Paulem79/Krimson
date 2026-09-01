@@ -10,6 +10,9 @@ Any contribution is welcome!
 ## Roadmap
 
 - [x] Custom blocks
+  - [x] Item display blocks
+  - [x] Noteblock blocks
+  - [ ] Mushroom blocks (don't think that's a good idea actually lol)
 - [x] Custom models
   - [x] BDEngine
     - [x] "Custom" textures
@@ -20,7 +23,7 @@ Any contribution is welcome!
     - [x] Custom animations
 - [x] Custom sounds
 - [ ] Custom UI (more support for positioning and something else?)
-- [ ] Custom items
+- [x] Custom items
 - [ ] Custom enchantments?
 - [ ] Split into modules
 
