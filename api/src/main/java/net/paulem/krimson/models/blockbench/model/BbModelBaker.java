@@ -150,7 +150,7 @@ public final class BbModelBaker {
                 elements.add(elementJson);
             }
         }
-        if (elements.size() == 0) {
+        if (elements.isEmpty()) {
             return null; // every face was hidden/untextured: nothing to render.
         }
 
