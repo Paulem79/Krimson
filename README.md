@@ -35,4 +35,4 @@ Any contribution is welcome!
 
 ## License
 
-Apache License 2.0 — see [LICENSE](./LICENSE).
+GPL-3.0 license, see [LICENSE](./LICENSE).
