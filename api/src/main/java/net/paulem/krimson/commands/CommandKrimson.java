@@ -1,5 +1,6 @@
 package net.paulem.krimson.commands;
 
+import net.paulem.krimson.inventories.gui.KrimsonCommandGui;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -37,7 +38,7 @@ public class CommandKrimson implements TabExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (sender instanceof Player player) {
             if (args.length == 0) {
-                sender.sendMessage("§cUsage: /krimson <give|fill|count|chunk>");
+                sender.sendMessage("§cUsage: /krimson <give|fill|count|chunk|gui>");
                 return true;
             }
             String subCommand = args[0].toLowerCase();
@@ -57,6 +58,9 @@ public class CommandKrimson implements TabExecutor {
 
                     player.getInventory().addItem(item.getItemStack());
                     sender.sendMessage("§aDon de 1x " + item.getKey());
+                }
+                case "gui" -> {
+                    KrimsonCommandGui.invoke(player);
                 }
                 case "fill" -> {
                     if (args.length < 5) {
@@ -112,7 +116,7 @@ public class CommandKrimson implements TabExecutor {
         if (args.length == 2) {
             return Items.REGISTRY.keys().parallelStream().map(NamespacedKey::toString).toList();
         } else {
-            return List.of("give", "fill", "count", "chunk");
+            return List.of("give", "fill", "count", "chunk", "gui");
         }
     }
 }

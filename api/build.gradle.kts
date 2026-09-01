@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.universal.scheduler)
     implementation(libs.custom.block.data)
     implementation(libs.packed.core)
+    implementation(libs.inventoryframework)
 
     implementation(libs.mcbrawls.inject.spigot)
     implementation(libs.mcbrawls.inject.api)
@@ -27,12 +28,12 @@ dependencies {
 
     implementation(libs.arcana)
 
-    implementation(libs.commons.lang3)
-
     implementation(libs.packetevents.spigot)
 
     compileOnly(libs.viaversion.api)
     compileOnly(libs.jetbrains.annotations)
+
+    implementation(libs.commons.lang3)
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

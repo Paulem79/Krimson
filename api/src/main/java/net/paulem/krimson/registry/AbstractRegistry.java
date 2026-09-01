@@ -211,6 +211,7 @@ package net.paulem.krimson.registry;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -274,5 +275,10 @@ public abstract class AbstractRegistry<T extends RegistryKey<K>, K> implements R
     @Override
     public Set<K> keys() {
         return registry.keySet();
+    }
+
+    @Override
+    public Collection<T> values() {
+        return registry.values();
     }
 }

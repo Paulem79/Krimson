@@ -213,6 +213,7 @@ package net.paulem.krimson.registry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -307,4 +308,12 @@ public interface Registry<T extends RegistryKey<K>, K> {
      * @since 1.0.0-SNAPSHOT
      */
     Set<K> keys();
+
+    /**
+     * Retrieves a collection of all values from the registry
+     *
+     * @return a collection of the registered values
+     * @since 1.0.0-SNAPSHOT
+     */
+    Collection<T> values();
 }

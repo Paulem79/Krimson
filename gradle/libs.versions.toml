@@ -23,6 +23,7 @@ packedCore = "1.1.4"
 mcbrawlsInject = "3.+"
 javalin = "7.+"
 packetevents = "2.13.0"
+inventoryframework = "0.12.0"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -37,6 +38,7 @@ arcana = { module = "net.paulem:arcana", version.ref = "arcana" }
 universal-scheduler = { module = "com.github.Anon8281:UniversalScheduler", version.ref = "universalScheduler" }
 custom-block-data = { module = "com.jeff-media:custom-block-data", version.ref = "customBlockData" }
 packed-core = { module = "net.radstevee.packed:packed-core", version.ref = "packedCore" }
+inventoryframework = { module = "com.github.stefvanschie.inventoryframework:IF", version.ref = "inventoryframework" }
 
 mcbrawls-inject-spigot = { module = "net.mcbrawls.inject:spigot", version.ref = "mcbrawlsInject" }
 mcbrawls-inject-api = { module = "net.mcbrawls.inject:api", version.ref = "mcbrawlsInject" }

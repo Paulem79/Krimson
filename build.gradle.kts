@@ -51,6 +51,8 @@ dependencies {
 
     implementation(libs.arcana)
 
+    implementation(libs.inventoryframework)
+
     compileOnly(libs.viaversion.api)
     compileOnly(libs.jetbrains.annotations)
 
@@ -92,6 +94,11 @@ tasks.shadowJar {
     relocate("com.jeff_media.customblockdata", "net.paulem.krimson.libs.customblockdata")
     relocate("io.github.retrooper.packetevents", "net.paulem.krimson.libs.packetevents")
     relocate("com.github.retrooper.packetevents", "net.paulem.krimson.libs.packetevents.api")
+    relocate("com.github.stefvanschie.inventoryframework", "net.paulem.krimson.libs.inventoryframework")
+
+    manifest {
+        attributes("paperweight-mappings-namespace" to "spigot")
+    }
 }
 
 tasks.build {
