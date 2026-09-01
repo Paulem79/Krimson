@@ -26,6 +26,9 @@ Any contribution is welcome!
 - [x] Custom items
 - [ ] Custom enchantments?
 - [ ] Split into modules
+- [ ] Ore generation
+- [ ] Localized items/blocks name
+- [ ] Ensure two and more plugins using Krimson don't conflict
 
 ## Known issues
 - Entities lose their behaviour and model on restart.
