@@ -73,6 +73,18 @@ public class Items {
         ));
     }
 
+    /**
+     * Registers a plain item (raw material, ingot, gem, ...) with no special behaviour. See {@link PlainItem}.
+     */
+    public static PlainItem registerPlainItem(
+            NamespacedKey identifier,
+            Material baseMaterial,
+            NamespacedKey itemModel,
+            @Nullable Consumer<ItemMeta> extraMeta
+    ) {
+        return registerItem(identifier, key -> new PlainItem(key, baseMaterial, itemModel, extraMeta));
+    }
+
     public static<T extends CustomItem> T registerItem(NamespacedKey identifier, Function<NamespacedKey, T> factory) {
         T item = factory.apply(identifier);
         REGISTRY.register(item);

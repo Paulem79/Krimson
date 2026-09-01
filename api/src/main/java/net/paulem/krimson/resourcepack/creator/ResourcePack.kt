@@ -8,6 +8,7 @@ import net.paulem.krimson.items.CustomArmorItem
 import net.paulem.krimson.items.CustomBlockItem
 import net.paulem.krimson.items.CustomToolItem
 import net.paulem.krimson.items.Items
+import net.paulem.krimson.items.PlainItem
 import net.paulem.krimson.models.blockbench.model.BlockbenchModelAssets
 import net.paulem.krimson.sounds.Sounds
 import net.paulem.krimson.ui.UIRegistry
@@ -212,6 +213,8 @@ fun main(dataFolder: File, packFormat: Int): File {
             is CustomToolItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key),
                 ParentModel.HANDHELD)
             is CustomArmorItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key),
+                ParentModel.GENERATED)
+            is PlainItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key),
                 ParentModel.GENERATED)
             else -> {}
         }
