@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "krimson:mythril"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "krimson:mythril"
+      }
+    ]
+  }
+}

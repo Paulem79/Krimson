@@ -29,7 +29,7 @@ public class PluginBlocks {
      * entity: no entity, vanilla lighting, vanilla persistence.
      */
     public static final NoteBlockCustomBlock NOTE_TEST = Blocks.registerNoteBlock(
-            "note_test_block",
+            "mythril_ore",
             meta -> {
                 meta.setDisplayName("§dNote Test Block");
                 meta.setLore(List.of("§bA custom block rendered", "§bthrough a noteblock state."));

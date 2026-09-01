@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "krimson:copper"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "krimson:copper"
+      }
+    ]
+  }
+}
