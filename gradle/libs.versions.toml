@@ -13,7 +13,7 @@ paperweightPlugin = "2.0.0-beta.23"
 commonsLang3 = "3.20.0"
 viaversion = "5.+"
 annotations = "26.1.0"
-lombok = "1.18.46"
+lombok = "1.18.48"
 
 arcana = "0.0.2"
 
