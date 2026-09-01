@@ -1,15 +1,14 @@
 package net.paulem.krimson.mobs;
 
-import net.minecraft.server.level.ServerLevel;
 import net.paulem.krimson.mobs.boss.BossController;
-import net.paulem.krimson.mobs.nms.KrimsonMob;
 import net.paulem.krimson.models.Models;
 import net.paulem.krimson.models.blockbench.BlockbenchDisplayModel;
 import net.paulem.krimson.models.blockbench.rig.ModelInstance;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.Attributable;
-import org.bukkit.craftbukkit.CraftWorld;
+import org.bukkit.craftbukkit.entity.CraftMob;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.plugin.Plugin;
@@ -76,36 +75,35 @@ public final class CustomMobManager {
     }
 
     /**
-     * Spawns a fresh instance of {@code type} at {@code location}: constructs the real NMS
-     * entity (via {@link CustomMobType#factory()}), applies attributes and AI, adds it to
-     * the world (firing a normal {@code CreatureSpawnEvent}), then spawns and attaches its
-     * Blockbench rig.
+     * Spawns a fresh instance of {@code type} at {@code location}: spawns the real body
+     * through the plain Bukkit/Paper API (via {@link CustomMobType#mobClass()}), wipes its
+     * vanilla AI, applies attributes, then spawns and attaches its Blockbench rig.
+     *
+     * <p>The body is a real, unmodified vanilla entity - no NMS subclass of our own is
+     * needed. Its vanilla goal selector is cleared through {@link KrimsonGoalAccess}, which
+     * is the one place in Krimson that touches an NMS field directly (see its class doc for
+     * why that stays safe across Minecraft versions); everything else here is pure Bukkit.
      */
-    public <T extends net.minecraft.world.entity.Mob & KrimsonMob<T>> CustomMobInstance spawn(
-            CustomMobType<T> type, Location location) {
-        if (location.getWorld() == null) {
+    public <T extends org.bukkit.entity.Mob> CustomMobInstance spawn(CustomMobType<T> type, Location location) {
+        World world = location.getWorld();
+        if (world == null) {
             throw new IllegalArgumentException("location has no world");
         }
 
-        ServerLevel level = ((CraftWorld) location.getWorld()).getHandle();
-        T nmsEntity = type.factory().create(type.baseEntityType(), level);
-        nmsEntity.moveTo(location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch());
-        nmsEntity.setInvisible(true); // the vanilla body is hidden; the rig is what's actually seen
-        nmsEntity.setPersistenceRequired();
-        nmsEntity.clearVanillaGoals(); // Krimson's own AI drives the mob from here, not vanilla's
+        T mob = world.spawn(location, type.mobClass(), CreatureSpawnEvent.SpawnReason.CUSTOM, entity -> {
+            entity.setInvisible(true); // the vanilla body is hidden; the rig is what's actually seen
+            entity.setPersistent(true);
+            KrimsonGoalAccess.clearVanillaGoals(((CraftMob) entity).getHandle()); // Krimson's own AI drives the mob from here, not vanilla's
 
-        if (type.onSpawn() != null) {
-            type.onSpawn().accept(nmsEntity);
-        }
-
-        level.addFreshEntity(nmsEntity, CreatureSpawnEvent.SpawnReason.CUSTOM);
-
-        Entity bukkitEntity = nmsEntity.getBukkitEntity();
-        org.bukkit.entity.Mob mob = (org.bukkit.entity.Mob) bukkitEntity;
+            if (type.onSpawn() != null) {
+                type.onSpawn().accept(entity);
+            }
+        });
 
         // Re-assert invisibility through the Bukkit-level API: this forces a metadata sync
-        // packet to every player already tracking the entity, in case the NMS-level flag set
-        // above (before addFreshEntity) didn't make it into the initial spawn snapshot.
+        // packet to every player already tracking the entity, in case the flag set above
+        // (before the entity was added to the world) didn't make it into the initial spawn
+        // snapshot.
         mob.setInvisible(true);
 
         applyAttributes(mob, type);

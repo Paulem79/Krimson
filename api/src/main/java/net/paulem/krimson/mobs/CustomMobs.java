@@ -1,18 +1,17 @@
 package net.paulem.krimson.mobs;
 
-import net.minecraft.world.entity.Mob;
 import net.paulem.krimson.KrimsonPlugin;
-import net.paulem.krimson.mobs.nms.KrimsonMob;
 import net.paulem.krimson.registry.NewFrozenRegistry;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Mob;
 
 /**
  * Registry of every {@link CustomMobType}, and the entry point for spawning them.
  *
  * <pre>{@code
- * public static final CustomMobType<CustomHorseEntity> GIRAFFE = CustomMobs.register("giraffe",
- *     key -> CustomMobType.builder(key, EntityTypeCast.<CustomHorseEntity>as(EntityType.HORSE), CustomHorseEntity::new)
+ * public static final CustomMobType<Horse> GIRAFFE = CustomMobs.register("giraffe",
+ *     key -> CustomMobType.builder(key, Horse.class)
  *         .model(new NamespacedKey("myplugin", "giraffe"))
  *         .animation("idle", "idle").animation("walk", "walk")
  *         .attribute(Attribute.MAX_HEALTH, 20.0).attribute(Attribute.MOVEMENT_SPEED, 0.28)
@@ -50,7 +49,7 @@ public final class CustomMobs {
         }
     }
 
-    public static <T extends Mob & KrimsonMob<T>> CustomMobType<T> register(String key,
+    public static <T extends Mob> CustomMobType<T> register(String key,
             java.util.function.Function<NamespacedKey, CustomMobType<T>> factory) {
         NamespacedKey identifier = new NamespacedKey(KrimsonPlugin.getInstance(), key);
         CustomMobType<T> type = factory.apply(identifier);
@@ -59,7 +58,7 @@ public final class CustomMobs {
         return type;
     }
 
-    public static <T extends Mob & KrimsonMob<T>> CustomMobInstance spawn(CustomMobType<T> type, Location location) {
+    public static <T extends Mob> CustomMobInstance spawn(CustomMobType<T> type, Location location) {
         return MANAGER.spawn(type, location);
     }
 

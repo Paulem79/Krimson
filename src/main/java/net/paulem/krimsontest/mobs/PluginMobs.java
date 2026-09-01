@@ -1,6 +1,5 @@
 package net.paulem.krimsontest.mobs;
 
-import net.minecraft.world.entity.EntityType;
 import net.paulem.krimson.KrimsonPlugin;
 import net.paulem.krimson.mobs.CustomMobType;
 import net.paulem.krimson.mobs.CustomMobs;
@@ -10,13 +9,12 @@ import net.paulem.krimson.mobs.ai.goals.MeleeAttackGoal;
 import net.paulem.krimson.mobs.ai.goals.TargetNearestPlayerGoal;
 import net.paulem.krimson.mobs.ai.goals.WanderGoal;
 import net.paulem.krimson.mobs.boss.BossSettings;
-import net.paulem.krimson.mobs.nms.CustomHorseEntity;
-import net.paulem.krimson.mobs.nms.CustomZombieEntity;
-import net.paulem.krimson.mobs.nms.CustomIronGolemEntity;
-import net.paulem.krimson.mobs.nms.EntityTypeCast;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.boss.BarColor;
+import org.bukkit.entity.Horse;
+import org.bukkit.entity.IronGolem;
+import org.bukkit.entity.Zombie;
 
 /**
  * Three worked examples of the custom mob system: a harmless passive critter with its own
@@ -35,9 +33,8 @@ public final class PluginMobs {
     }
 
     /** A tall, entirely peaceful custom animal. Body: an invisible horse (for the taller hitbox). */
-    public static final CustomMobType<CustomHorseEntity> GIRAFFE = CustomMobs.register("giraffe",
-            key -> CustomMobType.builder(key, EntityTypeCast.as(EntityType.HORSE),
-                            CustomHorseEntity::new)
+    public static final CustomMobType<Horse> GIRAFFE = CustomMobs.register("giraffe",
+            key -> CustomMobType.builder(key, Horse.class)
                     .model(new NamespacedKey(KrimsonPlugin.getInstance(), "the_world"))
                     .animation("idle", "idle")
                     .animation("walk", "walk")
@@ -55,9 +52,8 @@ public final class PluginMobs {
 
     /** Mechanically a real zombie - it still burns in daylight and converts to a drowned in water,
      *  since it extends Zombie directly - wearing a completely custom body and a beefed-up kit. */
-    public static final CustomMobType<CustomZombieEntity> WRAITH_ZOMBIE = CustomMobs.register("wraith_zombie",
-            key -> CustomMobType.builder(key, EntityTypeCast.as(EntityType.ZOMBIE),
-                            CustomZombieEntity::new)
+    public static final CustomMobType<Zombie> WRAITH_ZOMBIE = CustomMobs.register("wraith_zombie",
+            key -> CustomMobType.builder(key, Zombie.class)
                     .model(new NamespacedKey(KrimsonPlugin.getInstance(), "the_world"))
                     .animation("idle", "idle")
                     .animation("walk", "walk")
@@ -79,15 +75,14 @@ public final class PluginMobs {
                             // CustomMobListener#onDamage for every custom mob, not per-type here.
                     )
                     .onSpawn(mob -> {
-                        // Anything else you'd want on the raw NMS entity before it's added to the
+                        // Anything else you'd want on the Bukkit entity before it's added to the
                         // world - custom NBT, persistence flags, whatever - goes here.
                     })
                     .build());
 
     /** A boss with an iron-golem body (big hitbox, high knockback resistance) plus a bar and a phase. */
-    public static final CustomMobType<CustomIronGolemEntity> CINDER_TITAN = CustomMobs.register("cinder_titan",
-            key -> CustomMobType.builder(key, EntityTypeCast.as(EntityType.IRON_GOLEM),
-                            CustomIronGolemEntity::new)
+    public static final CustomMobType<IronGolem> CINDER_TITAN = CustomMobs.register("cinder_titan",
+            key -> CustomMobType.builder(key, IronGolem.class)
                     .model(new NamespacedKey(KrimsonPlugin.getInstance(), "the_world"), 1.6F)
                     .animation("idle", "idle")
                     .animation("walk", "walk")

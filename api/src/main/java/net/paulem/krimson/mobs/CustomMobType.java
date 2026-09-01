@@ -1,14 +1,11 @@
 package net.paulem.krimson.mobs;
 
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.level.Level;
 import net.paulem.krimson.mobs.ai.KrimsonGoal;
 import net.paulem.krimson.mobs.boss.BossSettings;
-import net.paulem.krimson.mobs.nms.KrimsonMob;
 import net.paulem.krimson.registry.RegistryKey;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
@@ -38,22 +35,17 @@ import java.util.function.Consumer;
  * <p>The brain is not: AI ({@link #aiGoals()}) is a list of {@link KrimsonGoal}s, written
  * entirely against the public {@code org.bukkit.entity.Mob} API - no
  * {@code net.minecraft.world.entity.ai.goal.Goal}, no {@code GoalSelector}. Vanilla's own
- * goal selector is wiped on spawn and never touched again.
+ * goal selector is wiped on spawn (see {@code CustomMobManager#spawn}) and never touched
+ * again.
  *
- * @param <T> the NMS class backing this mob's body - see {@link net.paulem.krimson.mobs.nms}
- *            for the three ready-made shapes (monster, animal, generic pathfinder mob)
+ * @param <T> the Bukkit interface backing this mob's body (e.g. {@code org.bukkit.entity.Zombie},
+ *            {@code org.bukkit.entity.Horse}) - any {@link Mob} subtype the server can spawn
+ *            works, so adding a new body shape never requires an NMS class of your own
  */
-public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements RegistryKey<NamespacedKey> {
-
-    /** Constructs the backing NMS entity. Almost always a constructor reference. */
-    @FunctionalInterface
-    public interface MobFactory<T extends Mob> {
-        T create(EntityType<T> type, Level level);
-    }
+public final class CustomMobType<T extends Mob> implements RegistryKey<NamespacedKey> {
 
     private final NamespacedKey key;
-    private final EntityType<T> baseEntityType;
-    private final MobFactory<T> factory;
+    private final Class<T> mobClass;
     private final List<KrimsonGoal> aiGoals;
 
     private final NamespacedKey modelKey;
@@ -75,8 +67,7 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
 
     private CustomMobType(Builder<T> builder) {
         this.key = builder.key;
-        this.baseEntityType = builder.baseEntityType;
-        this.factory = builder.factory;
+        this.mobClass = builder.mobClass;
         this.aiGoals = List.copyOf(builder.aiGoals);
         this.modelKey = builder.modelKey;
         this.animations = Map.copyOf(builder.animations);
@@ -90,9 +81,9 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         this.onSpawn = builder.onSpawn;
     }
 
-    public static <T extends Mob & KrimsonMob<T>> Builder<T> builder(NamespacedKey key, EntityType<T> baseEntityType,
-                                                                       MobFactory<T> factory) {
-        return new Builder<>(key, baseEntityType, factory);
+    /** @param mobClass the Bukkit entity interface to spawn, e.g. {@code org.bukkit.entity.Zombie.class} */
+    public static <T extends Mob> Builder<T> builder(NamespacedKey key, Class<T> mobClass) {
+        return new Builder<>(key, mobClass);
     }
 
     @Override
@@ -100,12 +91,9 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         return key;
     }
 
-    public EntityType<T> baseEntityType() {
-        return baseEntityType;
-    }
-
-    public MobFactory<T> factory() {
-        return factory;
+    /** The Bukkit entity interface this mob is spawned as - see {@code org.bukkit.entity.World#spawn}. */
+    public Class<T> mobClass() {
+        return mobClass;
     }
 
     public List<KrimsonGoal> aiGoals() {
@@ -164,10 +152,9 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         return onSpawn;
     }
 
-    public static final class Builder<T extends Mob & KrimsonMob<T>> {
+    public static final class Builder<T extends Mob> {
         private final NamespacedKey key;
-        private final EntityType<T> baseEntityType;
-        private final MobFactory<T> factory;
+        private final Class<T> mobClass;
         private final List<KrimsonGoal> aiGoals = new ArrayList<>();
 
         private NamespacedKey modelKey;
@@ -187,10 +174,9 @@ public final class CustomMobType<T extends Mob & KrimsonMob<T>> implements Regis
         @Nullable
         private Consumer<T> onSpawn;
 
-        private Builder(NamespacedKey key, EntityType<T> baseEntityType, MobFactory<T> factory) {
+        private Builder(NamespacedKey key, Class<T> mobClass) {
             this.key = key;
-            this.baseEntityType = baseEntityType;
-            this.factory = factory;
+            this.mobClass = mobClass;
         }
 
         /**

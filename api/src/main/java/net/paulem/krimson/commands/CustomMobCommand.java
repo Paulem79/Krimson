@@ -38,7 +38,6 @@ public final class CustomMobCommand implements CommandExecutor, TabCompleter {
 
         String sub = args[0].toLowerCase(Locale.ROOT);
 
-        // Sous-commandes utilisables depuis la console.
         if (sub.equals("types")) {
             List<String> keys = typeKeys();
             if (keys.isEmpty()) {
@@ -101,7 +100,6 @@ public final class CustomMobCommand implements CommandExecutor, TabCompleter {
                     case "hurt" -> instance.triggerHurt();
                     case "death" -> instance.triggerDeath();
                     default -> {
-                        // Soit un état déclaré (idle, walk, ...), soit un nom d'animation brut du bbmodel.
                         String animation = instance.type().animations()
                                 .getOrDefault(requested.toLowerCase(Locale.ROOT), requested);
                         instance.triggerCustomAnimation(animation, seconds);
@@ -156,8 +154,6 @@ public final class CustomMobCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    // --- RECHERCHE DES INSTANCES ---
-
     private static List<CustomMobInstance> inWorld(Player player) {
         List<CustomMobInstance> instances = new ArrayList<>();
         for (CustomMobInstance instance : CustomMobs.manager().instances()) {
@@ -191,10 +187,6 @@ public final class CustomMobCommand implements CommandExecutor, TabCompleter {
         return instance;
     }
 
-    /**
-     * Le registre ne retient que des {@code CustomMobType<?>}: le type capturé ne peut pas
-     * satisfaire {@code T extends Mob & KrimsonMob<T>} à la compilation, d'où l'appel brut.
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static CustomMobInstance spawnUnchecked(CustomMobType<?> type, Location location) {
         return CustomMobs.spawn((CustomMobType) type, location);
@@ -242,8 +234,6 @@ public final class CustomMobCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(Component.text("[mob] ", NamedTextColor.GOLD)
                 .append(Component.text(message, NamedTextColor.GRAY)));
     }
-
-    // --- COMPLÉTION ---
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias,
