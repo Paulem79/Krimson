@@ -3,6 +3,7 @@ package net.paulem.krimson.models.blockbench.model;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.paulem.krimson.models.blockbench.rig.RigPart;
+import net.paulem.krimson.resourcepack.creator.ParentModel;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -156,7 +157,7 @@ public final class BbModelBaker {
         String id = modelBaseName + "_p" + String.format("%02d", ordinal);
 
         JsonObject itemModel = new JsonObject();
-        itemModel.addProperty("parent", "minecraft:item/generated");
+        itemModel.addProperty("parent", ParentModel.GENERATED.getParent());
         JsonObject texturesJson = new JsonObject();
         for (int i = 0; i < textureKeys.size(); i++) {
             texturesJson.addProperty("tex" + i, "krimson:block/" + textureKeys.get(i));

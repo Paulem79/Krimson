@@ -145,18 +145,19 @@ private fun ensureCubeAllModel(outputDir: File, key: NamespacedKey) {
     textures.addProperty("all", "${key.namespace}:block/${key.key}")
 
     val model = JsonObject()
-    model.addProperty("parent", "minecraft:block/cube_all")
+    model.addProperty("parent", ParentModel.CUBE_ALL.parent)
     model.add("textures", textures)
 
     modelFile.writeText(prettyGson.toJson(model))
 }
 
+// TODO: Allow for multiface blocks or more? Maybe with an enum based constructor or idk, something that can do the job
 fun createBlockModel(
     pack: ResourcePack,
     texture: Key,
 ) {
     pack.addItemModel(texture) {
-        parent = "minecraft:block/cube_all"
+        parent = ParentModel.CUBE_ALL.parent
         cubeTexture("all", texture)
     }
     pack.addItemDefinition(ItemDefinition(texture, BasicItem(texture)))
@@ -171,9 +172,10 @@ fun createBlockModel(
 fun createFlatItemModel(
     pack: ResourcePack,
     texture: Key,
+    parentModel: ParentModel
 ) {
     pack.addItemModel(texture) {
-        parent = "minecraft:item/generated"
+        parent = parentModel.parent
         layerTexture(0, texture)
     }
     pack.addItemDefinition(ItemDefinition(texture, BasicItem(texture)))
@@ -207,8 +209,10 @@ fun main(dataFolder: File, packFormat: Int): File {
                 val modelPath = item.customBlock.itemDisplayStack.itemMeta?.itemModel ?: continue
                 createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
             }
-            is CustomToolItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key))
-            is CustomArmorItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key))
+            is CustomToolItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key),
+                ParentModel.HANDHELD)
+            is CustomArmorItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key),
+                ParentModel.GENERATED)
             else -> {}
         }
     }
