@@ -20,7 +20,7 @@ public class NewFrozenRegistry<T extends RegistryKey<K>, K> extends WriteableReg
     private boolean frozen = false;
 
     public NewFrozenRegistry(final Supplier<Map<K, T>> registrySupplier) {
-        super(() -> Map.copyOf(registrySupplier.get()));
+        super(registrySupplier);
     }
 
     public NewFrozenRegistry() {

@@ -17,13 +17,15 @@ import org.jetbrains.annotations.Nullable;
 import net.paulem.krimson.blocks.custom.CustomBlock;
 import net.paulem.krimson.registry.NewFrozenRegistry;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Items {
-    public static final NewFrozenRegistry<CustomItem, NamespacedKey> REGISTRY = new NewFrozenRegistry<>();
+    // LinkedHashMap to keep order for /krimson gui
+    public static final NewFrozenRegistry<CustomItem, NamespacedKey> REGISTRY = new NewFrozenRegistry<>(LinkedHashMap::new);
 
     public static CustomBlockItem registerBlockItem(CustomBlock customBlock, TriConsumer<CustomBlock, @Nullable Player, Location> action) {
         NamespacedKey identifier = customBlock.getKey();
