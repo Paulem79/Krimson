@@ -474,6 +474,8 @@ public class CustomBlock implements RegistryKey<NamespacedKey> {
         Player player = event.getPlayer();
         onBreak(event, player);
 
+        if (player.getGameMode() == GameMode.CREATIVE) return;
+
         // Damage player tool
         player.damageItemStack(player.getInventory().getItemInMainHand(), 1);
     }
