@@ -86,19 +86,24 @@ public class NoteBlockListener implements Listener {
             return;
         }
 
-        // Denying the block interaction still lets the held item be used, so placing a block against a note
-        // block keeps working.
+        Player player = event.getPlayer();
+        ItemStack held = player.getInventory().getItem(EquipmentSlot.HAND);
+
+        if (player.isSneaking() && held != null && !held.getType().isAir()) {
+            // Sneak + item means the player wants to place, exactly like vanilla. Leaving the event
+            // completely untouched here is required: setting useInteractedBlock to DENY makes vanilla treat
+            // the interaction as InteractionResult.FAIL, which "consumes" the right click and cancels the
+            // item placement that would normally follow, regardless of useItemInHand.
+            return;
+        }
+
+        // Past this point the player is not placing (handled above), so it is safe to deny the block
+        // interaction: the note block must cycle its pitch instead of doing whatever vanilla would do.
         event.setUseInteractedBlock(Event.Result.DENY);
 
         if (KrimsonAPI.isCustomBlockFromWatcher(block)) {
             // CustomBlockActionListener already ran onInteract for it; nothing vanilla to replay.
             return;
-        }
-
-        Player player = event.getPlayer();
-        ItemStack held = player.getInventory().getItem(EquipmentSlot.HAND);
-        if (player.isSneaking() && held != null && !held.getType().isAir()) {
-            return; // Sneak + item means the player wants to place, exactly like vanilla.
         }
 
         event.setUseItemInHand(Event.Result.DENY);
