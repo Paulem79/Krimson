@@ -94,6 +94,7 @@ public class KrimsonAPI<T extends KrimsonPlugin<T>> implements Listener {
         pluginManager.registerEvents(new MigrationListener(), plugin);
         pluginManager.registerEvents(new CustomMobListener(), plugin);
         pluginManager.registerEvents(new MiningListener(), plugin);
+        pluginManager.registerEvents(new CustomToolArmorListener(), plugin);
         // Registered last on purpose: it denies note block interactions, and the listeners above must get
         // their turn at the same priority first.
         pluginManager.registerEvents(new NoteBlockListener(), plugin);

@@ -1,6 +1,7 @@
 package net.paulem.krimson.listeners;
 
 import net.paulem.krimson.KrimsonPlugin;
+import net.paulem.krimson.items.CustomItem;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.EventHandler;
@@ -12,7 +13,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import net.paulem.krimson.constants.Keys;
-import net.paulem.krimson.items.CustomBlockItem;
 import net.paulem.krimson.items.Items;
 
 public class MigrationListener implements Listener {
@@ -39,9 +39,9 @@ public class MigrationListener implements Listener {
                 continue;
             }
 
-            CustomBlockItem customBlockItem = (CustomBlockItem) Items.REGISTRY.getOrThrow(key);
+            CustomItem customItem = Items.REGISTRY.getOrThrow(key);
 
-            ItemStack toGive = customBlockItem.getCustomBlock().getItemDisplayStack();
+            ItemStack toGive = customItem.getItemStack();
             toGive.setAmount(item.getAmount());
 
             if (!toGive.equals(item)) {

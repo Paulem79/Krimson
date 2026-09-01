@@ -4,7 +4,9 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonObject
 import net.paulem.krimson.blocks.noteblock.NoteBlockState
 import net.paulem.krimson.blocks.noteblock.NoteBlockStates
+import net.paulem.krimson.items.CustomArmorItem
 import net.paulem.krimson.items.CustomBlockItem
+import net.paulem.krimson.items.CustomToolItem
 import net.paulem.krimson.items.Items
 import net.paulem.krimson.models.blockbench.model.BlockbenchModelAssets
 import net.paulem.krimson.sounds.Sounds
@@ -160,6 +162,23 @@ fun createBlockModel(
     pack.addItemDefinition(ItemDefinition(texture, BasicItem(texture)))
 }
 
+/**
+ * Modèle plat "à la main" (parent `item/generated`, une seule couche de texture) utilisé pour les
+ * [CustomToolItem] et [CustomArmorItem]. La texture PNG elle-même n'est pas générée ici : elle doit déjà
+ * exister (pack de base fusionné par [mergeBasePack], ou pipeline Blockbench) à
+ * `assets/<namespace>/textures/<texture.value>.png`.
+ */
+fun createFlatItemModel(
+    pack: ResourcePack,
+    texture: Key,
+) {
+    pack.addItemModel(texture) {
+        parent = "minecraft:item/generated"
+        layerTexture(0, texture)
+    }
+    pack.addItemDefinition(ItemDefinition(texture, BasicItem(texture)))
+}
+
 fun main(dataFolder: File, packFormat: Int): File {
     val zipFile = File(dataFolder, "krimson_resource_pack_v${packFormat}.zip")
     val deleted = zipFile.delete()
@@ -183,9 +202,15 @@ fun main(dataFolder: File, packFormat: Int): File {
     }
 
     for (namespacedKey in Items.REGISTRY.keys()) {
-        val blockItem = Items.REGISTRY.getOrThrow(namespacedKey) as? CustomBlockItem ?: continue
-        val modelPath = blockItem.customBlock.itemDisplayStack.itemMeta?.itemModel ?: continue
-        createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
+        when (val item = Items.REGISTRY.getOrThrow(namespacedKey)) {
+            is CustomBlockItem -> {
+                val modelPath = item.customBlock.itemDisplayStack.itemMeta?.itemModel ?: continue
+                createBlockModel(pack, Key(modelPath.namespace, modelPath.key))
+            }
+            is CustomToolItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key))
+            is CustomArmorItem -> createFlatItemModel(pack, Key(item.itemModel.namespace, item.itemModel.key))
+            else -> {}
+        }
     }
 
     // Register sounds from the Krimson API registry

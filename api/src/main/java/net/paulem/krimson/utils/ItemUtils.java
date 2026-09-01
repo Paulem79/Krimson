@@ -22,4 +22,24 @@ public class ItemUtils {
 
         return newItem;
     }
+
+    /**
+     * Sets the item model to the given key verbatim (no {@code "block/"} prefix), for custom tools/armor whose
+     * model lives under a different path (e.g. {@code item/...}) in the resource pack.
+     */
+    public static ItemStack getWithRawItemModel(ItemStack item, NamespacedKey modelKey) {
+        if (item == null) {
+            return null;
+        }
+        ItemStack newItem = item.clone();
+        ItemMeta meta = newItem.getItemMeta();
+
+        if (meta != null) {
+            meta.setItemModel(modelKey);
+
+            newItem.setItemMeta(meta);
+        }
+
+        return newItem;
+    }
 }
