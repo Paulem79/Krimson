@@ -3,7 +3,7 @@ rootProject.name = "Krimson"
 pluginManagement {
     plugins {
         id("com.gradleup.shadow") version "9.6.1"
-        kotlin("plugin.lombok") version "2.4.10"
+        kotlin("plugin.lombok") version "2.4.20"
     }
 }
 

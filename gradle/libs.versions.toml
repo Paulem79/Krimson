@@ -4,7 +4,7 @@ minecraft = "1.21.4"
 paper = "1.21.4-R0.1-SNAPSHOT"
 
 # Plugins
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 shadow = "9.6.1"
 runPaper = "3.1.0"
 paperweightPlugin = "2.0.0-beta.23"
