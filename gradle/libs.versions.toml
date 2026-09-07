@@ -23,7 +23,7 @@ packedCore = "1.1.4"
 mcbrawlsInject = "3.+"
 javalin = "7.+"
 packetevents = "2.13.0"
-inventoryframework = "0.12.0"
+inventoryframework = "0.12.1"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
