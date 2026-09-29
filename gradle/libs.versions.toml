@@ -10,7 +10,7 @@ runPaper = "3.1.0"
 paperweightPlugin = "2.0.0-beta.23"
 
 # Libraries
-commonsLang3 = "3.20.0"
+commonsLang3 = "3.21.0"
 viaversion = "5.+"
 annotations = "26.1.0"
 lombok = "1.18.46"
